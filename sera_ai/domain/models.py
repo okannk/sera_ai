@@ -115,6 +115,22 @@ class KomutSonucu:
 # ──────────────────────────────────────────────────────────────
 
 @dataclass
+class BildirimKonfig:
+    """
+    Bildirim sistemi ayarları.
+    Token ve şifreler burada saklanmaz — env var adları saklanır.
+    Gerçek değerler çalışma anında os.getenv() ile okunur.
+    """
+    bastirma_dk:          int = 10       # Aynı alarmı tekrar göndermeden önce bekle
+    sabah_raporu:         str = "07:00"  # Günlük rapor saati (HH:MM)
+    telegram_aktif:       bool = False
+    whatsapp_aktif:       bool = False
+    eposta_aktif:         bool = False
+    # Env var adları (değerlerin kendisi değil)
+    telegram_token_env:   str = "TELEGRAM_TOKEN"
+    telegram_chat_id_env: str = "TELEGRAM_CHAT_ID"
+
+@dataclass
 class SeraKonfig:
     id:           str
     isim:         str
@@ -132,14 +148,17 @@ class SeraKonfig:
 class SistemKonfig:
     seralar:              list[SeraKonfig]
     profiller:            dict[str, BitkilProfili]
-    merkez_donanim:       str   = "mock"        # raspberry_pi | mock
-    sensor_interval_sn:   float = 2.5
-    cb_hata_esigi:        int   = 5
-    cb_recovery_sn:       int   = 60
-    log_dosyasi:          str   = "sera_system.jsonl"
-    db_yolu:              str   = "sera_data.db"
-    api_port:             int   = 5000
-    api_aktif:            bool  = True
+    merkez_donanim:       str              = "mock"        # raspberry_pi | mock
+    sensor_interval_sn:   float            = 2.5
+    cb_hata_esigi:        int              = 5
+    cb_recovery_sn:       int              = 60
+    log_dosyasi:          str              = "sera_system.jsonl"
+    db_yolu:              str              = "sera_data.db"
+    api_port:             int              = 5000
+    api_aktif:            bool             = True
+    # API key: değer değil, env var adı saklanır
+    api_key_env:          str              = "SERA_API_KEY"
+    bildirim:             BildirimKonfig   = field(default_factory=BildirimKonfig)
 
     def profil_al(self, bitki: str) -> BitkilProfili:
         if bitki not in self.profiller:

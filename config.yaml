@@ -1,17 +1,19 @@
 # ══════════════════════════════════════════════════════════════
 # SERA AI — Sistem Konfigürasyonu
+# Versiyon: 0.2  |  Öncelik: ortam değişkeni > bu dosya > kod varsayılanı
 # ══════════════════════════════════════════════════════════════
 #
-# Donanım değiştirmek için tek satır:
-#   saha_donanim: esp32_s3   → Gerçek ESP32-S3 node'ları
-#   saha_donanim: mock       → Test/demo modu (Arduino gerekmez)
+# Donanım değiştirmek için:
+#   saha:   esp32_s3      → gerçek ESP32-S3 node'ları (MQTT)
+#   saha:   mock          → test/demo modu (donanım gerekmez)
 #
-#   merkez_donanim: raspberry_pi  → Raspberry Pi 5 üzerinde çalış
-#   merkez_donanim: mock          → Test modu
+#   merkez: raspberry_pi  → Raspberry Pi 5'te tam kontrol döngüsü
+#   merkez: mock          → test modu
 #
-# Ortam değişkenleri bu dosyanın üzerinde önceliklidir:
-#   SERA_MQTT_HOST, SERA_MQTT_PORT, MQTT_KULLANICI, MQTT_SIFRE
+# Gizli değerler (token, şifre, API key) BURADA YOK.
+# Bunlar .env dosyasından gelir → ortam değişkenleri olarak okunur.
 
+# ── Donanım Seçimi ────────────────────────────────────────────
 donanim:
   saha:   mock           # esp32_s3 | mock
   merkez: mock           # raspberry_pi | mock
@@ -23,8 +25,8 @@ sera:
       isim:         "Sera A"
       bitki:        Domates
       alan_m2:      500
-      saha_donanim: mock          # Bu sera için override (ops. opsiyonel)
-      node_id:      esp32_sera_a  # ESP32-S3 MQTT kimliği
+      node_id:      esp32_sera_a   # ESP32-S3 MQTT kimliği
+      # saha_donanim: esp32_s3     # Sadece bu serayı override etmek için
 
     - id:           s2
       isim:         "Sera B"
@@ -38,23 +40,23 @@ sera:
       alan_m2:      200
       node_id:      esp32_sera_c
 
-# ── MQTT (ESP32-S3 iletişimi) ─────────────────────────────────
+# ── MQTT Bağlantısı (ESP32-S3 iletişimi) ─────────────────────
+# Kullanıcı/şifre .env'den: MQTT_KULLANICI, MQTT_SIFRE
+# Ortam değişkeni override: SERA_MQTT_HOST, SERA_MQTT_PORT
 mqtt:
   host: localhost
   port: 1883
-  # Kullanıcı/şifre .env dosyasından gelir (MQTT_KULLANICI, MQTT_SIFRE)
-  # TLS: esp32_s3.py'de ssl.wrap_socket ile aktifleştir
 
 # ── Bitki Profilleri ──────────────────────────────────────────
 bitki_profilleri:
   Domates:
-    min_T:     15
-    max_T:     30
-    opt_T:     23
-    min_H:     60
-    max_H:     85
-    opt_CO2:   1000
-    hasat_gun: 90
+    min_T:     15       # Minimum güvenli sıcaklık (°C)
+    max_T:     30       # Maksimum güvenli sıcaklık
+    opt_T:     23       # Optimal sıcaklık
+    min_H:     60       # Minimum nem (%)
+    max_H:     85       # Maksimum nem
+    opt_CO2:   1000     # Optimal CO₂ (ppm)
+    hasat_gun: 90       # Ortalama hasat süresi
 
   Biber:
     min_T:     18
@@ -76,23 +78,31 @@ bitki_profilleri:
 
 # ── Sistem Parametreleri ──────────────────────────────────────
 sistem:
-  sensor_interval_sn: 2.5   # Sensör okuma periyodu
-  cb_hata_esigi:      5     # Circuit breaker açılma eşiği
-  cb_recovery_sn:     60    # CB recovery süresi (saniye)
-  log_dosyasi:        sera_system.jsonl
-  db_yolu:            sera_data.db
+  sensor_interval_sn: 2.5    # Sensör okuma periyodu (saniye)
+  cb_hata_esigi:      5      # Circuit breaker açılma eşiği (hata sayısı)
+  cb_recovery_sn:     60     # Circuit breaker recovery süresi (saniye)
+  log_dosyasi:        sera_system.jsonl   # JSONL format, Grafana/Loki uyumlu
+  db_yolu:            sera_data.db        # SQLite veritabanı dosyası
 
 # ── REST API ──────────────────────────────────────────────────
+# API key .env'den okunur: SERA_API_KEY
+# api_key_env: hangi env değişkenine bakılacağını belirtir
 api:
-  aktif: true
-  port:  5000
-  # API key .env dosyasından gelir (SERA_API_KEY)
+  aktif:       true
+  port:        5000
+  api_key_env: SERA_API_KEY   # Bu env var tanımlıysa auth aktif olur
 
 # ── Bildirimler ───────────────────────────────────────────────
+# Tüm token/şifreler .env dosyasından gelir
 bildirim:
-  bastirma_dk:      10    # Aynı alarm için min bekleme süresi
-  sabah_raporu:     "07:00"
-  # Token'lar .env dosyasından gelir:
-  # TELEGRAM_TOKEN, TELEGRAM_CHAT_ID
-  # TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM, TWILIO_TO
-  # EMAIL_SMTP, EMAIL_PORT, EMAIL_USER, EMAIL_PASS, EMAIL_TO
+  bastirma_dk:  10        # Aynı alarm için minimum bekleme süresi (dakika)
+  sabah_raporu: "07:00"   # Günlük özet rapor saati (HH:MM)
+
+  # Hangi kanallar aktif?
+  telegram_aktif:  false   # true yapmak için TELEGRAM_TOKEN + TELEGRAM_CHAT_ID gerekli
+  whatsapp_aktif:  false   # true yapmak için Twilio env değişkenleri gerekli
+  eposta_aktif:    false   # true yapmak için EMAIL_* env değişkenleri gerekli
+
+  # Env var adları (değerlerin kendisi değil — güvenlik)
+  telegram_token_env:   TELEGRAM_TOKEN
+  telegram_chat_id_env: TELEGRAM_CHAT_ID

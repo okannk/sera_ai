@@ -27,6 +27,8 @@ notifications = [
 dev = [
     "pytest>=7.4",
     "pytest-cov>=4.1",
+    "flask>=3.0",
+    "flask-cors>=4.0",
 ]
 all = [
     "sera-ai[hardware,api,notifications,dev]",

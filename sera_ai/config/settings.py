@@ -19,7 +19,8 @@ from pathlib import Path
 from typing import Optional
 
 from ..domain.models import (
-    BitkilProfili, SeraKonfig, SistemKonfig, VARSAYILAN_PROFILLER
+    BildirimKonfig, BitkilProfili, SeraKonfig, SistemKonfig,
+    VARSAYILAN_PROFILLER,
 )
 
 
@@ -76,9 +77,20 @@ def konfig_yukle(yol: str = "config.yaml") -> SistemKonfig:
         print("[Konfig] Sera listesi boş → varsayılan seralar kullanılıyor")
         return SistemKonfig.varsayilan()
 
-    sistem_ham = ham.get("sistem", {})
-    donanim_ham = ham.get("donanim", {})
-    api_ham = ham.get("api", {})
+    sistem_ham   = ham.get("sistem", {})
+    donanim_ham  = ham.get("donanim", {})
+    api_ham      = ham.get("api", {})
+    bildirim_ham = ham.get("bildirim", {})
+
+    bildirim = BildirimKonfig(
+        bastirma_dk=bildirim_ham.get("bastirma_dk", 10),
+        sabah_raporu=bildirim_ham.get("sabah_raporu", "07:00"),
+        telegram_aktif=bildirim_ham.get("telegram_aktif", False),
+        whatsapp_aktif=bildirim_ham.get("whatsapp_aktif", False),
+        eposta_aktif=bildirim_ham.get("eposta_aktif", False),
+        telegram_token_env=bildirim_ham.get("telegram_token_env", "TELEGRAM_TOKEN"),
+        telegram_chat_id_env=bildirim_ham.get("telegram_chat_id_env", "TELEGRAM_CHAT_ID"),
+    )
 
     return SistemKonfig(
         seralar=seralar,
@@ -91,6 +103,8 @@ def konfig_yukle(yol: str = "config.yaml") -> SistemKonfig:
         db_yolu=sistem_ham.get("db_yolu", "sera_data.db"),
         api_port=api_ham.get("port", 5000),
         api_aktif=api_ham.get("aktif", True),
+        api_key_env=api_ham.get("api_key_env", "SERA_API_KEY"),
+        bildirim=bildirim,
     )
 
 

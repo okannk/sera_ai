@@ -1148,6 +1148,8 @@ api = [
     { name = "flask-cors" },
 ]
 dev = [
+    { name = "flask" },
+    { name = "flask-cors" },
     { name = "pytest" },
     { name = "pytest-cov" },
 ]
@@ -1163,7 +1165,9 @@ notifications = [
 [package.metadata]
 requires-dist = [
     { name = "flask", marker = "extra == 'api'", specifier = ">=3.0" },
+    { name = "flask", marker = "extra == 'dev'", specifier = ">=3.0" },
     { name = "flask-cors", marker = "extra == 'api'", specifier = ">=4.0" },
+    { name = "flask-cors", marker = "extra == 'dev'", specifier = ">=4.0" },
     { name = "paho-mqtt", marker = "extra == 'hardware'", specifier = ">=1.6" },
     { name = "pyserial", marker = "extra == 'hardware'", specifier = ">=3.5" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.4" },
