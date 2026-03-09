@@ -37,6 +37,18 @@ Sıcaklık, nem, CO₂, toprak nemi izlenir; SSR röle ile aktüatörler (sulama
 ```
 sera_ai/
 ├── domain/              # Saf iş mantığı — stdlib only, sıfır dış bağımlılık
+│
+├── infrastructure/
+│   ├── logging/         # JSONLLogger, LokiLogger, MockLogger, LogDispatcher
+│   ├── mqtt/            # MQTTIstemciBase, Mock, ESP32Simulatoru, Paho
+│   ├── notifications/   # BildirimKanalBase, Telegram, MockBildirim, Dispatcher
+│   └── repositories/    # SensorRepository, KomutRepository, SQLite impl
+│
+├── grafana/             # Docker Compose + provisioning + 2 dashboard JSON
+│   ├── docker-compose.yml
+│   ├── promtail/config.yml
+│   ├── provisioning/
+│   └── dashboards/
 │   ├── models.py        # SensorOkuma, Komut, SeraKonfig, SistemKonfig, BitkilProfili
 │   ├── state_machine.py # SeraStateMachine: 6 durum, on_gecis callback
 │   └── circuit_breaker.py # Per-sera bağımsız CB
@@ -130,7 +142,7 @@ CONTEXT.md               # Donanım + mimari kararlar (tam bağlam)
 
 ## Mevcut Durum
 
-**Versiyon:** 0.3.2 — `2026-03-10`
+**Versiyon:** 0.4.0 — `2026-03-10`
 
 ### Tamamlananlar
 - [x] İki katmanlı donanım soyutlaması: `SahaNodeBase` + `MerkezKontrolBase`
@@ -154,11 +166,14 @@ CONTEXT.md               # Donanım + mimari kararlar (tam bağlam)
 - [x] **`infrastructure/notifications/`** — `BildirimKanalBase` ABC, `TelegramKanal` (httpx, lazy), `MockBildirimKanal`, `BildirimDispatcher` (EventBus abone, bastırma, kritik bypass)
 - [x] **`drivers/esp32_s3.py`** — `SeraKonfig.sensorler` bazlı doğrulama: eksik alan → sentinel, fiziksel sınır dışı → sentinel, `gecerli_mi=False`; geriye dönük uyumlu (`sensorler=[]`)
 - [x] `settings.py` `saha_node_olustur()` → `sensorler=` geçirildi
-- [x] **250 test, 0 hata**
+- [x] **Grafana/Loki entegrasyonu**
+  - `infrastructure/logging/`: `LogYaziciBase` ABC, `JSONLLogger` (thread-safe, Promtail uyumlu), `LokiLogger` (HTTP push, batch, stream gruplama), `MockLogger`, `LogDispatcher` (EventBus abone, seviye eşleme)
+  - `api/metrics.py`: `/metrics` Prometheus text format (stdlib, harici lib yok), auth muaf
+  - `grafana/`: Docker Compose (Loki+Grafana+Promtail), provisioning, 2 dashboard JSON
+- [x] **290 test, 0 hata**
 
 ### Devam Edenler / Sıradaki
 - [ ] Siemens S7-1200 / Modbus TCP
-- [ ] Grafana/Loki entegrasyonu
 - [ ] `intelligence/` — RL ajanı iskeleti
 - [ ] `drivers/esp32_s3.py` — sensör config ile veri doğrulama
 - [ ] Siemens S7-1200 / Modbus TCP

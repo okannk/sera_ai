@@ -13,7 +13,7 @@ from __future__ import annotations
 
 
 # Auth'dan muaf endpoint isimleri (Flask endpoint adları)
-MUAF_ENDPOINTLER = frozenset({"saglik", "static"})
+MUAF_ENDPOINTLER = frozenset({"saglik", "metrics", "static"})
 
 
 def check_api_key(gelen_key: str, beklenen_key: str) -> bool:

@@ -284,6 +284,10 @@ def api_uygulamasi_olustur(
         a = servis.aktif_alarmlar()
         return api_yanit(a, meta={"toplam": len(a)})
 
+    # ── Prometheus metrics endpoint ───────────────────────────
+    from .metrics import metrics_route_ekle
+    metrics_route_ekle(app, servis)
+
     @app.errorhandler(404)
     def e404(e):
         return api_yanit(hata=f"Bulunamadı: {request.path}", durum=404)

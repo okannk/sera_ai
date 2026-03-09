@@ -1,0 +1,40 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: sera_ai_jsonl
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: sera_ai
+          __path__: /var/log/sera_system.jsonl
+
+    pipeline_stages:
+      # Her satır geçerli JSON — parse et
+      - json:
+          expressions:
+            seviye:  seviye
+            olay:    olay
+            sera_id: sera_id
+
+      # Loki label'larına taşı
+      - labels:
+          seviye:
+          olay:
+          sera_id:
+
+      # zaman damgasını JSON'dan al
+      - timestamp:
+          source: ts
+          format: RFC3339Nano
+          fallback_formats:
+            - "2006-01-02T15:04:05.999999999"
+            - "2006-01-02T15:04:05"
