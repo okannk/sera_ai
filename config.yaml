@@ -92,6 +92,11 @@ api:
   port:        5000
   api_key_env: SERA_API_KEY   # Bu env var tanımlıysa auth aktif olur
 
+# ── Intelligence / Optimizer ──────────────────────────────────
+intelligence:
+  optimizer:   kural_motoru   # kural_motoru | ml_motor
+  model_dizin: models         # Eğitilmiş .pkl dosyalarının dizini
+
 # ── Bildirimler ───────────────────────────────────────────────
 # Tüm token/şifreler .env dosyasından gelir
 bildirim:

@@ -26,6 +26,7 @@ from ..domain.state_machine import SeraStateMachine, Durum
 from ..domain.circuit_breaker import CircuitBreaker
 from ..application.event_bus import EventBus, OlayTur
 from ..application.control_engine import KontrolMotoru
+from ..config.settings import optimizer_olustur
 
 
 class RaspberryPiMerkez(MerkezKontrolBase):
@@ -80,6 +81,7 @@ class RaspberryPiMerkez(MerkezKontrolBase):
             profil=profil,
             on_gecis=lambda d, bus=self.olay_bus: bus.yayinla(OlayTur.DURUM_DEGISTI, d),
         )
+        optimizer = optimizer_olustur(self.konfig, profil)
         motor = KontrolMotoru(
             sera_id=sera_id,
             profil=profil,
@@ -87,6 +89,7 @@ class RaspberryPiMerkez(MerkezKontrolBase):
             cb=cb,
             state_machine=sm,
             olay_bus=self.olay_bus,
+            optimizer=optimizer,
         )
 
         self._nodes[sera_id]    = node

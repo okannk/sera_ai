@@ -159,6 +159,9 @@ class SistemKonfig:
     # API key: değer değil, env var adı saklanır
     api_key_env:          str              = "SERA_API_KEY"
     bildirim:             BildirimKonfig   = field(default_factory=BildirimKonfig)
+    # Intelligence katmanı
+    optimizer_tip:        str              = "kural_motoru"  # kural_motoru | ml_motor
+    model_dizin:          str              = "models"
 
     def profil_al(self, bitki: str) -> BitkilProfili:
         if bitki not in self.profiller:

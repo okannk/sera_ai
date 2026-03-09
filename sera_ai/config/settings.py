@@ -105,6 +105,8 @@ def konfig_yukle(yol: str = "config.yaml") -> SistemKonfig:
         api_aktif=api_ham.get("aktif", True),
         api_key_env=api_ham.get("api_key_env", "SERA_API_KEY"),
         bildirim=bildirim,
+        optimizer_tip=ham.get("intelligence", {}).get("optimizer", "kural_motoru"),
+        model_dizin=ham.get("intelligence", {}).get("model_dizin", "models"),
     )
 
 
@@ -166,6 +168,29 @@ def merkez_olustur(konfig: SistemKonfig):
     raise ValueError(
         f"Bilinmeyen merkez donanımı: {tip!r}. "
         f"Geçerli seçenekler: raspberry_pi, mock"
+    )
+
+
+def optimizer_olustur(konfig: SistemKonfig, profil):
+    """
+    config.yaml'daki intelligence.optimizer değerine göre optimizer oluştur.
+
+    Dönen tip: OptimizerBase (concrete sınıf değil)
+    KontrolMotoru optimizer= parametresine doğrudan verilir.
+    """
+    tip = konfig.optimizer_tip.lower()
+
+    if tip == "ml_motor":
+        from ..intelligence.ml_motor import MLOptimizer
+        return MLOptimizer(profil, model_dizin=konfig.model_dizin)
+
+    if tip == "kural_motoru":
+        from ..intelligence.kural_motoru import KuralMotoru
+        return KuralMotoru(profil)
+
+    raise ValueError(
+        f"Bilinmeyen optimizer: {tip!r}. "
+        f"Geçerli seçenekler: kural_motoru, ml_motor"
     )
 
 

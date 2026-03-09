@@ -24,14 +24,22 @@ notifications = [
     "requests>=2.31",
     "twilio>=8.0",
 ]
+ml = [
+    "scikit-learn>=1.3",
+    "numpy>=1.24",
+    "joblib>=1.3",
+]
 dev = [
     "pytest>=7.4",
     "pytest-cov>=4.1",
     "flask>=3.0",
     "flask-cors>=4.0",
+    "scikit-learn>=1.3",
+    "numpy>=1.24",
+    "joblib>=1.3",
 ]
 all = [
-    "sera-ai[hardware,api,notifications,dev]",
+    "sera-ai[hardware,api,notifications,ml,dev]",
 ]
 
 [project.scripts]
