@@ -142,6 +142,8 @@ class SeraKonfig:
     mqtt_host:    str = "localhost"
     mqtt_port:    int = 1883
     node_id:      str = ""              # ESP32 node kimliği
+    # Sensör listesi — config.yaml'dan: [{tip: sht31, adres: 0x44}, ...]
+    sensorler:    list = field(default_factory=list)
 
 
 @dataclass

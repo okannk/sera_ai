@@ -71,6 +71,7 @@ def konfig_yukle(yol: str = "config.yaml") -> SistemKonfig:
             mqtt_host=mqtt_host,
             mqtt_port=mqtt_port,
             node_id=s.get("node_id", f"esp32_{s['id']}"),
+            sensorler=s.get("sensorler", []),
         ))
 
     if not seralar:
@@ -168,6 +169,60 @@ def merkez_olustur(konfig: SistemKonfig):
     raise ValueError(
         f"Bilinmeyen merkez donanımı: {tip!r}. "
         f"Geçerli seçenekler: raspberry_pi, mock"
+    )
+
+
+def sensor_olustur(sensor_konfig: dict):
+    """
+    config.yaml sensör tanımından doğru sensör sürücüsünü oluştur.
+
+    Dönen tip: SensorBase (concrete sınıf değil)
+    Yeni sensör eklemek → sensors/ altına yeni dosya + buraya 3 satır.
+    """
+    tip = sensor_konfig.get("tip", "mock").lower()
+
+    if tip == "sht31":
+        from ..sensors.sht31 import SHT31Sensor
+        return SHT31Sensor(
+            adres=sensor_konfig.get("adres", 0x44),
+            bus_no=sensor_konfig.get("bus_no", 1),
+        )
+
+    if tip == "dht22":
+        from ..sensors.dht22 import DHT22Sensor
+        return DHT22Sensor(pin=sensor_konfig.get("pin", 4))
+
+    if tip == "mh_z19c":
+        from ..sensors.mh_z19c import MHZ19CSensor
+        return MHZ19CSensor(
+            port=sensor_konfig.get("port", "/dev/ttyS0"),
+            baud=sensor_konfig.get("baud", 9600),
+        )
+
+    if tip == "bh1750":
+        from ..sensors.bh1750 import BH1750Sensor
+        return BH1750Sensor(
+            adres=sensor_konfig.get("adres", 0x23),
+            bus_no=sensor_konfig.get("bus_no", 1),
+        )
+
+    if tip == "kapasitif_nem":
+        from ..sensors.kapasitif_nem import KapasitifNemSensor
+        return KapasitifNemSensor(
+            kanal=sensor_konfig.get("kanal", 0),
+            i2c_adres=sensor_konfig.get("i2c_adres", 0x48),
+        )
+
+    if tip == "mock":
+        from ..sensors.mock import MockSensor
+        return MockSensor(degerler=sensor_konfig.get("degerler", {
+            "T": 23.0, "H": 72.0, "co2": 950,
+            "isik": 500, "toprak_nem": 500,
+        }))
+
+    raise ValueError(
+        f"Bilinmeyen sensör tipi: {tip!r}. "
+        f"Geçerli: sht31, dht22, mh_z19c, bh1750, kapasitif_nem, mock"
     )
 
 

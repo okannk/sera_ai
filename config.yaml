@@ -27,18 +27,45 @@ sera:
       alan_m2:      500
       node_id:      esp32_sera_a   # ESP32-S3 MQTT kimliği
       # saha_donanim: esp32_s3     # Sadece bu serayı override etmek için
+      sensorler:
+        - tip:    sht31             # Sıcaklık + nem (I2C 0x44)
+          adres:  0x44
+        - tip:    mh_z19c          # CO₂ UART
+          port:   /dev/ttyS0
+        - tip:    kapasitif_nem    # Toprak nem (ADS1115 kanal 0)
+          kanal:  0
+        - tip:    bh1750           # Işık (I2C 0x23)
+          adres:  0x23
 
     - id:           s2
       isim:         "Sera B"
       bitki:        Biber
       alan_m2:      300
       node_id:      esp32_sera_b
+      sensorler:
+        - tip:    sht31
+          adres:  0x44
+        - tip:    mh_z19c
+          port:   /dev/ttyS0
+        - tip:    kapasitif_nem
+          kanal:  0
+        - tip:    bh1750
+          adres:  0x23
 
     - id:           s3
       isim:         "Sera C"
       bitki:        Marul
       alan_m2:      200
       node_id:      esp32_sera_c
+      sensorler:
+        - tip:    sht31
+          adres:  0x44
+        - tip:    mh_z19c
+          port:   /dev/ttyS0
+        - tip:    kapasitif_nem
+          kanal:  0
+        - tip:    bh1750
+          adres:  0x23
 
 # ── MQTT Bağlantısı (ESP32-S3 iletişimi) ─────────────────────
 # Kullanıcı/şifre .env'den: MQTT_KULLANICI, MQTT_SIFRE
