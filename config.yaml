@@ -71,8 +71,9 @@ sera:
 # Kullanıcı/şifre .env'den: MQTT_KULLANICI, MQTT_SIFRE
 # Ortam değişkeni override: SERA_MQTT_HOST, SERA_MQTT_PORT
 mqtt:
-  host: localhost
-  port: 1883
+  host:  localhost
+  port:  1883
+  aktif: false    # true → gerçek Mosquitto broker (paho-mqtt gerekli)
 
 # ── Bitki Profilleri ──────────────────────────────────────────
 bitki_profilleri:

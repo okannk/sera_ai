@@ -130,7 +130,7 @@ CONTEXT.md               # Donanım + mimari kararlar (tam bağlam)
 
 ## Mevcut Durum
 
-**Versiyon:** 0.2.0 — `2026-03-10`
+**Versiyon:** 0.3.0 — `2026-03-10`
 
 ### Tamamlananlar
 - [x] İki katmanlı donanım soyutlaması: `SahaNodeBase` + `MerkezKontrolBase`
@@ -148,10 +148,12 @@ CONTEXT.md               # Donanım + mimari kararlar (tam bağlam)
 - [x] `sensor_olustur()` factory
 - [x] `SeraKonfig.sensorler` + config.yaml sensör listesi
 - [x] CONTEXT.md gerçek donanım stack ile güncellendi
-- [x] **147 test, 0 hata**
+- [x] **`infrastructure/repositories/`** — `SensorRepository` + `KomutRepository` ABC, SQLite impl, WAL modu, idempotent yazma, zaman aralığı sorgu, temizleme
+- [x] **`infrastructure/mqtt/`** — `MQTTIstemciBase` ABC, `MockMQTTBroker` (in-process, wildcard destekli), `MockMQTTIstemci`, `ESP32Simulatoru` (sensör yayını + komut ACK), `MQTTKomutKoprusu` (dış komut → callback), `PahoMQTTIstemci` (gerçek broker)
+- [x] `config.yaml` `mqtt.aktif: false` alanı eklendi
+- [x] **198 test, 0 hata**
 
 ### Devam Edenler / Sıradaki
-- [ ] `infrastructure/repositories/` — SQLite implementasyonu
 - [ ] `infrastructure/notifications/` — Telegram/WhatsApp
 - [ ] `intelligence/` — RL ajanı iskeleti
 - [ ] `drivers/esp32_s3.py` — sensör config ile veri doğrulama
