@@ -78,7 +78,7 @@ class RaspberryPiMerkez(MerkezKontrolBase):
         sm = SeraStateMachine(
             sera_id=sera_id,
             profil=profil,
-            olay_bus=self.olay_bus,
+            on_gecis=lambda d, bus=self.olay_bus: bus.yayinla(OlayTur.DURUM_DEGISTI, d),
         )
         motor = KontrolMotoru(
             sera_id=sera_id,

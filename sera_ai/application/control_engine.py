@@ -11,15 +11,22 @@ Idempotent komut mantığı:
   "Sogutma zaten çalışıyor" → tekrar SOGUTMA_AC gönderme.
   Son aktüatör durumu önbellekte tutulur.
   Değişiklik yoksa komut gönderilmez → röle ömrü korunur, log temiz kalır.
+
+Optimizer DI:
+  optimizer=None → KuralMotoru (deterministik if/else, varsayılan)
+  optimizer=<OptimizerBase> → ML modeli, RL ajanı, vb.
+  KontrolMotoru hangisi olduğunu bilmez — sadece hedef_hesapla() çağırır.
 """
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from .event_bus import EventBus, OlayTur
 from ..domain.models import BitkilProfili, Komut, SensorOkuma
 from ..domain.state_machine import Durum, SeraStateMachine
 from ..domain.circuit_breaker import CircuitBreaker
+from ..intelligence.base import OptimizerBase
+from ..intelligence.kural_motoru import KuralMotoru
 
 if TYPE_CHECKING:
     from ..drivers.base import SahaNodeBase
@@ -30,23 +37,24 @@ class KontrolMotoru:
     Tek sera için sensör → karar → komut akışı.
 
     Bağımlılıklar (dependency injection):
-      - SahaNodeBase  → donanım (interface, concrete değil)
+      - SahaNodeBase   → donanım (interface, concrete değil)
       - CircuitBreaker → hata koruması
       - SeraStateMachine → durum yönetimi
-      - EventBus → olay yayınlama
-
-    Sistem geri kalanı hangi donanımın kullanıldığını bilmez.
+      - EventBus       → olay yayınlama
+      - OptimizerBase  → aktüatör hedef hesaplama (varsayılan: KuralMotoru)
     """
 
     def __init__(self, sera_id: str, profil: BitkilProfili,
                  node: "SahaNodeBase", cb: CircuitBreaker,
-                 state_machine: SeraStateMachine, olay_bus: EventBus):
-        self.sera_id = sera_id
-        self.profil  = profil
-        self.node    = node
-        self.cb      = cb
-        self.sm      = state_machine
+                 state_machine: SeraStateMachine, olay_bus: EventBus,
+                 optimizer: Optional[OptimizerBase] = None):
+        self.sera_id  = sera_id
+        self.profil   = profil
+        self.node     = node
+        self.cb       = cb
+        self.sm       = state_machine
         self.olay_bus = olay_bus
+        self.optimizer = optimizer if optimizer is not None else KuralMotoru(profil)
         # Son gönderilen aktüatör durumları — idempotent için
         self._son_aktüatörler: dict[str, bool] = {}
 
@@ -55,7 +63,7 @@ class KontrolMotoru:
         Ana döngü adımı:
           1. Sensör geçerliliğini kontrol et
           2. State machine'i güncelle
-          3. Hedef aktüatör durumlarını hesapla
+          3. Optimizer'dan hedef aktüatör durumlarını al
           4. Değişen aktüatörler için komut gönder
         """
         if not sensor.gecerli_mi:
@@ -67,51 +75,13 @@ class KontrolMotoru:
             return
 
         durum = self.sm.guncelle(sensor)
-        hedef = self._hedef_hesapla(sensor, durum)
+        hedef = self.optimizer.hedef_hesapla(sensor, durum)
 
-        for aktüatör, acik_mi in hedef.items():
+        for aktüatör, acik_mi in hedef.to_dict().items():
             if self._son_aktüatörler.get(aktüatör) != acik_mi:
                 komut = self._komut_sec(aktüatör, acik_mi)
                 self._komut_gonder(komut, sensor.tx_id)
                 self._son_aktüatörler[aktüatör] = acik_mi
-
-    def _hedef_hesapla(self, s: SensorOkuma, durum: Durum) -> dict[str, bool]:
-        """
-        Duruma göre aktüatörlerin olması gereken konumu.
-        Kural tabanlı — ML/RL kararı buraya entegre edilebilir.
-        """
-        p = self.profil
-
-        if durum == Durum.ACIL_DURDUR:
-            # Acil: her şeyi kapat
-            return {
-                "sulama": False, "isitici": False,
-                "sogutma": False, "fan": False,
-            }
-
-        hedef = {
-            "sulama": False, "isitici": False,
-            "sogutma": False, "fan": False,
-        }
-
-        # Sıcaklık kontrolü
-        if s.T > p.opt_T + 2:
-            hedef["sogutma"] = True
-            hedef["fan"]     = True
-        elif s.T < p.opt_T - 2:
-            hedef["isitici"] = True
-
-        # Nem kontrolü
-        if s.H > p.max_H:
-            hedef["fan"] = True
-        if s.H < p.min_H:
-            hedef["sulama"] = True
-
-        # Toprak nemi (ADC < 350 → kuru toprak → sula)
-        if s.toprak_nem < 350:
-            hedef["sulama"] = True
-
-        return hedef
 
     def _komut_sec(self, aktüatör: str, ac: bool) -> Komut:
         tablo: dict[tuple[str, bool], Komut] = {

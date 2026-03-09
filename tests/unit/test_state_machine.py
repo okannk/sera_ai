@@ -142,7 +142,10 @@ def test_durum_degisince_olay_yayinlar(profil_domates):
     alınan_olaylar = []
     bus.abone_ol(OlayTur.DURUM_DEGISTI, lambda v: alınan_olaylar.append(v))
 
-    sm = SeraStateMachine("s1", profil_domates, olay_bus=bus)
+    sm = SeraStateMachine(
+        "s1", profil_domates,
+        on_gecis=lambda d: bus.yayinla(OlayTur.DURUM_DEGISTI, d),
+    )
     sensor = SensorOkuma(
         sera_id="s1", T=profil_domates.max_T + 2,
         H=72.0, co2=950, isik=450, toprak_nem=500, ph=6.5, ec=1.8,
@@ -160,7 +163,10 @@ def test_ayni_durum_olay_yayinlamaz(profil_domates):
     alınan_olaylar = []
     bus.abone_ol(OlayTur.DURUM_DEGISTI, lambda v: alınan_olaylar.append(v))
 
-    sm = SeraStateMachine("s1", profil_domates, olay_bus=bus)
+    sm = SeraStateMachine(
+        "s1", profil_domates,
+        on_gecis=lambda d: bus.yayinla(OlayTur.DURUM_DEGISTI, d),
+    )
     sensor = SensorOkuma(
         sera_id="s1", T=23.0, H=72.0,
         co2=950, isik=450, toprak_nem=500, ph=6.5, ec=1.8,

@@ -26,7 +26,7 @@ def tam_sistem_kur(profil: BitkilProfili, hata_orani: float = 0.0):
     node.baglan()
     bus   = EventBus()
     cb    = CircuitBreaker("s1_cb", hata_esigi=5, recovery_sn=60)
-    sm    = SeraStateMachine("s1", profil, olay_bus=bus)
+    sm    = SeraStateMachine("s1", profil, on_gecis=lambda d: bus.yayinla(OlayTur.DURUM_DEGISTI, d))
     motor = KontrolMotoru(
         sera_id="s1", profil=profil,
         node=node, cb=cb, state_machine=sm, olay_bus=bus,

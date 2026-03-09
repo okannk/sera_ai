@@ -16,11 +16,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Callable, Optional
 
 if TYPE_CHECKING:
     from .models import BitkilProfili, SensorOkuma
-    from ..application.event_bus import EventBus
 
 
 class Durum(Enum):
@@ -57,10 +56,10 @@ class SeraStateMachine:
     ACIL_MARJ  = 10.0
 
     def __init__(self, sera_id: str, profil: "BitkilProfili",
-                 olay_bus: Optional["EventBus"] = None):
+                 on_gecis: Optional[Callable[[dict], None]] = None):
         self.sera_id  = sera_id
         self.profil   = profil
-        self.olay_bus = olay_bus
+        self.on_gecis = on_gecis
         self._durum   = Durum.BASLATILAMADI
         self.gecmis:  list[DurumGecisi] = []
 
@@ -120,10 +119,9 @@ class SeraStateMachine:
         self.gecmis.append(gecis)
         self._durum = yeni
 
-        # Event bus'a yayınla — bildirim sistemi dinler
-        if self.olay_bus:
-            from ..application.event_bus import OlayTur
-            self.olay_bus.yayinla(OlayTur.DURUM_DEGISTI, {
+        # Geçiş callback'i — bağlayan taraf OlayTur'u bilir, domain bilmez
+        if self.on_gecis:
+            self.on_gecis({
                 "sera_id": self.sera_id,
                 "onceki":  gecis.onceki.name,
                 "yeni":    yeni.name,

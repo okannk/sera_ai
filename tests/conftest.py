@@ -13,7 +13,7 @@ from sera_ai.domain.models import (
 )
 from sera_ai.domain.state_machine import SeraStateMachine
 from sera_ai.domain.circuit_breaker import CircuitBreaker
-from sera_ai.application.event_bus import EventBus
+from sera_ai.application.event_bus import EventBus, OlayTur
 from sera_ai.drivers.mock import MockSahaNode
 from sera_ai.merkez.mock import MockMerkez
 
@@ -86,7 +86,10 @@ def event_bus() -> EventBus:
 
 @pytest.fixture
 def state_machine(profil_domates, event_bus) -> SeraStateMachine:
-    return SeraStateMachine("s1", profil_domates, olay_bus=event_bus)
+    return SeraStateMachine(
+        "s1", profil_domates,
+        on_gecis=lambda d: event_bus.yayinla(OlayTur.DURUM_DEGISTI, d),
+    )
 
 @pytest.fixture
 def circuit_breaker() -> CircuitBreaker:

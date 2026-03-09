@@ -20,7 +20,7 @@ def motor_kur(profil: BitkilProfili) -> tuple[KontrolMotoru, MockSahaNode]:
     node.baglan()
     bus = EventBus()
     cb  = CircuitBreaker("test", hata_esigi=10)
-    sm  = SeraStateMachine("s1", profil, olay_bus=bus)
+    sm  = SeraStateMachine("s1", profil, on_gecis=lambda d: bus.yayinla(OlayTur.DURUM_DEGISTI, d))
     motor = KontrolMotoru(
         sera_id="s1", profil=profil,
         node=node, cb=cb, state_machine=sm, olay_bus=bus,
@@ -195,7 +195,7 @@ def test_komut_olay_yayinlaniyor(profil_domates):
     bus.abone_ol(OlayTur.KOMUT_GONDERILDI, lambda v: olaylar.append(v))
 
     cb    = CircuitBreaker("test", hata_esigi=10)
-    sm    = SeraStateMachine("s1", profil_domates, olay_bus=bus)
+    sm    = SeraStateMachine("s1", profil_domates, on_gecis=lambda d: bus.yayinla(OlayTur.DURUM_DEGISTI, d))
     motor = KontrolMotoru(
         sera_id="s1", profil=profil_domates,
         node=node, cb=cb, state_machine=sm, olay_bus=bus,
