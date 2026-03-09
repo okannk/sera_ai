@@ -2,26 +2,22 @@
 ESP32-S3 Saha Node — WiFi/MQTT Üzerinden Haberleşme
 
 ESP32-S3 firmware'i şunları yapar:
-  1. DHT22'den T/H okur
-  2. MQ-135'ten CO2 okur
-  3. Analog pinlerden toprak nem, pH, EC okur
-  4. Verileri MQTT'ye yayınlar:  sera/{node_id}/sensor
-  5. Komutları MQTT'den dinler:  sera/{node_id}/komut
-  6. Komut onayını yayınlar:     sera/{node_id}/ack
+  1. SHT31/MH-Z19C/BH1750/kapasitif nem sensörlerini okur
+  2. JSON'a dönüştürür → sera/{node_id}/sensor yayınlar
+  3. sera/{node_id}/komut dinler
+  4. Komut onayını yayınlar: sera/{node_id}/ack
 
 Bu Python sınıfı merkez tarafındaki istemci —
 MQTT broker'a bağlanır, ESP32'yi remote olarak kontrol eder.
 
+Sensör doğrulama:
+  SeraKonfig.sensorler listesi hangi sensörlerin takılı olduğunu bildirir.
+  Her sensör tipinin üretmesi beklenen JSON alanları kontrol edilir.
+  Eksik veya fiziksel sınır dışı alan → sentinel değer (gecerli_mi=False).
+  sensorler=[] verilirse doğrulama atlanır (geriye dönük uyumlu).
+
 Kurulum:
     pip install paho-mqtt
-
-Bağlantı:
-    node = ESP32S3Node(
-        sera_id="s1",
-        node_id="esp32_sera_a",
-        mqtt_host="192.168.1.100",
-    )
-    node.baglan()
 """
 from __future__ import annotations
 
@@ -36,6 +32,42 @@ from .base import SahaNodeBase
 from ..domain.models import Komut, SensorOkuma
 
 
+# ── Sensör tipi → ürettiği JSON alanları ────────────────────────
+# ESP32 firmware'in gönderdiği JSON key adları
+_SENSOR_ALANLARI: dict[str, set[str]] = {
+    "sht31":         {"T", "H"},
+    "dht22":         {"T", "H"},
+    "mh_z19c":       {"co2"},
+    "bh1750":        {"isik"},
+    "kapasitif_nem": {"toprak"},
+}
+
+# Alan → fiziksel geçerlilik aralığı (SensorOkuma.gecerli_mi ile uyumlu)
+_ALAN_ARALIK: dict[str, tuple[float, float]] = {
+    "T":      (-10,  60),
+    "H":      (0,    100),
+    "co2":    (300,  5000),
+    "isik":   (0,    100000),
+    "toprak": (0,    1023),
+    "ph":     (3.0,  9.0),
+    "ec":     (0.0,  10.0),
+}
+
+# Geçersiz alan için sentinel değerler — gecerli_mi=False yapar
+_SENTINEL: dict[str, float] = {
+    "T":      -999.0,
+    "H":      -999.0,
+    "co2":    0,
+    "isik":   -1,
+    "toprak": -1,
+    "ph":     -1.0,
+    "ec":     -1.0,
+}
+
+# JSON alanı → _dict_to_okuma'nın beklediği dict anahtar adı (aynı olan atlanır)
+# Not: "toprak" JSON'da "toprak", SensorOkuma'da "toprak_nem" → özel dönüşüm
+
+
 class ESP32S3Node(SahaNodeBase):
     """
     ESP32-S3 node ile MQTT üzerinden iletişim.
@@ -48,36 +80,63 @@ class ESP32S3Node(SahaNodeBase):
     Thread güvenliği:
       MQTT callback'leri ayrı thread'de çalışır.
       _sensor_kuyruk ve _ack_kuyruk thread-safe Queue kullanır.
+
+    Sensör doğrulama:
+      sensorler=[{tip: sht31}, {tip: mh_z19c}, ...]  → aktif doğrulama
+      sensorler=[]                                    → doğrulama atlanır
     """
 
-    SENSOR_TIMEOUT_SN = 5.0   # ESP32'den veri bekleme süresi
-    KOMUT_TIMEOUT_SN  = 3.0   # ACK bekleme süresi
+    SENSOR_TIMEOUT_SN = 5.0
+    KOMUT_TIMEOUT_SN  = 3.0
 
-    def __init__(self, sera_id: str, node_id: str,
-                 mqtt_host: str = "localhost", mqtt_port: int = 1883,
-                 kullanici: str = "", sifre: str = ""):
-        self.sera_id   = sera_id
-        self.node_id   = node_id
-        self.mqtt_host = mqtt_host
-        self.mqtt_port = mqtt_port
+    def __init__(
+        self,
+        sera_id:    str,
+        node_id:    str,
+        mqtt_host:  str  = "localhost",
+        mqtt_port:  int  = 1883,
+        kullanici:  str  = "",
+        sifre:      str  = "",
+        sensorler:  list = None,   # SeraKonfig.sensorler — doğrulama için
+    ):
+        self.sera_id    = sera_id
+        self.node_id    = node_id
+        self.mqtt_host  = mqtt_host
+        self.mqtt_port  = mqtt_port
         self._kullanici = kullanici
         self._sifre     = sifre
+        self._sensorler = sensorler or []
         self._client    = None
         self._baglandı  = False
 
-        # Thread-safe kuyruklar — MQTT callback → ana thread
+        # Konfigürasyondan beklenen alan kümesini önceden hesapla
+        self._beklenen_alanlar: set[str] = self._beklenen_alanlari_hesapla()
+
         self._sensor_kuyruk: queue.Queue[dict] = queue.Queue(maxsize=10)
         self._ack_kuyruk:    queue.Queue[str]  = queue.Queue(maxsize=5)
 
-        # Topic tanımları
         self._topic_sensor = f"sera/{node_id}/sensor"
         self._topic_komut  = f"sera/{node_id}/komut"
         self._topic_ack    = f"sera/{node_id}/ack"
 
+    def _beklenen_alanlari_hesapla(self) -> set[str]:
+        """
+        sensorler listesinden hangi JSON alanlarının gelmesi gerektiğini çıkar.
+        ph ve ec her zaman beklenir (her kurulumda bulunur).
+        """
+        if not self._sensorler:
+            return set()  # Doğrulama aktif değil
+
+        alanlar = {"ph", "ec"}  # Her kurulumda ortak
+        for s in self._sensorler:
+            tip = s.get("tip", "").lower()
+            alanlar |= _SENSOR_ALANLARI.get(tip, set())
+        return alanlar
+
     def baglan(self) -> bool:
         """
         MQTT broker'a bağlan ve ESP32 topic'lerine abone ol.
-        paho-mqtt kurulu değilse ImportError → False döner (graceful).
+        paho-mqtt kurulu değilse False döner (graceful).
         """
         try:
             import paho.mqtt.client as mqtt
@@ -96,10 +155,9 @@ class ESP32S3Node(SahaNodeBase):
 
         try:
             client.connect(self.mqtt_host, self.mqtt_port, keepalive=60)
-            client.loop_start()   # Arka plan thread'i
+            client.loop_start()
             self._client  = client
             self._baglandı = True
-            # Broker onayını bekle (max 3s)
             time.sleep(3)
             return self._baglandı
         except Exception as e:
@@ -107,37 +165,25 @@ class ESP32S3Node(SahaNodeBase):
             return False
 
     def sensor_oku(self, sera_id: str) -> SensorOkuma:
-        """
-        ESP32'nin MQTT'ye yayınladığı son sensör verisini al.
-
-        ESP32 firmware her 2.5 saniyede bir veri yayınlar.
-        Bu metod kuyruğu boşaltır — timeout'ta IOError.
-        """
+        """ESP32'nin MQTT'ye yayınladığı son sensör verisini al."""
         if not self._baglandı or not self._client:
             raise IOError(f"[{self.node_id}] MQTT bağlantısı yok")
 
         try:
             veri = self._sensor_kuyruk.get(timeout=self.SENSOR_TIMEOUT_SN)
+            veri = self._dogrula_ve_doldur(veri)
             return self._dict_to_okuma(sera_id, veri)
         except queue.Empty:
             raise IOError(
                 f"[{self.node_id}] Sensör timeout ({self.SENSOR_TIMEOUT_SN}s) — "
-                f"ESP32 yanıt vermedi veya MQTT koptu"
+                "ESP32 yanıt vermedi veya MQTT koptu"
             )
 
     def komut_gonder(self, komut: Komut) -> bool:
-        """
-        ESP32'ye MQTT üzerinden komut gönder, ACK bekle.
-
-        ESP32 firmware:
-          1. Komutu alır
-          2. Röleyi sürer
-          3. "OK" veya "ERR:{sebep}" yayınlar
-        """
+        """ESP32'ye MQTT üzerinden komut gönder, ACK bekle."""
         if not self._baglandı or not self._client:
             raise IOError(f"[{self.node_id}] MQTT bağlantısı yok")
 
-        # ACK kuyruğunu temizle (eski onaylar karışmasın)
         while not self._ack_kuyruk.empty():
             self._ack_kuyruk.get_nowait()
 
@@ -147,9 +193,7 @@ class ESP32S3Node(SahaNodeBase):
             ack = self._ack_kuyruk.get(timeout=self.KOMUT_TIMEOUT_SN)
             if ack.startswith("OK"):
                 return True
-            else:
-                # "ERR:GUVENLIK_KİLİDİ" gibi
-                raise IOError(f"[{self.node_id}] Komut reddedildi: {ack}")
+            raise IOError(f"[{self.node_id}] Komut reddedildi: {ack}")
         except queue.Empty:
             raise IOError(
                 f"[{self.node_id}] Komut ACK timeout ({self.KOMUT_TIMEOUT_SN}s): "
@@ -164,7 +208,49 @@ class ESP32S3Node(SahaNodeBase):
             self._client.disconnect()
             self._client = None
 
-    # ── MQTT Callback'leri (arka plan thread'inde çalışır) ────
+    # ── Sensör Doğrulama ─────────────────────────────────────────
+
+    def _dogrula_ve_doldur(self, veri: dict) -> dict:
+        """
+        ESP32'den gelen JSON'ı sensör konfigürasyonuna göre doğrula.
+
+        sensorler boşsa (doğrulama kapalı) veriyi olduğu gibi döner.
+
+        Her beklenen alan için:
+          1. Alan JSON'da var mı?
+          2. Değer fiziksel aralıkta mı?
+          3. Yoksa veya geçersizse → sentinel (gecerli_mi=False yapacak)
+        """
+        if not self._beklenen_alanlar:
+            return veri  # Doğrulama kapalı
+
+        sonuc = dict(veri)
+        for alan in self._beklened_kontrol_alanlari():
+            ham_deger = veri.get(alan)
+
+            if ham_deger is None:
+                print(
+                    f"[ESP32:{self.node_id}] Eksik alan: '{alan}' "
+                    f"(sensör konfigürasyona göre bekleniyor)"
+                )
+                sonuc[alan] = _SENTINEL[alan]
+                continue
+
+            aralik = _ALAN_ARALIK.get(alan)
+            if aralik and not (aralik[0] <= ham_deger <= aralik[1]):
+                print(
+                    f"[ESP32:{self.node_id}] Geçersiz değer: "
+                    f"'{alan}'={ham_deger} (beklenen: {aralik[0]}–{aralik[1]})"
+                )
+                sonuc[alan] = _SENTINEL[alan]
+
+        return sonuc
+
+    def _beklened_kontrol_alanlari(self) -> set[str]:
+        """Doğrulama yapılacak alan kümesi (_ALAN_ARALIK'ta olanlar)."""
+        return self._beklenen_alanlar & _ALAN_ARALIK.keys()
+
+    # ── MQTT Callback'leri ────────────────────────────────────────
 
     def _on_connect(self, client, userdata, flags, rc):
         if rc == 0:
@@ -179,16 +265,13 @@ class ESP32S3Node(SahaNodeBase):
             topic = msg.topic
             if topic == self._topic_sensor:
                 veri = json.loads(msg.payload.decode())
-                # Kuyruk doluysa eski veriyi at (en yeni veri önemli)
                 if self._sensor_kuyruk.full():
                     self._sensor_kuyruk.get_nowait()
                 self._sensor_kuyruk.put_nowait(veri)
-
             elif topic == self._topic_ack:
                 ack = msg.payload.decode().strip()
                 if not self._ack_kuyruk.full():
                     self._ack_kuyruk.put_nowait(ack)
-
         except Exception as e:
             print(f"[ESP32:{self.node_id}] Mesaj parse hatası: {e}")
 
@@ -197,11 +280,11 @@ class ESP32S3Node(SahaNodeBase):
             print(f"[ESP32:{self.node_id}] MQTT bağlantı kesildi (rc={rc})")
             self._baglandı = False
 
-    # ── Dönüştürücüler ────────────────────────────────────────
+    # ── Dönüştürücüler ────────────────────────────────────────────
 
     def _dict_to_okuma(self, sera_id: str, veri: dict) -> SensorOkuma:
         """
-        ESP32 firmware'inin gönderdiği JSON → SensorOkuma.
+        ESP32 JSON → SensorOkuma.
 
         Beklenen JSON format:
           {
@@ -209,21 +292,25 @@ class ESP32S3Node(SahaNodeBase):
             "isik": 450, "toprak": 512,
             "ph": 6.5, "ec": 1.8
           }
+
+        Doğrulama sonrası eksik/geçersiz alanlar sentinel değer taşır.
+        SensorOkuma.gecerli_mi bunları otomatik yakalar.
         """
         return SensorOkuma(
             sera_id=sera_id,
-            T=float(veri.get("T", 0)),
-            H=float(veri.get("H", 0)),
-            co2=int(veri.get("co2", 0)),
-            isik=int(veri.get("isik", 0)),
-            toprak_nem=int(veri.get("toprak", 500)),
-            ph=float(veri.get("ph", 6.5)),
-            ec=float(veri.get("ec", 2.0)),
+            T=float(veri.get("T",      _SENTINEL["T"])),
+            H=float(veri.get("H",      _SENTINEL["H"])),
+            co2=int(veri.get("co2",    _SENTINEL["co2"])),
+            isik=int(veri.get("isik",  _SENTINEL["isik"])),
+            toprak_nem=int(veri.get("toprak", _SENTINEL["toprak"])),
+            ph=float(veri.get("ph",    _SENTINEL["ph"])),
+            ec=float(veri.get("ec",    _SENTINEL["ec"])),
         )
 
     def __repr__(self) -> str:
         return (
             f"ESP32S3Node({self.node_id}, "
             f"mqtt={self.mqtt_host}:{self.mqtt_port}, "
-            f"bağlı={self._baglandı})"
+            f"bağlı={self._baglandı}, "
+            f"sensörler={len(self._sensorler)})"
         )

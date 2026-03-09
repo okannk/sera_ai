@@ -131,6 +131,7 @@ def saha_node_olustur(sera_konfig: SeraKonfig, sistem: SistemKonfig):
             mqtt_port=sera_konfig.mqtt_port,
             kullanici=os.getenv("MQTT_KULLANICI", ""),
             sifre=os.getenv("MQTT_SIFRE", ""),
+            sensorler=sera_konfig.sensorler,
         )
 
     if tip == "mock":

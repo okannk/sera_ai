@@ -130,7 +130,7 @@ CONTEXT.md               # Donanım + mimari kararlar (tam bağlam)
 
 ## Mevcut Durum
 
-**Versiyon:** 0.3.1 — `2026-03-10`
+**Versiyon:** 0.3.2 — `2026-03-10`
 
 ### Tamamlananlar
 - [x] İki katmanlı donanım soyutlaması: `SahaNodeBase` + `MerkezKontrolBase`
@@ -152,10 +152,13 @@ CONTEXT.md               # Donanım + mimari kararlar (tam bağlam)
 - [x] **`infrastructure/mqtt/`** — `MQTTIstemciBase` ABC, `MockMQTTBroker` (in-process, wildcard destekli), `MockMQTTIstemci`, `ESP32Simulatoru` (sensör yayını + komut ACK), `MQTTKomutKoprusu` (dış komut → callback), `PahoMQTTIstemci` (gerçek broker)
 - [x] `config.yaml` `mqtt.aktif: false` alanı eklendi
 - [x] **`infrastructure/notifications/`** — `BildirimKanalBase` ABC, `TelegramKanal` (httpx, lazy), `MockBildirimKanal`, `BildirimDispatcher` (EventBus abone, bastırma, kritik bypass)
-- [x] **224 test, 0 hata**
+- [x] **`drivers/esp32_s3.py`** — `SeraKonfig.sensorler` bazlı doğrulama: eksik alan → sentinel, fiziksel sınır dışı → sentinel, `gecerli_mi=False`; geriye dönük uyumlu (`sensorler=[]`)
+- [x] `settings.py` `saha_node_olustur()` → `sensorler=` geçirildi
+- [x] **250 test, 0 hata**
 
 ### Devam Edenler / Sıradaki
-- [ ] `drivers/esp32_s3.py` — sensör config ile veri doğrulama
+- [ ] Siemens S7-1200 / Modbus TCP
+- [ ] Grafana/Loki entegrasyonu
 - [ ] `intelligence/` — RL ajanı iskeleti
 - [ ] `drivers/esp32_s3.py` — sensör config ile veri doğrulama
 - [ ] Siemens S7-1200 / Modbus TCP
