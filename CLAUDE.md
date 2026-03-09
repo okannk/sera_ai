@@ -142,7 +142,7 @@ CONTEXT.md               # Donanım + mimari kararlar (tam bağlam)
 
 ## Mevcut Durum
 
-**Versiyon:** 0.4.0 — `2026-03-10`
+**Versiyon:** 0.4.1 — `2026-03-10`
 
 ### Tamamlananlar
 - [x] İki katmanlı donanım soyutlaması: `SahaNodeBase` + `MerkezKontrolBase`
@@ -170,10 +170,15 @@ CONTEXT.md               # Donanım + mimari kararlar (tam bağlam)
   - `infrastructure/logging/`: `LogYaziciBase` ABC, `JSONLLogger` (thread-safe, Promtail uyumlu), `LokiLogger` (HTTP push, batch, stream gruplama), `MockLogger`, `LogDispatcher` (EventBus abone, seviye eşleme)
   - `api/metrics.py`: `/metrics` Prometheus text format (stdlib, harici lib yok), auth muaf
   - `grafana/`: Docker Compose (Loki+Grafana+Promtail), provisioning, 2 dashboard JSON
-- [x] **290 test, 0 hata**
+- [x] **Uçtan uca entegrasyon testleri** — 3 senaryo, yeni production kodu yok
+  - Senaryo 1: MockSahaNode → KontrolMotoru → SQLite + Bildirim + Log zinciri
+  - Senaryo 2: ESP32Simulatoru → MockMQTTBroker → MQTTSahaNodeAdaptor → KontrolMotoru (MQTT round-trip)
+  - Senaryo 3: 3 sera paralel, CB izolasyonu, çapraz kirlilik yok
+- [x] **309 test, 0 hata**
 
 ### Devam Edenler / Sıradaki
-- [ ] Siemens S7-1200 / Modbus TCP
+- [ ] RL ajanı iskeleti (`intelligence/` katmanı tamamlama)
+- [ ] Siemens S7-1200 / Modbus TCP (donanım gelince)
 - [ ] `intelligence/` — RL ajanı iskeleti
 - [ ] `drivers/esp32_s3.py` — sensör config ile veri doğrulama
 - [ ] Siemens S7-1200 / Modbus TCP
