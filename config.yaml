@@ -1,0 +1,98 @@
+# ══════════════════════════════════════════════════════════════
+# SERA AI — Sistem Konfigürasyonu
+# ══════════════════════════════════════════════════════════════
+#
+# Donanım değiştirmek için tek satır:
+#   saha_donanim: esp32_s3   → Gerçek ESP32-S3 node'ları
+#   saha_donanim: mock       → Test/demo modu (Arduino gerekmez)
+#
+#   merkez_donanim: raspberry_pi  → Raspberry Pi 5 üzerinde çalış
+#   merkez_donanim: mock          → Test modu
+#
+# Ortam değişkenleri bu dosyanın üzerinde önceliklidir:
+#   SERA_MQTT_HOST, SERA_MQTT_PORT, MQTT_KULLANICI, MQTT_SIFRE
+
+donanim:
+  saha:   mock           # esp32_s3 | mock
+  merkez: mock           # raspberry_pi | mock
+
+# ── Sera Tanımları ────────────────────────────────────────────
+sera:
+  seralar:
+    - id:           s1
+      isim:         "Sera A"
+      bitki:        Domates
+      alan_m2:      500
+      saha_donanim: mock          # Bu sera için override (ops. opsiyonel)
+      node_id:      esp32_sera_a  # ESP32-S3 MQTT kimliği
+
+    - id:           s2
+      isim:         "Sera B"
+      bitki:        Biber
+      alan_m2:      300
+      node_id:      esp32_sera_b
+
+    - id:           s3
+      isim:         "Sera C"
+      bitki:        Marul
+      alan_m2:      200
+      node_id:      esp32_sera_c
+
+# ── MQTT (ESP32-S3 iletişimi) ─────────────────────────────────
+mqtt:
+  host: localhost
+  port: 1883
+  # Kullanıcı/şifre .env dosyasından gelir (MQTT_KULLANICI, MQTT_SIFRE)
+  # TLS: esp32_s3.py'de ssl.wrap_socket ile aktifleştir
+
+# ── Bitki Profilleri ──────────────────────────────────────────
+bitki_profilleri:
+  Domates:
+    min_T:     15
+    max_T:     30
+    opt_T:     23
+    min_H:     60
+    max_H:     85
+    opt_CO2:   1000
+    hasat_gun: 90
+
+  Biber:
+    min_T:     18
+    max_T:     32
+    opt_T:     25
+    min_H:     55
+    max_H:     80
+    opt_CO2:   900
+    hasat_gun: 85
+
+  Marul:
+    min_T:     10
+    max_T:     22
+    opt_T:     16
+    min_H:     65
+    max_H:     85
+    opt_CO2:   800
+    hasat_gun: 45
+
+# ── Sistem Parametreleri ──────────────────────────────────────
+sistem:
+  sensor_interval_sn: 2.5   # Sensör okuma periyodu
+  cb_hata_esigi:      5     # Circuit breaker açılma eşiği
+  cb_recovery_sn:     60    # CB recovery süresi (saniye)
+  log_dosyasi:        sera_system.jsonl
+  db_yolu:            sera_data.db
+
+# ── REST API ──────────────────────────────────────────────────
+api:
+  aktif: true
+  port:  5000
+  # API key .env dosyasından gelir (SERA_API_KEY)
+
+# ── Bildirimler ───────────────────────────────────────────────
+bildirim:
+  bastirma_dk:      10    # Aynı alarm için min bekleme süresi
+  sabah_raporu:     "07:00"
+  # Token'lar .env dosyasından gelir:
+  # TELEGRAM_TOKEN, TELEGRAM_CHAT_ID
+  # TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM, TWILIO_TO
+  # EMAIL_SMTP, EMAIL_PORT, EMAIL_USER, EMAIL_PASS, EMAIL_TO

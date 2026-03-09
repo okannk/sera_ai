@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sera-ai"
+version = "0.2.0"
+description = "Endüstriyel sera otomasyon sistemi — Arduino/ESP32-S3 + Raspberry Pi 5"
+requires-python = ">=3.10"
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+hardware = [
+    "paho-mqtt>=1.6",
+    "pyserial>=3.5",
+]
+api = [
+    "flask>=3.0",
+    "flask-cors>=4.0",
+]
+notifications = [
+    "requests>=2.31",
+    "twilio>=8.0",
+]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+]
+all = [
+    "sera-ai[hardware,api,notifications,dev]",
+]
+
+[project.scripts]
+sera-ai = "sera_ai.__main__:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["sera_ai"]
+omit = ["tests/*"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sera_ai*"]
