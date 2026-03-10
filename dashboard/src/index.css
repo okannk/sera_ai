@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+:root {
+  --bg:          #0a0f1e;
+  --card:        #111827;
+  --card-hover:  #151f30;
+  --border:      #1f2937;
+  --border-lt:   #374151;
+  --accent:      #00d4aa;
+  --accent-dim:  rgba(0,212,170,0.12);
+  --warn:        #f59e0b;
+  --warn-dim:    rgba(245,158,11,0.12);
+  --alarm:       #ef4444;
+  --alarm-dim:   rgba(239,68,68,0.12);
+  --crit:        #7c3aed;
+  --crit-dim:    rgba(124,58,237,0.12);
+  --t1:          #f1f5f9;
+  --t2:          #94a3b8;
+  --t3:          #475569;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--t1);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  overflow: hidden;
+  height: 100vh;
+}
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-lt); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--t3); }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.card-hover {
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+}
+.card-hover:hover {
+  border-color: var(--border-lt);
+  background: var(--card-hover);
+  transform: translateY(-1px);
+}
+
+.badge-normal   { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+.badge-uyari    { background: var(--warn-dim);  color: var(--warn);  border: 1px solid rgba(245,158,11,0.3); }
+.badge-alarm    { background: var(--alarm-dim); color: var(--alarm); border: 1px solid rgba(239,68,68,0.3); }
+.badge-acil     { background: var(--crit-dim);  color: var(--crit);  border: 1px solid rgba(124,58,237,0.3); }
+.badge-bilinmiyor { background: rgba(71,85,105,0.2); color: var(--t3); border: 1px solid var(--border); }
+
+.btn-accent {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid rgba(0,212,170,0.3);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn-accent:hover { background: rgba(0,212,170,0.2); border-color: var(--accent); }
+.btn-accent:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--t2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-ghost:hover { background: var(--border); color: var(--t1); }
+.btn-ghost.active { background: var(--accent-dim); color: var(--accent); border-color: rgba(0,212,170,0.3); }
+
+.input-field {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--t1);
+  padding: 6px 12px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.input-field:focus { border-color: var(--accent); }
+
+.table-row { border-bottom: 1px solid var(--border); }
+.table-row:last-child { border-bottom: none; }
+.table-row:hover { background: rgba(255,255,255,0.02); }
+
+/* Desktop: sidebar her zaman görünür */
+@media (min-width: 1024px) {
+  .sidebar-panel { transform: translateX(0) !important; }
+}
+
+/* Her sayfa ekranı doldurur */
+.page-root {
+  min-height: calc(100vh - 110px);
+  display: flex;
+  flex-direction: column;
+}
