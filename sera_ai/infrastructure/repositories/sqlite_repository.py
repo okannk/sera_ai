@@ -188,12 +188,14 @@ class SQLiteKomutRepository(KomutRepository):
 
     _CREATE_SQL = """
     CREATE TABLE IF NOT EXISTS komut_gecmisi (
-        id         INTEGER PRIMARY KEY AUTOINCREMENT,
-        sera_id    TEXT NOT NULL,
-        zaman      TEXT NOT NULL,
-        komut      TEXT NOT NULL,
-        basarili   INTEGER NOT NULL,
-        mesaj      TEXT NOT NULL
+        id           INTEGER PRIMARY KEY AUTOINCREMENT,
+        sera_id      TEXT NOT NULL,
+        zaman        TEXT NOT NULL,
+        komut        TEXT NOT NULL,
+        basarili     INTEGER NOT NULL,
+        mesaj        TEXT NOT NULL,
+        kaynak       TEXT NOT NULL DEFAULT 'sistem',
+        kullanici_id TEXT NOT NULL DEFAULT ''
     );
     CREATE INDEX IF NOT EXISTS idx_komut_sera_zaman
         ON komut_gecmisi(sera_id, zaman);
@@ -207,6 +209,15 @@ class SQLiteKomutRepository(KomutRepository):
     def _init_db(self) -> None:
         with self._baglanti() as conn:
             conn.executescript(self._CREATE_SQL)
+            # Mevcut DB'lere kolon ekle (migration)
+            for stmt in [
+                "ALTER TABLE komut_gecmisi ADD COLUMN kaynak TEXT NOT NULL DEFAULT 'sistem'",
+                "ALTER TABLE komut_gecmisi ADD COLUMN kullanici_id TEXT NOT NULL DEFAULT ''",
+            ]:
+                try:
+                    conn.execute(stmt)
+                except sqlite3.OperationalError:
+                    pass  # sütun zaten var
 
     @contextmanager
     def _baglanti(self):
@@ -230,8 +241,8 @@ class SQLiteKomutRepository(KomutRepository):
 
     def kaydet(self, sera_id: str, sonuc: KomutSonucu) -> None:
         sql = """
-        INSERT INTO komut_gecmisi (sera_id, zaman, komut, basarili, mesaj)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO komut_gecmisi (sera_id, zaman, komut, basarili, mesaj, kaynak, kullanici_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """
         with self._baglanti() as conn:
             conn.execute(sql, (
@@ -240,11 +251,13 @@ class SQLiteKomutRepository(KomutRepository):
                 sonuc.komut.value,
                 int(sonuc.basarili),
                 sonuc.mesaj,
+                sonuc.kaynak,
+                sonuc.kullanici_id,
             ))
 
     def gecmis(self, sera_id: str, limit: int = 100) -> list[KomutSonucu]:
         sql = """
-        SELECT zaman, komut, basarili, mesaj
+        SELECT zaman, komut, basarili, mesaj, kaynak, kullanici_id
         FROM komut_gecmisi
         WHERE sera_id = ?
         ORDER BY id DESC
@@ -258,6 +271,8 @@ class SQLiteKomutRepository(KomutRepository):
                 basarili=bool(row[2]),
                 mesaj=row[3],
                 zaman=_to_dt(row[0]),
+                kaynak=row[4] if len(row) > 4 else "sistem",
+                kullanici_id=row[5] if len(row) > 5 else "",
             )
             for row in rows
         ]

@@ -131,6 +131,8 @@ class RaspberryPiMerkez(MerkezKontrolBase):
                 komut=komut,
                 basarili=veri.get("basarili", False),
                 mesaj=veri.get("hata", ""),
+                kaynak=veri.get("kaynak", "sistem"),
+                kullanici_id=veri.get("kullanici_id", ""),
             )
             self._komut_repo.kaydet(veri.get("sera_id", ""), sonuc)
         except Exception as e:

@@ -75,6 +75,8 @@ export interface SensorGecmis {
   isik?: number
 }
 
+export type KomutKaynak = 'sistem' | 'kullanici' | 'alarm' | 'zamanlayici'
+
 export interface KomutLog {
   id: string
   sera_id: string
@@ -82,6 +84,8 @@ export interface KomutLog {
   komut: KomutAdi
   zaman: string
   basarili: boolean
+  kaynak: KomutKaynak
+  kullanici_id?: string
 }
 
 export interface AlarmGecmisKaydi {

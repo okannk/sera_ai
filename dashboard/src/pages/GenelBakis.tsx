@@ -7,7 +7,8 @@ import {
 import { useData } from '../context/DataContext'
 import { durumBadgeClass, durumLabel, durumRengi } from '../components/Sidebar'
 import { SeraDetayPanel } from '../components/SeraDetayPanel'
-import type { KomutAdi, SeraOzet } from '../types'
+import { KaynakBadge } from '../components/KaynakBadge'
+import type { KomutAdi, KomutKaynak, SeraOzet } from '../types'
 
 const BITKI_EMOJI: Record<string, string> = { Domates: '🍅', Biber: '🌶️', Marul: '🥬' }
 
@@ -357,16 +358,17 @@ function SonKomutlar() {
           <div
             key={k.id}
             className="table-row"
-            style={{ padding: '9px 16px', display: 'flex', alignItems: 'center', gap: 10 }}
+            style={{ padding: '9px 16px', display: 'flex', alignItems: 'center', gap: 8 }}
           >
-            <span style={{ fontSize: 16 }}>{komutIcon[k.komut] ?? '⚙️'}</span>
+            <span style={{ fontSize: 16, flexShrink: 0 }}>{komutIcon[k.komut] ?? '⚙️'}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)' }}>{k.komut}</div>
               <div style={{ fontSize: 11, color: 'var(--t3)' }}>{k.sera_isim}</div>
             </div>
+            <KaynakBadge kaynak={(k.kaynak ?? 'kullanici') as KomutKaynak} />
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
               <div style={{ fontSize: 10, color: k.basarili ? 'var(--accent)' : 'var(--alarm)' }}>
-                {k.basarili ? '✓ Başarılı' : '✗ Hata'}
+                {k.basarili ? '✓' : '✗'}
               </div>
               <div style={{ fontSize: 10, color: 'var(--t3)' }}>
                 {new Date(k.zaman).toLocaleTimeString('tr-TR')}

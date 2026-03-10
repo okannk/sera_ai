@@ -18,7 +18,8 @@ class KomutIstek(BaseModel):
     """POST /api/v1/seralar/{sid}/komut request body."""
 
     komut: str
-    kaynak: str = "api"
+    kaynak: str = "kullanici"       # "kullanici" | "sistem" | "alarm" | "zamanlayici"
+    kullanici_id: Optional[str] = None
 
     @field_validator("komut")
     @classmethod

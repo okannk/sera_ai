@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useData } from '../context/DataContext'
-import type { KomutAdi, SistemLog } from '../types'
+import { KaynakBadge } from '../components/KaynakBadge'
+import type { KomutAdi, SistemLog, KomutKaynak } from '../types'
 
 const KOMUT_GRUPLARI: { grup: string; icon: string; ac: KomutAdi; kapat: KomutAdi }[] = [
   { grup: 'Sulama',  icon: '💧', ac: 'SULAMA_AC',  kapat: 'SULAMA_KAPAT' },
@@ -209,13 +210,14 @@ export function LogKomutlar() {
                   Henüz komut gönderilmedi
                 </div>
               ) : filtreliKomut.map(k => (
-                <div key={k.id} className="table-row" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 11, color: k.basarili ? 'var(--accent)' : 'var(--alarm)' }}>
+                <div key={k.id} className="table-row" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 11, color: k.basarili ? 'var(--accent)' : 'var(--alarm)', flexShrink: 0 }}>
                     {k.basarili ? '✓' : '✗'}
                   </span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)', flex: 1 }}>{k.komut}</span>
-                  <span style={{ fontSize: 11, color: 'var(--t3)' }}>{k.sera_isim}</span>
-                  <span style={{ fontSize: 10, color: 'var(--t3)' }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)', flex: 1, minWidth: 0 }}>{k.komut}</span>
+                  <KaynakBadge kaynak={(k.kaynak ?? 'kullanici') as KomutKaynak} />
+                  <span style={{ fontSize: 11, color: 'var(--t3)', flexShrink: 0 }}>{k.sera_isim}</span>
+                  <span style={{ fontSize: 10, color: 'var(--t3)', flexShrink: 0 }}>
                     {new Date(k.zaman).toLocaleTimeString('tr-TR')}
                   </span>
                 </div>

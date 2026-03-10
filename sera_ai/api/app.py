@@ -148,7 +148,8 @@ class SeraApiServisi:
     def son_sensor(self, sid: str) -> Optional[dict]:
         return self._sensor.get(sid)
 
-    def komut_gonder(self, sid: str, komut: str, kaynak: str = "api") -> dict:
+    def komut_gonder(self, sid: str, komut: str, kaynak: str = "kullanici",
+                     kullanici_id: str = "") -> dict:
         if sid not in self._seralar:
             return {"basarili": False, "hata": f"Sera bulunamadı: {sid}"}
         k = komut.upper()
@@ -160,9 +161,11 @@ class SeraApiServisi:
             }
         self._komut_log.append({
             "sera_id": sid, "komut": k,
-            "kaynak":  kaynak, "zaman": datetime.now().isoformat(),
+            "kaynak":  kaynak, "kullanici_id": kullanici_id,
+            "zaman": datetime.now().isoformat(),
         })
-        return {"basarili": True, "komut": k, "sera_id": sid}
+        return {"basarili": True, "komut": k, "sera_id": sid,
+                "kaynak": kaynak, "kullanici_id": kullanici_id}
 
     def sera_ekle(self, data: dict) -> dict:
         self._id_sayac += 1
@@ -402,7 +405,7 @@ def api_uygulamasi_olustur(
         istek: KomutIstek,
         _: None = Depends(auth),
     ) -> JSONResponse:
-        sonuc = servis.komut_gonder(sid, istek.komut, istek.kaynak)
+        sonuc = servis.komut_gonder(sid, istek.komut, istek.kaynak, istek.kullanici_id or "")
         if not sonuc.get("basarili"):
             hata_mesaji = sonuc.get("hata", "Komut gönderilemedi")
             kod = HataKod.GECERSIZ_KOMUT if "gecerli" in sonuc else HataKod.BULUNAMADI

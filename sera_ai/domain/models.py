@@ -131,10 +131,12 @@ class Komut(Enum):
 
 @dataclass
 class KomutSonucu:
-    komut:    Komut
-    basarili: bool
-    mesaj:    str
-    zaman:    datetime = field(default_factory=datetime.now)
+    komut:        Komut
+    basarili:     bool
+    mesaj:        str
+    zaman:        datetime = field(default_factory=datetime.now)
+    kaynak:       str = "sistem"   # "sistem" | "kullanici" | "alarm" | "zamanlayici"
+    kullanici_id: str = ""         # kim gönderdi (API key, kullanıcı adı vb.)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -191,6 +193,8 @@ class SistemKonfig:
     # Intelligence katmanı
     optimizer_tip:        str              = "kural_motoru"  # kural_motoru | ml_motor
     model_dizin:          str              = "models"
+    # Görüntü işleme — ham konfig dict (settings.py parse eder)
+    goruntu_konfig:       dict             = field(default_factory=dict)
 
     def profil_al(self, bitki: str) -> BitkilProfili:
         if bitki not in self.profiller:

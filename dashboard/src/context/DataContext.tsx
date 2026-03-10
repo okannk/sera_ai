@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import { api } from '../api'
 import type {
   SeraOzet, SaglikDurumu, Alarm, SensorGecmis,
-  KomutAdi, KomutLog, AlarmGecmisKaydi, SistemLog,
+  KomutAdi, KomutLog, KomutKaynak, AlarmGecmisKaydi, SistemLog,
 } from '../types'
 
 const MAX_GECMIS = 300
@@ -18,7 +18,7 @@ interface DataCtx {
   yukleniyor: boolean
   hata: string | null
   sonGuncelleme: Date | null
-  komutGonder: (sid: string, komut: KomutAdi, seraIsim?: string) => Promise<{ ok: boolean; mesaj: string }>
+  komutGonder: (sid: string, komut: KomutAdi, seraIsim?: string, kaynak?: KomutKaynak) => Promise<{ ok: boolean; mesaj: string }>
   alarmOnayla: (id: string) => void
 }
 
@@ -139,12 +139,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(id)
   }, [yukle])
 
-  const komutGonder = useCallback(async (sid: string, komut: KomutAdi, seraIsim = sid) => {
+  const komutGonder = useCallback(async (
+    sid: string, komut: KomutAdi, seraIsim = sid, kaynak: KomutKaynak = 'kullanici'
+  ) => {
     try {
       await api.komutGonder(sid, komut)
       const log: KomutLog = {
         id: `${sid}-${komut}-${Date.now()}`, sera_id: sid,
-        sera_isim: seraIsim, komut, zaman: new Date().toISOString(), basarili: true,
+        sera_isim: seraIsim, komut, zaman: new Date().toISOString(),
+        basarili: true, kaynak,
       }
       setKomutLog(prev => [log, ...prev].slice(0, 100))
       addSistemLog('INFO', `Komut: ${seraIsim} → ${komut}`, sid)
@@ -153,7 +156,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       const msg = e instanceof Error ? e.message : 'Hata'
       const log: KomutLog = {
         id: `${sid}-${komut}-${Date.now()}`, sera_id: sid,
-        sera_isim: seraIsim, komut, zaman: new Date().toISOString(), basarili: false,
+        sera_isim: seraIsim, komut, zaman: new Date().toISOString(),
+        basarili: false, kaynak,
       }
       setKomutLog(prev => [log, ...prev].slice(0, 100))
       addSistemLog('ERROR', `Komut başarısız: ${seraIsim} → ${komut} (${msg})`, sid)

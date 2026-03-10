@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import {
   AreaChart, Area, YAxis, ResponsiveContainer, Tooltip,
 } from 'recharts'
-import type { SeraDetay, SensorGecmis, KomutAdi } from '../types'
+import type { SeraDetay, SensorGecmis, KomutAdi, KomutKaynak } from '../types'
 import { StatusBadge } from './StatusBadge'
 import { KomutPanel } from './KomutPanel'
+import { KaynakBadge } from './KaynakBadge'
 import { api } from '../api'
 import { useData } from '../context/DataContext'
 
@@ -276,14 +277,15 @@ export function SeraDetayPanel({ seraId, onKapat }: Props) {
             ) : (
               <div>
                 {sonKomutlar.map(k => (
-                  <div key={k.id} className="table-row" style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 16 }}>{KOMUT_ICON[k.komut] ?? '⚙️'}</span>
-                    <div style={{ flex: 1 }}>
+                  <div key={k.id} className="table-row" style={{ padding: '9px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 15, flexShrink: 0 }}>{KOMUT_ICON[k.komut] ?? '⚙️'}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)' }}>{k.komut}</div>
                     </div>
+                    <KaynakBadge kaynak={(k.kaynak ?? 'kullanici') as KomutKaynak} />
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <div style={{ fontSize: 10, color: k.basarili ? 'var(--accent)' : 'var(--alarm)' }}>
-                        {k.basarili ? '✓ Başarılı' : '✗ Hata'}
+                        {k.basarili ? '✓' : '✗'}
                       </div>
                       <div style={{ fontSize: 10, color: 'var(--t3)' }}>
                         {new Date(k.zaman).toLocaleTimeString('tr-TR')}

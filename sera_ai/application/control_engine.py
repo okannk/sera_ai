@@ -114,6 +114,7 @@ class KontrolMotoru:
                 "komut":   komut.value,
                 "basarili": True,
                 "tx_id":   tx_id,
+                "kaynak":  "sistem",
             })
         except Exception as e:
             self.olay_bus.yayinla(OlayTur.SISTEM_HATASI, {
