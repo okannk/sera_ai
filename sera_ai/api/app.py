@@ -79,21 +79,30 @@ class SeraApiServisi:
     })
 
     def __init__(self) -> None:
-        self._durum: dict[str, str] = {sid: "NORMAL" for sid in self.SERALAR}
+        self._seralar: dict[str, dict] = {k: dict(v) for k, v in self.SERALAR.items()}
+        self._id_sayac: int = max((int(k[1:]) for k in self.SERALAR if k[1:].isdigit()), default=0)
+        self._durum: dict[str, str] = {sid: "NORMAL" for sid in self._seralar}
         self._sensor: dict[str, dict] = {}
         self._komut_log: list[dict] = []
         self._baslangic = time.time()
         threading.Thread(target=self._sim_dongu, daemon=True).start()
 
     def _sim_dongu(self) -> None:
-        s = {
-            "s1": {"T": 23.0, "H": 72.0, "co2": 950},
-            "s2": {"T": 25.0, "H": 65.0, "co2": 900},
-            "s3": {"T": 16.0, "H": 75.0, "co2": 820},
-        }
+        s: dict[str, dict] = {}
         while True:
-            for sid, st in s.items():
-                p    = self.PROFILLER[self.SERALAR[sid]["bitki"]]
+            # Yeni eklenen seraları simülasyona dahil et
+            for sid in list(self._seralar.keys()):
+                if sid not in s:
+                    p = self.PROFILLER.get(self._seralar[sid].get("bitki", "Domates"), self.PROFILLER["Domates"])
+                    s[sid] = {"T": float(p["optT"]), "H": 70.0, "co2": 950}
+                if sid not in self._durum:
+                    self._durum[sid] = "NORMAL"
+            # Silinen seraları kaldır
+            for sid in list(s.keys()):
+                if sid not in self._seralar:
+                    del s[sid]
+            for sid, st in list(s.items()):
+                p    = self.PROFILLER.get(self._seralar[sid]["bitki"], self.PROFILLER["Domates"])
                 opt  = p["optT"]
                 # Mean-reversion: değer opt'a doğru çekiliyor, küçük gürültü ekleniyor
                 st["T"]   = round(st["T"]   + random.gauss(0, 0.12) + (opt      - st["T"])   * 0.05, 2)
@@ -123,24 +132,24 @@ class SeraApiServisi:
         return [
             {**s, "durum": self._durum.get(sid, "?"),
              "sensor": self._sensor.get(sid, {})}
-            for sid, s in self.SERALAR.items()
+            for sid, s in self._seralar.items()
         ]
 
     def sera_detay(self, sid: str) -> Optional[dict]:
-        if sid not in self.SERALAR:
+        if sid not in self._seralar:
             return None
         return {
-            **self.SERALAR[sid],
-            "durum":  self._durum[sid],
+            **self._seralar[sid],
+            "durum":  self._durum.get(sid, "NORMAL"),
             "sensor": self._sensor.get(sid, {}),
-            "profil": self.PROFILLER.get(self.SERALAR[sid]["bitki"], {}),
+            "profil": self.PROFILLER.get(self._seralar[sid].get("bitki", "Domates"), {}),
         }
 
     def son_sensor(self, sid: str) -> Optional[dict]:
         return self._sensor.get(sid)
 
     def komut_gonder(self, sid: str, komut: str, kaynak: str = "api") -> dict:
-        if sid not in self.SERALAR:
+        if sid not in self._seralar:
             return {"basarili": False, "hata": f"Sera bulunamadı: {sid}"}
         k = komut.upper()
         if k not in self.GECERLI_KOMUTLAR:
@@ -154,6 +163,36 @@ class SeraApiServisi:
             "kaynak":  kaynak, "zaman": datetime.now().isoformat(),
         })
         return {"basarili": True, "komut": k, "sera_id": sid}
+
+    def sera_ekle(self, data: dict) -> dict:
+        self._id_sayac += 1
+        sid = f"s{self._id_sayac}"
+        yeni = {
+            "id":       sid,
+            "isim":     data["isim"],
+            "bitki":    data.get("bitki", "Domates"),
+            "alan":     float(data.get("alan", 100.0)),
+            "esp32_ip": data.get("esp32_ip", ""),
+        }
+        self._seralar[sid] = yeni
+        self._durum[sid] = "NORMAL"
+        return yeni
+
+    def sera_guncelle(self, sid: str, data: dict) -> Optional[dict]:
+        if sid not in self._seralar:
+            return None
+        for k, v in data.items():
+            if v is not None:
+                self._seralar[sid][k] = v
+        return self._seralar[sid]
+
+    def sera_sil(self, sid: str) -> bool:
+        if sid not in self._seralar:
+            return False
+        del self._seralar[sid]
+        self._durum.pop(sid, None)
+        self._sensor.pop(sid, None)
+        return True
 
     def saglik(self) -> dict:
         up = int(time.time() - self._baslangic)
@@ -182,12 +221,12 @@ class SeraApiServisi:
         return [
             {
                 "sera_id": sid,
-                "isim":    self.SERALAR[sid]["isim"],
+                "isim":    self._seralar[sid]["isim"],
                 "durum":   d,
                 "sensor":  self._sensor.get(sid, {}),
             }
             for sid, d in self._durum.items()
-            if d in ("ALARM", "ACIL_DURDUR", "UYARI")
+            if d in ("ALARM", "ACIL_DURDUR", "UYARI") and sid in self._seralar
         ]
 
 
@@ -389,6 +428,135 @@ def api_uygulamasi_olustur(
                 meta={"ts": datetime.now().isoformat(), "toplam": len(a)},  # type: ignore[arg-type]
             ).model_dump(),
         )
+
+    # ── Kamera / Hastalık Tespiti Endpoint'leri ────────────────
+
+    # Mock görüntü servis kayıtları: {sera_id: GorüntuServisi}
+    # Demo modunda MockKamera + MockHastalıkTespit kullanılır.
+    _goruntu_servisler: dict = {}
+    _tespit_gecmis: dict = {}  # sera_id → list[dict]
+
+    def _goruntu_servisi_al(sid: str):
+        """Sera için GorüntuServisi döndür; yoksa mock oluştur."""
+        if sid not in _goruntu_servisler:
+            from ..goruntu.mock import mock_goruntu_servisi_olustur
+            _goruntu_servisler[sid] = mock_goruntu_servisi_olustur()
+        return _goruntu_servisler[sid]
+
+    @v1.post(
+        "/kamera/{sid}/tespit",
+        status_code=200,
+        summary="Kamera hastalık tespiti yap",
+        tags=["Kamera"],
+    )
+    @limit
+    async def kamera_tespit(
+        request: Request,
+        sid: str,
+        _: None = Depends(auth),
+    ) -> JSONResponse:
+        # Sera var mı?
+        if servis.sera_detay(sid) is None:
+            raise HTTPException(
+                status_code=404,
+                detail=HataYanit(hata=f"Sera bulunamadı: {sid}", kod=HataKod.BULUNAMADI).model_dump(),
+            )
+        try:
+            gs  = _goruntu_servisi_al(sid)
+            sonuc = gs.kontrol_et(sid)
+        except IOError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=HataYanit(hata=f"Kamera bağlantı hatası: {e}", kod=HataKod.SUNUCU_HATASI).model_dump(),
+            )
+        d = sonuc.to_dict()
+        _tespit_gecmis.setdefault(sid, []).append(d)
+        if len(_tespit_gecmis[sid]) > 50:
+            _tespit_gecmis[sid] = _tespit_gecmis[sid][-50:]
+        return JSONResponse(content=ApiYanit(data=d).model_dump())
+
+    @v1.get(
+        "/kamera/{sid}/gecmis",
+        summary="Son hastalık tespitleri",
+        tags=["Kamera"],
+    )
+    @limit
+    async def kamera_gecmis(
+        request: Request,
+        sid: str,
+        son: int = 10,
+        _: None = Depends(auth),
+    ) -> JSONResponse:
+        if servis.sera_detay(sid) is None:
+            raise HTTPException(
+                status_code=404,
+                detail=HataYanit(hata=f"Sera bulunamadı: {sid}", kod=HataKod.BULUNAMADI).model_dump(),
+            )
+        kayitlar = _tespit_gecmis.get(sid, [])[-max(1, min(son, 50)):]
+        return JSONResponse(
+            content=ApiYanit(
+                data=kayitlar,
+                meta={"sera_id": sid, "toplam": len(kayitlar)},  # type: ignore[arg-type]
+            ).model_dump(),
+        )
+
+    @v1.get(
+        "/kamera/ozet",
+        summary="Tüm seraların son tespitleri",
+        tags=["Kamera"],
+    )
+    @limit
+    async def kamera_ozet(
+        request: Request,
+        _: None = Depends(auth),
+    ) -> JSONResponse:
+        ozet = {}
+        for sid in list(_tespit_gecmis.keys()):
+            gecmis = _tespit_gecmis[sid]
+            if gecmis:
+                ozet[sid] = gecmis[-1]
+        return JSONResponse(content=ApiYanit(data=ozet).model_dump())
+
+    @v1.post("/seralar", status_code=201, summary="Yeni sera ekle", tags=["Seralar"])
+    @limit
+    async def sera_ekle(
+        request: Request,
+        istek: SeraEkleme,
+        _: None = Depends(auth),
+    ) -> JSONResponse:
+        yeni = servis.sera_ekle(istek.model_dump())
+        return JSONResponse(status_code=201, content=ApiYanit(data=yeni).model_dump())
+
+    @v1.put("/seralar/{sid}", summary="Sera güncelle", tags=["Seralar"])
+    @limit
+    async def sera_guncelle(
+        request: Request,
+        sid: str,
+        istek: SeraGuncelleme,
+        _: None = Depends(auth),
+    ) -> JSONResponse:
+        guncellendi = servis.sera_guncelle(sid, istek.model_dump())
+        if guncellendi is None:
+            raise HTTPException(
+                status_code=404,
+                detail=HataYanit(hata=f"Sera bulunamadı: {sid}", kod=HataKod.BULUNAMADI).model_dump(),
+            )
+        return JSONResponse(content=ApiYanit(data=guncellendi).model_dump())
+
+    @v1.delete("/seralar/{sid}", status_code=204, summary="Sera sil", tags=["Seralar"])
+    @limit
+    async def sera_sil(
+        request: Request,
+        sid: str,
+        _: None = Depends(auth),
+    ) -> Response:
+        silindi = servis.sera_sil(sid)
+        if not silindi:
+            raise HTTPException(
+                status_code=404,
+                detail=HataYanit(hata=f"Sera bulunamadı: {sid}", kod=HataKod.BULUNAMADI).model_dump(),
+            )
+        return Response(status_code=204)
 
     app.include_router(v1)
 

@@ -6,6 +6,7 @@ import {
 } from 'recharts'
 import { useData } from '../context/DataContext'
 import { durumBadgeClass, durumLabel, durumRengi } from '../components/Sidebar'
+import { SeraDetayPanel } from '../components/SeraDetayPanel'
 import type { KomutAdi, SeraOzet } from '../types'
 
 const BITKI_EMOJI: Record<string, string> = { Domates: '🍅', Biber: '🌶️', Marul: '🥬' }
@@ -96,7 +97,7 @@ function Sparkline({ values, color }: { values: number[]; color: string }) {
   )
 }
 
-function SeraKart({ sera }: { sera: SeraOzet }) {
+function SeraKart({ sera, onDetay }: { sera: SeraOzet; onDetay: (id: string) => void }) {
   const { sensorGecmis, komutLog, komutGonder } = useData()
   const [komutYuklenen, setKomutYuklenen] = useState<string | null>(null)
   const [komutSonuc, setKomutSonuc]       = useState<{ ok: boolean; mesaj: string } | null>(null)
@@ -120,7 +121,12 @@ function SeraKart({ sera }: { sera: SeraOzet }) {
   return (
     <div
       className="card card-hover rounded-xl flex flex-col"
-      style={{ borderTop: `3px solid ${c}` }}
+      style={{ borderTop: `3px solid ${c}`, cursor: 'pointer' }}
+      onClick={e => {
+        // Buton tıklamalarının karta tıklamayla çakışmaması için
+        if ((e.target as HTMLElement).closest('button')) return
+        onDetay(sera.id)
+      }}
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 pb-2">
@@ -375,19 +381,24 @@ function SonKomutlar() {
 
 export function GenelBakis() {
   const { seralar, saglik, alarmlar, komutLog } = useData()
+  const [secilenSera, setSecilenSera] = useState<string | null>(null)
 
   const alarmSayisi = saglik?.alarm_sayisi ?? 0
   const toplamKomut = komutLog.length
 
   return (
     <div className="page-root">
-      <div className="mb-4">
+      {secilenSera && (
+        <SeraDetayPanel seraId={secilenSera} onKapat={() => setSecilenSera(null)} />
+      )}
+
+      <div className="mb-5">
         <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)' }}>Genel Bakış</h1>
-        <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 1 }}>Tüm seraların anlık durumu</p>
+        <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 1 }}>Tüm seraların anlık durumu · karta tıkla → detay</p>
       </div>
 
       {/* Özet kartlar */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
         <SummaryCard
           icon="🏠" label="Toplam Sera" value={seralar.length}
           sub={`${seralar.filter(s => s.durum === 'NORMAL').length} normal`}
@@ -409,9 +420,9 @@ export function GenelBakis() {
       </div>
 
       {/* Sera grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mb-5">
         {seralar.map(sera => (
-          <SeraKart key={sera.id} sera={sera} />
+          <SeraKart key={sera.id} sera={sera} onDetay={setSecilenSera} />
         ))}
         {seralar.length === 0 && (
           <div
@@ -426,7 +437,7 @@ export function GenelBakis() {
 
       {/* Alt panel: Sıcaklık trendi + Son komutlar */}
       {seralar.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div className="lg:col-span-2">
             <SicaklikTrendi />
           </div>

@@ -18,6 +18,7 @@ export interface SeraOzet {
   alan: number
   durum: Durum
   sensor: SensorOkuma | null
+  esp32_ip?: string
 }
 
 export interface BitkiProfil {
@@ -99,4 +100,18 @@ export interface SistemLog {
   mesaj: string
   zaman: string
   sera_id?: string
+}
+
+export interface SeraEkleInput {
+  isim: string
+  bitki?: string
+  alan?: number
+  esp32_ip?: string
+}
+
+export interface SeraGuncelleInput {
+  isim?: string
+  bitki?: string
+  alan?: number
+  esp32_ip?: string
 }
