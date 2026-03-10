@@ -224,7 +224,8 @@ class RaspberryPiMerkez(MerkezKontrolBase):
             self._son_guncelleme[sera_id] = datetime.now()
         return okuma
 
-    def komut_gonder(self, sera_id: str, komut: Komut) -> bool:
+    def komut_gonder(self, sera_id: str, komut: Komut,
+                     kaynak: str = "kullanici", kullanici_id: str = "") -> bool:
         if sera_id not in self._nodes:
             return False
         cb   = self._cb_ler[sera_id]
@@ -232,7 +233,11 @@ class RaspberryPiMerkez(MerkezKontrolBase):
         try:
             cb.cagir(node.komut_gonder, komut)
             self.olay_bus.yayinla(OlayTur.KOMUT_GONDERILDI, {
-                "sera_id": sera_id, "komut": komut.value,
+                "sera_id":      sera_id,
+                "komut":        komut.value,
+                "basarili":     True,
+                "kaynak":       kaynak,
+                "kullanici_id": kullanici_id,
             })
             return True
         except Exception:

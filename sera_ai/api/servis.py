@@ -99,12 +99,13 @@ class MerkezApiServisi:
         d = self._tum_durum().get(sid)
         return d.get("sensor") if d else None
 
-    def komut_gonder(self, sid: str, komut_str: str, kaynak: str = "api") -> dict:
+    def komut_gonder(self, sid: str, komut_str: str, kaynak: str = "kullanici",
+                     kullanici_id: str = "") -> dict:
         """
         Komut string'ini Komut enum'a çevirip merkeze ilet.
 
         Returns:
-            {"basarili": True, "komut": ..., "sera_id": ...}
+            {"basarili": True, "komut": ..., "sera_id": ..., "kaynak": ...}
             {"basarili": False, "hata": ..., ["gecerli": ...]}
         """
         if sid not in self._sera_map:
@@ -118,9 +119,11 @@ class MerkezApiServisi:
                 "gecerli":  sorted(_KOMUT_MAP.keys()),
             }
 
-        basarili = self.merkez.komut_gonder(sid, _KOMUT_MAP[k])
+        basarili = self.merkez.komut_gonder(sid, _KOMUT_MAP[k], kaynak=kaynak,
+                                            kullanici_id=kullanici_id)
         if basarili:
-            return {"basarili": True, "komut": k, "sera_id": sid}
+            return {"basarili": True, "komut": k, "sera_id": sid,
+                    "kaynak": kaynak, "kullanici_id": kullanici_id}
         return {
             "basarili": False,
             "hata": "Komut iletilemedi (circuit breaker açık veya node yanıtsız)",

@@ -58,7 +58,8 @@ class MockMerkez(MerkezKontrolBase):
         self._son_okumallar[sera_id] = okuma
         return okuma
 
-    def komut_gonder(self, sera_id: str, komut: Komut) -> bool:
+    def komut_gonder(self, sera_id: str, komut: Komut,
+                     kaynak: str = "kullanici", kullanici_id: str = "") -> bool:
         if sera_id not in self._nodes:
             return False
         try:

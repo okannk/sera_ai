@@ -77,7 +77,8 @@ class MerkezKontrolBase(ABC):
         ...
 
     @abstractmethod
-    def komut_gonder(self, sera_id: str, komut: "Komut") -> bool:
+    def komut_gonder(self, sera_id: str, komut: "Komut",
+                     kaynak: str = "kullanici", kullanici_id: str = "") -> bool:
         """
         Belirtilen seraya komut gönder.
         Returns:
