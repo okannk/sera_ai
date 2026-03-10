@@ -85,6 +85,15 @@ bitki_profilleri:
     max_H:     85       # Maksimum nem
     opt_CO2:   1000     # Optimal CO₂ (ppm)
     hasat_gun: 90       # Ortalama hasat süresi
+    min_isik:  2000     # Minimum ışık (lux)
+    opt_isik:  20000    # Optimal ışık
+    max_isik:  50000    # Maksimum ışık
+    min_pH:    5.8      # Minimum pH
+    opt_pH:    6.3      # Optimal pH
+    max_pH:    6.8      # Maksimum pH
+    min_EC:    2.0      # Minimum EC (mS/cm)
+    opt_EC:    3.0      # Optimal EC
+    max_EC:    4.0      # Maksimum EC
 
   Biber:
     min_T:     18
@@ -94,6 +103,15 @@ bitki_profilleri:
     max_H:     80
     opt_CO2:   900
     hasat_gun: 85
+    min_isik:  1500
+    opt_isik:  15000
+    max_isik:  40000
+    min_pH:    5.8
+    opt_pH:    6.3
+    max_pH:    6.8
+    min_EC:    1.8
+    opt_EC:    2.5
+    max_EC:    3.5
 
   Marul:
     min_T:     10
@@ -103,6 +121,15 @@ bitki_profilleri:
     max_H:     85
     opt_CO2:   800
     hasat_gun: 45
+    min_isik:  500
+    opt_isik:  8000
+    max_isik:  20000
+    min_pH:    5.5
+    opt_pH:    6.0
+    max_pH:    6.5
+    min_EC:    0.8
+    opt_EC:    1.2
+    max_EC:    2.0
 
 # ── Sistem Parametreleri ──────────────────────────────────────
 sistem:
@@ -121,8 +148,14 @@ api:
   api_key_env: SERA_API_KEY   # Bu env var tanımlıysa auth aktif olur
 
 # ── Intelligence / Optimizer ──────────────────────────────────
+# ⚠️  DONANIM BAĞLARKEN KONTROL LİSTESİ:
+#   1. donanim.saha:   mock  →  esp32_s3
+#   2. donanim.merkez: mock  →  raspberry_pi
+#   3. optimizer: rl_ajan    →  kural_motoru  (RL henüz sahada test edilmedi!)
+#   4. mqtt.aktif: false     →  true
+#   5. .env dosyasına MQTT_KULLANICI, MQTT_SIFRE ekle
 intelligence:
-  optimizer:   kural_motoru   # kural_motoru | ml_motor
+  optimizer:   rl_ajan        # kural_motoru | ml_motor | rl_ajan
   model_dizin: models         # Eğitilmiş .pkl dosyalarının dizini
 
 # ── Bildirimler ───────────────────────────────────────────────

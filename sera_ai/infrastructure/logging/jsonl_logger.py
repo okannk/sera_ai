@@ -36,20 +36,26 @@ class JSONLLogger(LogYaziciBase):
         logger.yaz(LogKayit(LogSeviye.INFO, "DURUM_DEGISTI", {"yeni": "ALARM"}))
     """
 
-    def __init__(self, dosya_yolu: str = "sera_system.jsonl") -> None:
-        self._yol  = Path(dosya_yolu)
-        self._lock = threading.Lock()
-        # Dizin yoksa oluştur
+    def __init__(
+        self,
+        dosya_yolu:   str = "sera_system.jsonl",
+        max_mb:       int = 10,
+        yedek_sayisi: int = 3,
+    ) -> None:
+        self._yol          = Path(dosya_yolu)
+        self._lock         = threading.Lock()
+        self._max_boyut    = max_mb * 1024 * 1024 if max_mb > 0 else 0
+        self._yedek_sayisi = yedek_sayisi
         self._yol.parent.mkdir(parents=True, exist_ok=True)
 
     def yaz(self, kayit: LogKayit) -> None:
         satir = json.dumps(kayit.to_dict(), ensure_ascii=False)
         try:
             with self._lock:
+                self._rotate_eger_gerekli()
                 with open(self._yol, "a", encoding="utf-8") as f:
                     f.write(satir + "\n")
         except Exception as e:
-            # Log hatası sistemi durdurmamalı
             print(f"[JSONLLogger] Yazma hatası: {e}")
 
     def satirlari_oku(self) -> list[dict]:
@@ -67,6 +73,45 @@ class JSONLLogger(LogYaziciBase):
                         except json.JSONDecodeError:
                             pass
         return kayitlar
+
+    def _rotate_eger_gerekli(self) -> None:
+        """Lock alındıktan sonra çağrılmalı. Boyut aşımında rotate başlatır."""
+        if not self._max_boyut:
+            return
+        if not self._yol.exists():
+            return
+        if self._yol.stat().st_size < self._max_boyut:
+            return
+        self._rotate()
+
+    def _rotate(self) -> None:
+        """
+        Eski dosyaları öteleyerek yeni log için yer aç.
+
+        sera_system.jsonl      → sera_system.1.jsonl
+        sera_system.1.jsonl    → sera_system.2.jsonl
+        sera_system.2.jsonl    → sera_system.3.jsonl  (yedek_sayisi=3)
+        sera_system.3.jsonl    → silindi
+        """
+        parent = self._yol.parent
+        stem   = self._yol.stem
+        suffix = self._yol.suffix
+
+        # En eski yedek silinir
+        en_eski = parent / f"{stem}.{self._yedek_sayisi}{suffix}"
+        if en_eski.exists():
+            en_eski.unlink()
+
+        # Yedekleri ötele (.2→.3, .1→.2)
+        for i in range(self._yedek_sayisi - 1, 0, -1):
+            src = parent / f"{stem}.{i}{suffix}"
+            dst = parent / f"{stem}.{i + 1}{suffix}"
+            if src.exists():
+                src.rename(dst)
+
+        # Aktif dosyayı .1'e taşı
+        if self._yol.exists():
+            self._yol.rename(parent / f"{stem}.1{suffix}")
 
     def temizle(self) -> None:
         """Test teardown — dosyayı sıfırla."""

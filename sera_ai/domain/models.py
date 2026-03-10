@@ -30,12 +30,39 @@ class BitkilProfili:
     max_H:     float   # Maksimum nem
     opt_CO2:   int     # Optimal CO₂ (ppm)
     hasat_gun: int     # Ortalama hasat süresi
+    # Işık (lux) — varsayılan: genel sera değerleri
+    min_isik:  int     = 200
+    opt_isik:  int     = 5000
+    max_isik:  int     = 50000
+    # pH — varsayılan: geniş kabul aralığı
+    min_pH:    float   = 5.5
+    opt_pH:    float   = 6.2
+    max_pH:    float   = 7.0
+    # EC — elektriksel iletkenlik (mS/cm)
+    min_EC:    float   = 0.8
+    opt_EC:    float   = 1.8
+    max_EC:    float   = 3.5
 
 
 VARSAYILAN_PROFILLER: dict[str, BitkilProfili] = {
-    "Domates": BitkilProfili("Domates", 15, 30, 23, 60, 85, 1000, 90),
-    "Biber":   BitkilProfili("Biber",   18, 32, 25, 55, 80,  900, 85),
-    "Marul":   BitkilProfili("Marul",   10, 22, 16, 65, 85,  800, 45),
+    "Domates": BitkilProfili(
+        "Domates", 15, 30, 23, 60, 85, 1000, 90,
+        min_isik=2000, opt_isik=20000, max_isik=50000,
+        min_pH=5.8, opt_pH=6.3, max_pH=6.8,
+        min_EC=2.0,  opt_EC=3.0,  max_EC=4.0,
+    ),
+    "Biber": BitkilProfili(
+        "Biber",   18, 32, 25, 55, 80,  900, 85,
+        min_isik=1500, opt_isik=15000, max_isik=40000,
+        min_pH=5.8, opt_pH=6.3, max_pH=6.8,
+        min_EC=1.8,  opt_EC=2.5,  max_EC=3.5,
+    ),
+    "Marul": BitkilProfili(
+        "Marul",   10, 22, 16, 65, 85,  800, 45,
+        min_isik=500,  opt_isik=8000,  max_isik=20000,
+        min_pH=5.5, opt_pH=6.0, max_pH=6.5,
+        min_EC=0.8,  opt_EC=1.2,  max_EC=2.0,
+    ),
 }
 
 

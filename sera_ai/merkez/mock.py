@@ -71,11 +71,13 @@ class MockMerkez(MerkezKontrolBase):
     def tum_durum(self) -> dict:
         return {
             sera_id: {
-                "son_okuma": (
+                "durum":          "NORMAL",
+                "sensor":         (
                     self._son_okumallar[sera_id].to_dict()
                     if sera_id in self._son_okumallar else None
                 ),
-                "node": repr(node),
+                "cb":             "-",
+                "son_guncelleme": None,
             }
             for sera_id, node in self._nodes.items()
         }

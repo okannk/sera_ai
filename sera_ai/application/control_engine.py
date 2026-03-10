@@ -57,6 +57,8 @@ class KontrolMotoru:
         self.optimizer = optimizer if optimizer is not None else KuralMotoru(profil)
         # Son gönderilen aktüatör durumları — idempotent için
         self._son_aktüatörler: dict[str, bool] = {}
+        # Öğrenme geri bildirimi için önceki geçerli sensör
+        self._onceki_sensor: Optional[SensorOkuma] = None
 
     def adim_at(self, sensor: SensorOkuma) -> None:
         """
@@ -72,7 +74,13 @@ class KontrolMotoru:
                 "hata": f"Geçersiz sensör: T={sensor.T} H={sensor.H} co2={sensor.co2}",
                 "tx_id": sensor.tx_id,
             })
+            # Geçersiz okuma → öğrenme zincirini sıfırla
+            self._onceki_sensor = None
             return
+
+        # Öğrenme geri bildirimi: önceki adımın sonucunu bildir
+        if self._onceki_sensor is not None:
+            self.optimizer.geri_bildirim(self._onceki_sensor, sensor)
 
         durum = self.sm.guncelle(sensor)
         hedef = self.optimizer.hedef_hesapla(sensor, durum)
@@ -82,6 +90,8 @@ class KontrolMotoru:
                 komut = self._komut_sec(aktüatör, acik_mi)
                 self._komut_gonder(komut, sensor.tx_id)
                 self._son_aktüatörler[aktüatör] = acik_mi
+
+        self._onceki_sensor = sensor
 
     def _komut_sec(self, aktüatör: str, ac: bool) -> Komut:
         tablo: dict[tuple[str, bool], Komut] = {

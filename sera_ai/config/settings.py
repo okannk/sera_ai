@@ -56,6 +56,15 @@ def konfig_yukle(yol: str = "config.yaml") -> SistemKonfig:
             opt_T=p.get("opt_T", 22),
             min_H=p.get("min_H", 60), max_H=p.get("max_H", 85),
             opt_CO2=p.get("opt_CO2", 1000), hasat_gun=p.get("hasat_gun", 90),
+            min_isik=p.get("min_isik", 200),
+            opt_isik=p.get("opt_isik", 5000),
+            max_isik=p.get("max_isik", 50000),
+            min_pH=p.get("min_pH", 5.5),
+            opt_pH=p.get("opt_pH", 6.2),
+            max_pH=p.get("max_pH", 7.0),
+            min_EC=p.get("min_EC", 0.8),
+            opt_EC=p.get("opt_EC", 1.8),
+            max_EC=p.get("max_EC", 3.5),
         )
 
     # Seralar
@@ -244,9 +253,13 @@ def optimizer_olustur(konfig: SistemKonfig, profil):
         from ..intelligence.kural_motoru import KuralMotoru
         return KuralMotoru(profil)
 
+    if tip == "rl_ajan":
+        from ..intelligence.rl_ajan import RLAjan
+        return RLAjan(profil)
+
     raise ValueError(
         f"Bilinmeyen optimizer: {tip!r}. "
-        f"Geçerli seçenekler: kural_motoru, ml_motor"
+        f"Geçerli seçenekler: kural_motoru, ml_motor, rl_ajan"
     )
 
 

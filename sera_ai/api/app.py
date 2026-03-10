@@ -36,10 +36,10 @@ from typing import Any, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from .auth import check_api_key, get_api_key_dep
-from .models import ApiYanit, HataYanit, KomutIstek
+from .models import ApiYanit, HataYanit, KomutIstek, SeraEkleme, SeraGuncelleme
 
 
 # ── Hata kodu sabitleri ────────────────────────────────────────
@@ -68,9 +68,9 @@ class SeraApiServisi:
         "Marul":   {"minT": 10, "maxT": 22, "optT": 16, "minH": 65, "maxH": 85},
     }
     SERALAR = {
-        "s1": {"id": "s1", "isim": "Sera A", "bitki": "Domates", "alan": 500},
-        "s2": {"id": "s2", "isim": "Sera B", "bitki": "Biber",   "alan": 300},
-        "s3": {"id": "s3", "isim": "Sera C", "bitki": "Marul",   "alan": 200},
+        "s1": {"id": "s1", "isim": "Sera A", "bitki": "Domates", "alan": 500, "esp32_ip": "192.168.1.101"},
+        "s2": {"id": "s2", "isim": "Sera B", "bitki": "Biber",   "alan": 300, "esp32_ip": "192.168.1.102"},
+        "s3": {"id": "s3", "isim": "Sera C", "bitki": "Marul",   "alan": 200, "esp32_ip": "192.168.1.103"},
     }
     GECERLI_KOMUTLAR = frozenset({
         "SULAMA_AC", "SULAMA_KAPAT", "ISITICI_AC", "ISITICI_KAPAT",
@@ -93,11 +93,16 @@ class SeraApiServisi:
         }
         while True:
             for sid, st in s.items():
-                st["T"]   = max(8,   min(42,   st["T"]   + random.gauss(0, 0.15)))
-                st["H"]   = max(20,  min(98,   st["H"]   + random.gauss(0, 0.25)))
-                st["co2"] = max(300, min(1800, st["co2"] + random.gauss(0, 10)))
-                p   = self.PROFILLER[self.SERALAR[sid]["bitki"]]
-                opt = p["optT"]
+                p    = self.PROFILLER[self.SERALAR[sid]["bitki"]]
+                opt  = p["optT"]
+                # Mean-reversion: değer opt'a doğru çekiliyor, küçük gürültü ekleniyor
+                st["T"]   = round(st["T"]   + random.gauss(0, 0.12) + (opt      - st["T"])   * 0.05, 2)
+                st["H"]   = round(st["H"]   + random.gauss(0, 0.20) + (70.0     - st["H"])   * 0.04, 2)
+                st["co2"] = round(st["co2"] + random.gauss(0, 8)    + (950.0    - st["co2"]) * 0.03, 1)
+                # Gerçekçi sınırlar: T opt±4°C, H 55-85%, CO₂ 800-1200 ppm
+                st["T"]   = max(opt - 4,  min(opt + 4,  st["T"]))
+                st["H"]   = max(55,       min(85,        st["H"]))
+                st["co2"] = max(800,      min(1200,      st["co2"]))
                 if   abs(st["T"] - opt) > 8: self._durum[sid] = "ACIL_DURDUR"
                 elif abs(st["T"] - opt) > 5: self._durum[sid] = "ALARM"
                 elif abs(st["T"] - opt) > 2: self._durum[sid] = "UYARI"

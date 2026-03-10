@@ -29,6 +29,45 @@ class KomutIstek(BaseModel):
         return v
 
 
+class SeraEkleme(BaseModel):
+    """POST /api/v1/seralar request body."""
+
+    isim: str
+    bitki: str = "Diğer"
+    alan: float = 100.0
+    esp32_ip: str = ""
+
+    @field_validator("isim")
+    @classmethod
+    def isim_gecerli(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("sera adı boş olamaz")
+        return v
+
+    @field_validator("alan")
+    @classmethod
+    def alan_pozitif(cls, v: float) -> float:
+        if v <= 0:
+            raise ValueError("alan pozitif olmalı")
+        return v
+
+
+class SeraGuncelleme(BaseModel):
+    """PUT /api/v1/seralar/{sid} request body — tüm alanlar isteğe bağlı."""
+
+    isim: Optional[str] = None
+    bitki: Optional[str] = None
+    alan: Optional[float] = None
+    esp32_ip: Optional[str] = None
+
+    @model_validator(mode="after")
+    def en_az_bir_alan(self) -> "SeraGuncelleme":
+        if all(v is None for v in [self.isim, self.bitki, self.alan, self.esp32_ip]):
+            raise ValueError("en az bir alan güncellenmeli")
+        return self
+
+
 # ── Response modelleri ─────────────────────────────────────────
 
 class ApiMeta(BaseModel):

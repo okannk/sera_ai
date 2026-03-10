@@ -7,10 +7,15 @@ HedefDeger:    Dört aktüatörün istenen konumu (açık/kapalı).
 Neden ayrı bir katman?
   KontrolMotoru "ne yapılacağına" karar verirdi (if/else).
   Bu katman o kararı dışarı taşır:
-    - KuralMotoru  → mevcut deterministik mantık (varsayılan)
-    - MLOptimizer  → scikit-learn / ONNX model (ileride)
-    - RLAjan       → reinforcement learning (ileride)
+    - KuralMotoru  → deterministik if/else (varsayılan)
+    - MLOptimizer  → scikit-learn / ONNX model
+    - RLAjan       → reinforcement learning (online öğrenme)
   KontrolMotoru hangisi geldiğini bilmez — sadece arayüzü çağırır.
+
+geri_bildirim() — öğrenme döngüsü:
+  KontrolMotoru her adımda önceki ve yeni sensörü geri bildirir.
+  KuralMotoru / MLOptimizer → no-op (öğrenmez).
+  RLAjan → ödül hesapla + Q-güncelle.
 """
 from __future__ import annotations
 
@@ -67,3 +72,34 @@ class OptimizerBase(ABC):
             HedefDeger — her aktüatörün olması gereken konumu
         """
         ...
+
+    def geri_bildirim(
+        self,
+        onceki_sensor: "SensorOkuma",
+        sonraki_sensor: "SensorOkuma",
+    ) -> None:
+        """
+        Öğrenme geri bildirimi — bir adım tamamlandıktan sonra çağrılır.
+
+        KontrolMotoru her adımda (önceki_sensor, yeni_sensor) çiftini verir.
+        Varsayılan: işlem yok (KuralMotoru, MLOptimizer için uygundur).
+        RLAjan bu metodu override eder: ödül hesapla → Q-güncelle.
+
+        Args:
+            onceki_sensor:  Önceki adımdaki sensör okuması (t-1)
+            sonraki_sensor: Yeni sensör okuması (t)
+        """
+
+    def baslangic_yukle(self, model_dizin: str, sera_id: str) -> None:
+        """
+        Sistem başlarken kaydedilmiş modeli yükle.
+        Varsayılan: işlem yok (KuralMotoru, MLOptimizer için).
+        RLAjan bu metodu override eder → Q-tabloyu diskten okur.
+        """
+
+    def kapatma_kaydet(self, model_dizin: str, sera_id: str) -> None:
+        """
+        Sistem kapanırken modeli diske kaydet.
+        Varsayılan: işlem yok (KuralMotoru, MLOptimizer için).
+        RLAjan bu metodu override eder → Q-tabloyu diske yazar.
+        """

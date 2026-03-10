@@ -58,6 +58,84 @@ class RaspberryPiMerkez(MerkezKontrolBase):
         self._son_guncelleme: dict[str, datetime]   = {}
         self._lock = threading.Lock()
 
+        # Infrastructure bileşenleri — baslat() içinde hazırlanır
+        self._sensor_repo:         object = None
+        self._komut_repo:          object = None
+        self._log_dispatcher:      object = None
+        self._bildirim_dispatcher: object = None
+
+        self._infrastructure_baslat()
+
+    def _infrastructure_baslat(self) -> None:
+        """Repository, Logger ve BildirimDispatcher'ı oluştur ve EventBus'a bağla."""
+        # ── Repository ────────────────────────────────────────
+        try:
+            from ..infrastructure.repositories.sqlite_repository import (
+                SQLiteSensorRepository, SQLiteKomutRepository,
+            )
+            self._sensor_repo = SQLiteSensorRepository(self.konfig.db_yolu)
+            self._komut_repo  = SQLiteKomutRepository(self.konfig.db_yolu)
+            # Komut geçmişi: KOMUT_GONDERILDI event'i → DB
+            self.olay_bus.abone_ol(OlayTur.KOMUT_GONDERILDI, self._komut_kaydet)
+        except Exception as e:
+            print(f"[MerkezRPi] Repository başlatma hatası: {e}")
+
+        # ── Yapılandırılmış log ────────────────────────────────
+        try:
+            from ..infrastructure.logging.jsonl_logger import JSONLLogger
+            from ..infrastructure.logging.dispatcher import LogDispatcher
+            logger = JSONLLogger(self.konfig.log_dosyasi)
+            self._log_dispatcher = LogDispatcher(
+                yazicilar=[logger],
+                olay_bus=self.olay_bus,
+            )
+            self._log_dispatcher.baslat()
+        except Exception as e:
+            print(f"[MerkezRPi] Log başlatma hatası: {e}")
+
+        # ── Bildirimler ────────────────────────────────────────
+        try:
+            from ..infrastructure.notifications.dispatcher import BildirimDispatcher
+            kanallar = []
+            b = self.konfig.bildirim
+            if b.telegram_aktif:
+                try:
+                    from ..infrastructure.notifications.telegram import TelegramKanal
+                    kanallar.append(TelegramKanal(
+                        token_env=b.telegram_token_env,
+                        chat_id_env=b.telegram_chat_id_env,
+                        aktif=True,
+                    ))
+                except Exception as te:
+                    print(f"[MerkezRPi] Telegram başlatma hatası: {te}")
+            self._bildirim_dispatcher = BildirimDispatcher(
+                kanallar=kanallar,
+                konfig=b,
+                olay_bus=self.olay_bus,
+            )
+            self._bildirim_dispatcher.baslat()
+        except Exception as e:
+            print(f"[MerkezRPi] Bildirim başlatma hatası: {e}")
+
+    def _komut_kaydet(self, veri: dict) -> None:
+        """KOMUT_GONDERILDI event'ini KomutRepository'ye yaz."""
+        if self._komut_repo is None:
+            return
+        try:
+            komut_str = veri.get("komut", "")
+            komut = next((k for k in Komut if k.value == komut_str), None)
+            if komut is None:
+                return
+            from ..domain.models import KomutSonucu
+            sonuc = KomutSonucu(
+                komut=komut,
+                basarili=veri.get("basarili", False),
+                mesaj=veri.get("hata", ""),
+            )
+            self._komut_repo.kaydet(veri.get("sera_id", ""), sonuc)
+        except Exception as e:
+            print(f"[MerkezRPi] Komut kaydetme hatası: {e}")
+
     def node_ekle(self, sera_id: str, node: SahaNodeBase) -> None:
         """
         Sisteme sera ekle. baslat() öncesinde çağrılmalı.
@@ -98,10 +176,14 @@ class RaspberryPiMerkez(MerkezKontrolBase):
         self._motorlar[sera_id] = motor
 
     def baslat(self) -> None:
-        """Tüm node'lara bağlan ve kontrol döngüsünü başlat."""
+        """Tüm node'lara bağlan, optimizer modellerini yükle ve kontrol döngüsünü başlat."""
         for sera_id, node in self._nodes.items():
             if not node.baglan():
                 print(f"[MerkezRPi] Uyarı: {sera_id} node bağlantısı başarısız")
+
+        # Optimizer kalıcılığı: kaydedilmiş modelleri yükle (ör. RLAjan Q-tablo)
+        for sera_id, motor in self._motorlar.items():
+            motor.optimizer.baslangic_yukle(self.konfig.model_dizin, sera_id)
 
         self._calisiyor = True
         self._dongu_thread = threading.Thread(
@@ -112,12 +194,22 @@ class RaspberryPiMerkez(MerkezKontrolBase):
         self._dongu_thread.start()
 
     def durdur(self) -> None:
-        """Döngüyü durdur, node bağlantılarını kapat."""
+        """Döngüyü durdur, modelleri kaydet, node bağlantılarını kapat."""
         self._calisiyor = False
         if self._dongu_thread:
             self._dongu_thread.join(timeout=10)
+
+        # Optimizer kalıcılığı: kapanmadan önce kaydet (ör. RLAjan Q-tablo)
+        for sera_id, motor in self._motorlar.items():
+            motor.optimizer.kapatma_kaydet(self.konfig.model_dizin, sera_id)
+
         for node in self._nodes.values():
             node.kapat()
+
+        if self._log_dispatcher:
+            self._log_dispatcher.durdur()
+        if self._bildirim_dispatcher:
+            self._bildirim_dispatcher.durdur()
 
     def sensor_oku(self, sera_id: str) -> SensorOkuma:
         if sera_id not in self._nodes:
@@ -190,6 +282,13 @@ class RaspberryPiMerkez(MerkezKontrolBase):
             with self._lock:
                 self._son_okumallar[sera_id]  = okuma
                 self._son_guncelleme[sera_id] = datetime.now()
+
+            # Sensör verisini DB'ye kaydet
+            if self._sensor_repo is not None:
+                try:
+                    self._sensor_repo.kaydet(okuma)
+                except Exception as db_e:
+                    print(f"[MerkezRPi:{sera_id}] DB yazma hatası: {db_e}")
 
             self.olay_bus.yayinla(OlayTur.SENSOR_OKUMA, okuma.to_dict())
             motor.adim_at(okuma)
