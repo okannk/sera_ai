@@ -1,27 +1,32 @@
 """
-REST API — Flask Uygulaması
+REST API — FastAPI Uygulaması
 
-Endpoint'ler:
-  GET  /api/seralar              → Tüm seralar + son sensör
-  GET  /api/seralar/<sid>        → Tek sera detayı
-  GET  /api/seralar/<sid>/sensor → Son sensör okuma
-  POST /api/seralar/<sid>/komut  → Komut gönder {"komut": "FAN_AC"}
-  GET  /api/sistem/saglik        → Health check (auth MUAF)
-  GET  /api/sistem/metrik        → İstatistikler
-  GET  /api/alarm                → Aktif alarmlar
+Endpoint'ler (/api/v1/ prefix):
+  GET  /api/v1/seralar                → Tüm seralar + son sensör
+  GET  /api/v1/seralar/{sid}          → Tek sera detayı
+  GET  /api/v1/seralar/{sid}/sensor   → Son sensör okuma
+  POST /api/v1/seralar/{sid}/komut    → Komut gönder {"komut": "FAN_AC"}
+  GET  /api/v1/sistem/saglik          → Health check (auth MUAF, rate limit MUAF)
+  GET  /api/v1/sistem/metrik          → İstatistikler
+  GET  /api/v1/alarm                  → Aktif alarmlar
+  GET  /metrics                       → Prometheus metrikleri (auth MUAF)
+  GET  /docs                          → Otomatik OpenAPI dökümantasyonu
 
 Auth:
-  X-API-Key header zorunlu (eğer SERA_API_KEY env tanımlıysa).
-  /api/sistem/saglik muaf — monitoring sistemleri key olmadan erişebilir.
+  X-API-Key header zorunlu (SERA_API_KEY env tanımlıysa).
+  /api/v1/sistem/saglik ve /metrics muaf.
+
+Rate limiting:
+  IP başına 60 istek/dakika (slowapi).
+  /api/v1/sistem/saglik muaf.
 
 Kullanım:
     from sera_ai.api.app import api_uygulamasi_olustur
     app = api_uygulamasi_olustur(api_key="gizli")
-    app.run(port=5000)
+    # uvicorn ile: uvicorn.run(app, host="0.0.0.0", port=5000)
 """
 from __future__ import annotations
 
-import json
 import os
 import random
 import threading
@@ -29,33 +34,32 @@ import time
 from datetime import datetime
 from typing import Any, Optional
 
-from .auth import check_api_key, MUAF_ENDPOINTLER
+from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from .auth import check_api_key, get_api_key_dep
+from .models import ApiYanit, HataYanit, KomutIstek
 
 
-def api_yanit(data: Any = None, hata: str = None,
-              durum: int = 200, meta: dict = None):
-    """Standart JSON yanıt zarfı."""
-    govde = {
-        "success": hata is None,
-        "data":    data,
-        "error":   hata,
-        "meta":    {"ts": datetime.now().isoformat(), **(meta or {})},
-    }
-    return (
-        json.dumps(govde, ensure_ascii=False, default=str),
-        durum,
-        {"Content-Type": "application/json; charset=utf-8"},
-    )
+# ── Hata kodu sabitleri ────────────────────────────────────────
+
+class HataKod:
+    YETKISIZ        = "YETKISIZ"
+    BULUNAMADI      = "BULUNAMADI"
+    GECERSIZ_KOMUT  = "GECERSIZ_KOMUT"
+    GECERSIZ_ISTEK  = "GECERSIZ_ISTEK"
+    KOMUT_BASARISIZ = "KOMUT_BASARISIZ"
+    SUNUCU_HATASI   = "SUNUCU_HATASI"
+    RATE_LIMIT      = "RATE_LIMIT"
 
 
-# ── Simülasyon Servisi ────────────────────────────────────────
+# ── Simülasyon Servisi (demo / geliştirme) ─────────────────────
 
 class SeraApiServisi:
     """
-    API iş mantığı katmanı.
-
-    Şu an: kendi simülasyonu (mock).
-    İleride: gerçek MerkezKontrolBase instance'ı enjekte edilir.
+    Mock API servisi — demo ve geliştirme modu.
+    Gerçek sistem için MerkezApiServisi kullanın.
     """
 
     PROFILLER = {
@@ -68,16 +72,20 @@ class SeraApiServisi:
         "s2": {"id": "s2", "isim": "Sera B", "bitki": "Biber",   "alan": 300},
         "s3": {"id": "s3", "isim": "Sera C", "bitki": "Marul",   "alan": 200},
     }
+    GECERLI_KOMUTLAR = frozenset({
+        "SULAMA_AC", "SULAMA_KAPAT", "ISITICI_AC", "ISITICI_KAPAT",
+        "SOGUTMA_AC", "SOGUTMA_KAPAT", "FAN_AC", "FAN_KAPAT",
+        "ISIK_AC", "ISIK_KAPAT", "ACIL_DURDUR",
+    })
 
-    def __init__(self):
-        self._durum = {sid: "NORMAL" for sid in self.SERALAR}
+    def __init__(self) -> None:
+        self._durum: dict[str, str] = {sid: "NORMAL" for sid in self.SERALAR}
         self._sensor: dict[str, dict] = {}
-        self._komut_log: list[dict]   = []
+        self._komut_log: list[dict] = []
         self._baslangic = time.time()
         threading.Thread(target=self._sim_dongu, daemon=True).start()
 
-    def _sim_dongu(self):
-        """Arka planda sensör simülasyonu."""
+    def _sim_dongu(self) -> None:
         s = {
             "s1": {"T": 23.0, "H": 72.0, "co2": 950},
             "s2": {"T": 25.0, "H": 65.0, "co2": 900},
@@ -95,14 +103,14 @@ class SeraApiServisi:
                 elif abs(st["T"] - opt) > 2: self._durum[sid] = "UYARI"
                 else:                         self._durum[sid] = "NORMAL"
                 self._sensor[sid] = {
-                    "T":        round(st["T"], 1),
-                    "H":        round(st["H"], 1),
-                    "co2":      int(st["co2"]),
-                    "isik":     random.randint(200, 900),
-                    "toprak":   random.randint(300, 700),
-                    "ph":       round(random.uniform(5.8, 7.2), 2),
-                    "ec":       round(random.uniform(1.4, 2.8), 2),
-                    "zaman":    datetime.now().isoformat(),
+                    "T":      round(st["T"], 1),
+                    "H":      round(st["H"], 1),
+                    "co2":    int(st["co2"]),
+                    "isik":   random.randint(200, 900),
+                    "toprak": random.randint(300, 700),
+                    "ph":     round(random.uniform(5.8, 7.2), 2),
+                    "ec":     round(random.uniform(1.4, 2.8), 2),
+                    "zaman":  datetime.now().isoformat(),
                 }
             time.sleep(2)
 
@@ -127,17 +135,15 @@ class SeraApiServisi:
         return self._sensor.get(sid)
 
     def komut_gonder(self, sid: str, komut: str, kaynak: str = "api") -> dict:
-        GECERLI = {
-            "SULAMA_AC", "SULAMA_KAPAT", "ISITICI_AC", "ISITICI_KAPAT",
-            "SOGUTMA_AC", "SOGUTMA_KAPAT", "FAN_AC", "FAN_KAPAT",
-            "ISIK_AC", "ISIK_KAPAT", "ACIL_DURDUR",
-        }
         if sid not in self.SERALAR:
             return {"basarili": False, "hata": f"Sera bulunamadı: {sid}"}
         k = komut.upper()
-        if k not in GECERLI:
-            return {"basarili": False, "hata": f"Geçersiz komut: {komut}",
-                    "gecerli": sorted(GECERLI)}
+        if k not in self.GECERLI_KOMUTLAR:
+            return {
+                "basarili": False,
+                "hata":    f"Geçersiz komut: {komut}",
+                "gecerli": sorted(self.GECERLI_KOMUTLAR),
+            }
         self._komut_log.append({
             "sera_id": sid, "komut": k,
             "kaynak":  kaynak, "zaman": datetime.now().isoformat(),
@@ -147,10 +153,10 @@ class SeraApiServisi:
     def saglik(self) -> dict:
         up = int(time.time() - self._baslangic)
         return {
-            "durum":       "CALISIYOR",
-            "uptime_sn":   up,
-            "uptime_fmt":  f"{up // 3600}s {(up % 3600) // 60}d",
-            "seralar":     dict(self._durum),
+            "durum":        "CALISIYOR",
+            "uptime_sn":    up,
+            "uptime_fmt":   f"{up // 3600}s {(up % 3600) // 60}d",
+            "seralar":      dict(self._durum),
             "alarm_sayisi": sum(
                 1 for d in self._durum.values()
                 if d in ("ALARM", "ACIL_DURDUR")
@@ -159,8 +165,8 @@ class SeraApiServisi:
 
     def metrikler(self) -> dict:
         return {
-            "toplam_komut": len(self._komut_log),
-            "son_10":        self._komut_log[-10:],
+            "toplam_komut":   len(self._komut_log),
+            "son_10":         self._komut_log[-10:],
             "durum_dagilimi": {
                 d: sum(1 for v in self._durum.values() if v == d)
                 for d in set(self._durum.values())
@@ -180,120 +186,220 @@ class SeraApiServisi:
         ]
 
 
-# ── Flask Uygulaması ──────────────────────────────────────────
+# ── FastAPI Uygulama Factory ───────────────────────────────────
 
 def api_uygulamasi_olustur(
-    servis: Optional[SeraApiServisi] = None,
+    servis: Any = None,
     api_key: Optional[str] = None,
-):
+) -> FastAPI:
     """
-    Flask uygulaması fabrika fonksiyonu.
+    FastAPI uygulaması fabrika fonksiyonu.
 
     Args:
-        servis:  Veri kaynağı (None → kendi simülasyonunu oluşturur)
+        servis:  Veri kaynağı (None → mock simülasyon)
         api_key: X-API-Key değeri (None → SERA_API_KEY env'den okur)
 
     Returns:
-        Flask app instance
+        FastAPI app instance
     """
-    try:
-        from flask import Flask, request
-        from flask_cors import CORS
-    except ImportError:
-        raise ImportError(
-            "Flask kurulu değil: pip install flask flask-cors"
-        )
+    app = FastAPI(
+        title="Sera AI API",
+        description="ESP32-S3 + Raspberry Pi 5 tabanlı endüstriyel sera otomasyon API'si",
+        version="1.0.0",
+        docs_url="/docs",
+        redoc_url="/redoc",
+    )
 
-    app = Flask(__name__)
-    CORS(app)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # ── Servis & key kurulumu ──────────────────────────────────
 
     if servis is None:
+        print(
+            "[API] Uyarı: servis=None → Mock simülasyon aktif. "
+            "Gerçek veri için MerkezApiServisi kullanın."
+        )
         servis = SeraApiServisi()
 
-    # API key: parametre > env değişkeni
     _api_key = api_key if api_key is not None else os.getenv("SERA_API_KEY", "")
 
     if not _api_key:
-        print(
-            "[API] Uyarı: SERA_API_KEY tanımlı değil — "
-            "kimlik doğrulama devre dışı (geliştirme modu)"
+        print("[API] Uyarı: SERA_API_KEY tanımlı değil — kimlik doğrulama devre dışı")
+
+    auth = get_api_key_dep(_api_key)
+
+    # ── Rate limiting ──────────────────────────────────────────
+
+    try:
+        from slowapi import Limiter, _rate_limit_exceeded_handler
+        from slowapi.errors import RateLimitExceeded
+        from slowapi.util import get_remote_address
+
+        limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
+        app.state.limiter = limiter
+        app.add_exception_handler(
+            RateLimitExceeded,
+            _rate_limit_exceeded_handler,  # type: ignore[arg-type]
         )
 
-    # ── Auth middleware ───────────────────────────────────────
+        def limit(func):
+            """Endpoint'e 60/minute rate limit uygular (request: Request gerektirir)."""
+            return limiter.limit("60/minute")(func)
+    except ImportError:
+        print("[API] Uyarı: slowapi kurulu değil — rate limiting devre dışı")
 
-    @app.before_request
-    def auth_kontrol():
-        """Her istekte X-API-Key kontrolü. Muaf endpoint'ler geçer."""
-        if request.endpoint in MUAF_ENDPOINTLER:
-            return None
-        gelen = request.headers.get("X-API-Key", "")
-        if not check_api_key(gelen, _api_key):
-            return api_yanit(
-                hata="Yetkisiz erişim — X-API-Key header'ı gerekli",
-                durum=401,
-            )
+        def limit(func):  # no-op
+            return func
 
-    # ── Route'lar ─────────────────────────────────────────────
+    # ── Global exception handler ───────────────────────────────
 
-    @app.route("/api/seralar")
-    def tum():
-        return api_yanit(servis.tum_seralar())
-
-    @app.route("/api/seralar/<sid>")
-    def detay(sid):
-        d = servis.sera_detay(sid)
-        return (
-            api_yanit(d) if d
-            else api_yanit(hata=f"Sera bulunamadı: {sid}", durum=404)
+    @app.exception_handler(HTTPException)
+    async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+        detail = exc.detail
+        if isinstance(detail, dict):
+            return JSONResponse(status_code=exc.status_code, content=detail)
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=HataYanit(
+                hata=str(detail),
+                kod=_durum_kodu(exc.status_code),
+            ).model_dump(),
         )
 
-    @app.route("/api/seralar/<sid>/sensor")
-    def sensor(sid):
-        s = servis.son_sensor(sid)
-        return (
-            api_yanit(s) if s
-            else api_yanit(hata="Veri yok", durum=404)
+    @app.exception_handler(Exception)
+    async def genel_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        return JSONResponse(
+            status_code=500,
+            content=HataYanit(
+                hata="Beklenmeyen sunucu hatası",
+                kod=HataKod.SUNUCU_HATASI,
+            ).model_dump(),
         )
 
-    @app.route("/api/seralar/<sid>/komut", methods=["POST"])
-    def komut(sid):
-        try:
-            body = request.get_json(force=True) or {}
-        except Exception:
-            return api_yanit(hata="Geçersiz JSON", durum=400)
-        k = body.get("komut", "").strip()
-        if not k:
-            return api_yanit(hata="'komut' alanı zorunlu", durum=400)
-        sonuc = servis.komut_gonder(sid, k, body.get("kaynak", "api"))
-        if sonuc["basarili"]:
-            return api_yanit(sonuc, durum=201)
-        return api_yanit(hata=sonuc["hata"], durum=400)
+    def _durum_kodu(http_status: int) -> str:
+        return {
+            401: HataKod.YETKISIZ,
+            404: HataKod.BULUNAMADI,
+            400: HataKod.GECERSIZ_ISTEK,
+            422: HataKod.GECERSIZ_ISTEK,
+            429: HataKod.RATE_LIMIT,
+        }.get(http_status, HataKod.SUNUCU_HATASI)
 
-    @app.route("/api/sistem/saglik")
-    def saglik():
-        """Health check — auth MUAF (monitoring sistemleri key gerektirmez)."""
+    # ── 422 Validation error formatını özelleştir ──────────────
+
+    from fastapi.exceptions import RequestValidationError
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+        ilk_hata = exc.errors()[0] if exc.errors() else {}
+        mesaj = ilk_hata.get("msg", "Geçersiz istek verisi")
+        alan  = " → ".join(str(x) for x in ilk_hata.get("loc", []))
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content=HataYanit(
+                hata=f"{alan}: {mesaj}" if alan else mesaj,
+                kod=HataKod.GECERSIZ_ISTEK,
+            ).model_dump(),
+        )
+
+    # ── Router ─────────────────────────────────────────────────
+
+    from fastapi import APIRouter
+
+    v1 = APIRouter(prefix="/api/v1")
+
+    # Saglik: auth muaf, rate limit muaf
+    @v1.get("/sistem/saglik", summary="Sistem sağlık durumu", tags=["Sistem"])
+    async def saglik() -> JSONResponse:
         s = servis.saglik()
-        return api_yanit(s, durum=503 if s["alarm_sayisi"] > 0 else 200)
+        http_status = 503 if s.get("alarm_sayisi", 0) > 0 else 200
+        return JSONResponse(status_code=http_status, content=ApiYanit(data=s).model_dump())
 
-    @app.route("/api/sistem/metrik")
-    def metrik():
-        return api_yanit(servis.metrikler())
+    @v1.get("/seralar", summary="Tüm seralar", tags=["Seralar"])
+    @limit
+    async def tum_seralar(request: Request, _: None = Depends(auth)) -> JSONResponse:
+        return JSONResponse(content=ApiYanit(data=servis.tum_seralar()).model_dump())
 
-    @app.route("/api/alarm")
-    def alarm():
+    @v1.get("/seralar/{sid}", summary="Sera detayı", tags=["Seralar"])
+    @limit
+    async def sera_detay(request: Request, sid: str, _: None = Depends(auth)) -> JSONResponse:
+        d = servis.sera_detay(sid)
+        if d is None:
+            raise HTTPException(
+                status_code=404,
+                detail=HataYanit(hata=f"Sera bulunamadı: {sid}", kod=HataKod.BULUNAMADI).model_dump(),
+            )
+        return JSONResponse(content=ApiYanit(data=d).model_dump())
+
+    @v1.get("/seralar/{sid}/sensor", summary="Son sensör okuma", tags=["Seralar"])
+    @limit
+    async def son_sensor(request: Request, sid: str, _: None = Depends(auth)) -> JSONResponse:
+        s = servis.son_sensor(sid)
+        if s is None:
+            raise HTTPException(
+                status_code=404,
+                detail=HataYanit(
+                    hata=f"Sera bulunamadı veya henüz veri yok: {sid}",
+                    kod=HataKod.BULUNAMADI,
+                ).model_dump(),
+            )
+        return JSONResponse(content=ApiYanit(data=s).model_dump())
+
+    @v1.post("/seralar/{sid}/komut", status_code=201, summary="Komut gönder", tags=["Seralar"])
+    @limit
+    async def komut_gonder(
+        request: Request,
+        sid: str,
+        istek: KomutIstek,
+        _: None = Depends(auth),
+    ) -> JSONResponse:
+        sonuc = servis.komut_gonder(sid, istek.komut, istek.kaynak)
+        if not sonuc.get("basarili"):
+            hata_mesaji = sonuc.get("hata", "Komut gönderilemedi")
+            kod = HataKod.GECERSIZ_KOMUT if "gecerli" in sonuc else HataKod.BULUNAMADI
+            http_st = 400 if "gecerli" in sonuc else 404
+            raise HTTPException(
+                status_code=http_st,
+                detail=HataYanit(hata=hata_mesaji, kod=kod).model_dump(),
+            )
+        return JSONResponse(status_code=201, content=ApiYanit(data=sonuc).model_dump())
+
+    @v1.get("/sistem/metrik", summary="Sistem metrikleri", tags=["Sistem"])
+    @limit
+    async def metrik(request: Request, _: None = Depends(auth)) -> JSONResponse:
+        return JSONResponse(content=ApiYanit(data=servis.metrikler()).model_dump())
+
+    @v1.get("/alarm", summary="Aktif alarmlar", tags=["Alarmlar"])
+    @limit
+    async def alarm(request: Request, _: None = Depends(auth)) -> JSONResponse:
         a = servis.aktif_alarmlar()
-        return api_yanit(a, meta={"toplam": len(a)})
+        return JSONResponse(
+            content=ApiYanit(
+                data=a,
+                meta={"ts": datetime.now().isoformat(), "toplam": len(a)},  # type: ignore[arg-type]
+            ).model_dump(),
+        )
 
-    # ── Prometheus metrics endpoint ───────────────────────────
-    from .metrics import metrics_route_ekle
-    metrics_route_ekle(app, servis)
+    app.include_router(v1)
 
-    @app.errorhandler(404)
-    def e404(e):
-        return api_yanit(hata=f"Bulunamadı: {request.path}", durum=404)
+    # Prometheus metrics
+    from .metrics import metrics_router_olustur
+    app.include_router(metrics_router_olustur(servis))
 
-    @app.errorhandler(405)
-    def e405(e):
-        return api_yanit(hata="Yöntem desteklenmiyor", durum=405)
+    # 404 handler
+    @app.exception_handler(404)
+    async def e404(request: Request, exc: Exception) -> JSONResponse:
+        return JSONResponse(
+            status_code=404,
+            content=HataYanit(
+                hata=f"Bulunamadı: {request.url.path}",
+                kod=HataKod.BULUNAMADI,
+            ).model_dump(),
+        )
 
     return app

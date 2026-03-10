@@ -285,15 +285,12 @@ class TestLogDispatcher:
 class TestMetricsEndpoint:
 
     @pytest.fixture
-    def app(self):
+    def client(self):
+        pytest.importorskip("fastapi")
+        from fastapi.testclient import TestClient
         from sera_ai.api.app import api_uygulamasi_olustur
         app = api_uygulamasi_olustur(api_key="")
-        app.config["TESTING"] = True
-        return app
-
-    @pytest.fixture
-    def client(self, app):
-        return app.test_client()
+        return TestClient(app, raise_server_exceptions=False)
 
     def test_metrics_200(self, client):
         r = client.get("/metrics")
@@ -301,46 +298,46 @@ class TestMetricsEndpoint:
 
     def test_content_type_prometheus(self, client):
         r = client.get("/metrics")
-        assert "text/plain" in r.content_type
+        assert "text/plain" in r.headers["content-type"]
 
     def test_help_satirlari_var(self, client):
-        metin = client.get("/metrics").data.decode()
+        metin = client.get("/metrics").text
         assert "# HELP" in metin
         assert "# TYPE" in metin
 
     def test_sera_sicaklik_metrik_var(self, client):
-        metin = client.get("/metrics").data.decode()
+        metin = client.get("/metrics").text
         assert "sera_sicaklik_celsius" in metin
 
     def test_sera_nem_metrik_var(self, client):
-        metin = client.get("/metrics").data.decode()
+        metin = client.get("/metrics").text
         assert "sera_nem_yuzde" in metin
 
     def test_sera_co2_metrik_var(self, client):
-        metin = client.get("/metrics").data.decode()
+        metin = client.get("/metrics").text
         assert "sera_co2_ppm" in metin
 
     def test_sera_durum_kodu_var(self, client):
-        metin = client.get("/metrics").data.decode()
+        metin = client.get("/metrics").text
         assert "sera_durum_kodu" in metin
 
     def test_sistem_uptime_var(self, client):
-        metin = client.get("/metrics").data.decode()
+        metin = client.get("/metrics").text
         assert "sistem_uptime_saniye" in metin
 
     def test_metrics_auth_gerektirmez(self):
         """Auth aktifken bile /metrics açık olmalı."""
+        pytest.importorskip("fastapi")
+        from fastapi.testclient import TestClient
         from sera_ai.api.app import api_uygulamasi_olustur
         app = api_uygulamasi_olustur(api_key="gizli_anahtar")
-        app.config["TESTING"] = True
-        c = app.test_client()
-        # X-API-Key olmadan
+        c = TestClient(app, raise_server_exceptions=False)
         r = c.get("/metrics")
         assert r.status_code == 200
 
     def test_her_sera_etiketlendi(self, client):
         """s1, s2, s3 seraları metriklerde görünmeli."""
-        metin = client.get("/metrics").data.decode()
+        metin = client.get("/metrics").text
         assert 'sera_id="s1"' in metin
         assert 'sera_id="s2"' in metin
         assert 'sera_id="s3"' in metin

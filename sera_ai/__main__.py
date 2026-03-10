@@ -87,6 +87,8 @@ def main():
                         help="Demo modu: mock sensörler, canlı çıktı")
     parser.add_argument("--adim",   type=int, default=None,
                         help="Kaç döngü (demo varsayılanı: 15, normal: sonsuz)")
+    parser.add_argument("--api",    action="store_true",
+                        help="REST API'yi gerçek merkeze bağlı başlat")
     args = parser.parse_args()
 
     konfig = konfig_yukle(args.config)
@@ -133,6 +135,22 @@ def main():
     print("═" * 60)
 
     merkez.baslat()
+
+    # REST API — hem demo hem gerçek modda başlatılabilir
+    if args.api:
+        import threading
+        from .api.app import api_uygulamasi_olustur
+        from .api.servis import MerkezApiServisi
+        servis    = MerkezApiServisi(merkez, konfig)
+        fastapi_app = api_uygulamasi_olustur(servis=servis)
+        def _api_baslat():
+            import uvicorn
+            print(f"[API] Uvicorn → http://0.0.0.0:{konfig.api_port}")
+            uvicorn.run(fastapi_app, host="0.0.0.0", port=konfig.api_port, log_level="warning")
+
+        api_thread = threading.Thread(target=_api_baslat, name="FlaskAPI", daemon=True)
+        api_thread.start()
+
     try:
         adim = 0
         while args.adim is None or adim < args.adim:

@@ -142,7 +142,7 @@ CONTEXT.md               # Donanım + mimari kararlar (tam bağlam)
 
 ## Mevcut Durum
 
-**Versiyon:** 0.4.1 — `2026-03-10`
+**Versiyon:** 0.6.0 — `2026-03-10`
 
 ### Tamamlananlar
 - [x] İki katmanlı donanım soyutlaması: `SahaNodeBase` + `MerkezKontrolBase`
@@ -174,17 +174,96 @@ CONTEXT.md               # Donanım + mimari kararlar (tam bağlam)
   - Senaryo 1: MockSahaNode → KontrolMotoru → SQLite + Bildirim + Log zinciri
   - Senaryo 2: ESP32Simulatoru → MockMQTTBroker → MQTTSahaNodeAdaptor → KontrolMotoru (MQTT round-trip)
   - Senaryo 3: 3 sera paralel, CB izolasyonu, çapraz kirlilik yok
-- [x] **309 test, 0 hata**
+- [x] **374 test, 0 hata**
+- [x] **`intelligence/rl_ajan.py`** — Tabular Q-Learning RL ajan
+  - 30 durum (5×3×2: T_sapma × H_band × toprak_band), 16 eylem (2^4)
+  - KuralMotoru warm-start: ilk adımdan güvenli, sıfırdan başlamaz
+  - `odul_hesapla()` + `ogren()` online Bellman güncellemesi
+  - `kaydet()`/`yukle()` pickle kalıcılığı
+  - `epsilon`-greedy keşif (production'da 0.05, test'te 0.0)
+  - ACİL_DURDUR → HedefDeger() (ML/RL'e danışılmaz)
+  - numpy yoksa KuralMotoru fallback (sessiz degradasyon)
+  - `config.yaml` `intelligence.optimizer: rl_ajan` ile aktif
+  - 26 unit test, KontrolMotoru DI entegrasyon testi dahil
+- [x] **RLAjan öğrenme döngüsü** — `KontrolMotoru` entegrasyonu
+  - `OptimizerBase.geri_bildirim(onceki, sonraki)` → no-op varsayılan
+  - `RLAjan.geri_bildirim()` → ödül hesapla + Bellman güncelle
+  - `KontrolMotoru._onceki_sensor` state, her `adim_at()` sonunda güncellenir
+  - Geçersiz sensör → zincir sıfırlanır (yanlış ödül hesabı engellenir)
+  - 9 yeni test (35 toplam RL testi)
+
+- [x] **Flask → FastAPI geçişi** (v1.0 API katmanı)
+  - `/api/v1/` prefix, async endpoint'ler, `/docs` OpenAPI
+  - slowapi rate limiting: 60 req/min per IP (`/sistem/saglik` muaf)
+  - Pydantic input validation, 422 + açıklayıcı hata
+  - Global exception handler, tutarlı hata formatı `{"success": false, "hata": ..., "kod": ...}`
+  - Uvicorn ile çalışır
+- [x] **API → gerçek sisteme bağlantısı** (`api/servis.py` — `MerkezApiServisi`)
+  - `MerkezKontrolBase` + `SistemKonfig` → API duck-type arayüzüne adapte
+  - `tum_seralar / sera_detay / son_sensor / komut_gonder / saglik / metrikler / aktif_alarmlar`
+  - Komut string → Komut enum çevirisi, geçersiz komut/sera doğrulaması
+  - `__main__.py` `--api` flag'i: kontrol döngüsüyle aynı süreçte Flask başlatır
+  - `api_uygulamasi_olustur(servis=MerkezApiServisi(...))` ile inject edilir
+  - Mock servis (`SeraApiServisi`) değişmedi — demo/geliştirme için hâlâ geçerli
+  - 23 unit test + 4 Flask entegrasyon testi
+
+- [x] **Altyapı boşlukları kapatıldı** (v0.5.0)
+  - `RaspberryPiMerkez` artık SQLiteRepository + LogDispatcher + BildirimDispatcher kullanıyor
+  - `_sera_adimi()` → sensör verisi doğrudan DB'ye yazılıyor
+  - `KOMUT_GONDERILDI` event → `KomutRepository`'ye yazılıyor
+  - `OptimizerBase.baslangic_yukle()` / `kapatma_kaydet()` — lifecycle API
+  - `RLAjan` restart'ta Q-tablosunu yüklüyor, kapanırken kaydediyor
+  - `odul_hesapla()` CO₂ bileşeni eklendi (aralık -4…0)
+  - `JSONLLogger` log rotation: `max_mb=10`, `yedek_sayisi=3`
+  - `__main__.py` `--api` → Waitress (yoksa Flask dev server + uyarı)
+  - `pyproject.toml` `api` extras'a `waitress>=3.0` eklendi
+  - `MockMerkez.tum_durum()` — `RaspberryPiMerkez` ile aynı format
+  - API mock fallback uyarısı
+
+- [x] **RLAjan tam sensör entegrasyonu** (v0.5.1)
+  - `BitkilProfili` 9 yeni alan: `min_isik/opt_isik/max_isik`, `min_pH/opt_pH/max_pH`, `min_EC/opt_EC/max_EC` (varsayılan değerli, geriye dönük uyumlu)
+  - `VARSAYILAN_PROFILLER` bitki-spesifik ışık/pH/EC değerleri (Domates/Biber/Marul)
+  - `DURUM_SAYISI` 30 → **2430** (5×3×2×3×3×3×3 — 7 sensörün tamamı)
+  - Durum indeksi: `t×486 + h×162 + toprak×81 + co2×27 + isik×9 + ph×3 + ec`
+  - `odul_hesapla()` artık 7 bileşen: T, H, toprak, CO₂, ışık, pH, EC (aralık -7…0)
+  - `config.yaml` bitki profillerine ışık/pH/EC alanları eklendi
+  - `settings.py` `konfig_yukle()` yeni alanları okuyor
+  - 38 test, 370 toplam, 0 hata
+
+- [x] **Çoklu sera yönetimi** (v0.6.0) — Adım 1 tamamlandı
+  - `RaspberryPiMerkez` zaten N-greenhouse: per-sera `_cb_ler`, `_sm_ler`, `_motorlar` dict'leri
+  - `_kontrol_dongusu()` tüm seraları sıralı işler, per-sera CB izolasyonu
+  - `demo_komplet.py` → `DemoBridgeMulti` (3 sera: s1 Domates, s2 Biber, s3 Marul)
+    - 3× ESP32Simulatoru + 3× MQTTSahaNodeAdaptor (paylaşımlı broker)
+    - 3× RLAjan Q(2430, 16) paralel öğrenme
+    - CB izolasyonu kanıtlandı: s2 ALARM, s1/s3 NORMAL kalıyor
+    - API tüm seraları tek endpointten sunuyor (`/api/seralar`)
+    - 40 komut / 56 JSONL satır / 6 bildirim (10 adım, 3 sera)
+  - Production yolu (`config.yaml` → `RaspberryPiMerkez`) zaten doğru, değişmedi
+  - `tests/integration/test_uctan_uca.py` Senaryo 3: 3 sera paralel, CB izolasyonu testli
+  - 370 test, 0 hata
 
 ### Devam Edenler / Sıradaki
-- [ ] RL ajanı iskeleti (`intelligence/` katmanı tamamlama)
+- [x] **React dashboard** (canlı veri, alarm banner, grafik, komut paneli) — Adım 2
+  - `dashboard/` — Vite + React + TypeScript + Tailwind v4 + Recharts
+  - Her 2 saniyede otomatik güncelleme, karta tıkla → modal (grafik + komut)
+  - `npm run dev` ile başlatılır (proxy: localhost:5000)
+- [ ] Görüntü işleme (kamera hastalık tespiti) — Adım 3
+- [ ] Sesli asistan (Türkçe) — Adım 4
 - [ ] Siemens S7-1200 / Modbus TCP (donanım gelince)
-- [ ] `intelligence/` — RL ajanı iskeleti
-- [ ] `drivers/esp32_s3.py` — sensör config ile veri doğrulama
-- [ ] Siemens S7-1200 / Modbus TCP
-- [ ] Grafana/Loki entegrasyonu
 
 ---
+
+## Dashboard Komutları
+
+```bash
+# Geliştirme: önce Flask'ı başlat, sonra React'ı
+python -m sera_ai --demo          # terminal 1 — Flask :5000
+cd dashboard && npm run dev        # terminal 2 — Vite :5173
+
+# Production build
+cd dashboard && npm run build
+```
 
 ## Sık Kullanılan Komutlar
 
@@ -196,6 +275,10 @@ CONTEXT.md               # Donanım + mimari kararlar (tam bağlam)
 
 # Sadece sensör testleri
 ~/.local/bin/uv run --with pytest pytest tests/unit/test_sensors.py -v
+
+# Çoklu sera demo (3 sera paralel)
+~/.local/bin/uv run --with flask --with flask-cors \
+  --with numpy --with joblib python demo_komplet.py
 
 # Demo modu
 ~/.local/bin/uv run --with flask --with flask-cors \

@@ -22,7 +22,6 @@ Mevcut metrikler:
 """
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 
 
@@ -82,7 +81,7 @@ def prometheus_metrik_uret(servis) -> str:
     yorum("sera_alarm_aktif", "Sera alarm durumunda mı (1=evet)")
 
     for sera in servis.tum_seralar():
-        sid   = sera["id"]
+        sid    = sera["id"]
         sensor = sera.get("sensor", {})
         durum  = sera.get("durum", "NORMAL")
         etiket = {"sera_id": sid, "isim": sera.get("isim", sid)}
@@ -103,29 +102,43 @@ def prometheus_metrik_uret(servis) -> str:
     return "\n".join(satirlar) + "\n"
 
 
+def metrics_router_olustur(servis):
+    """FastAPI router olarak /metrics endpoint'i döndürür."""
+    from fastapi import APIRouter
+    from fastapi.responses import PlainTextResponse
+
+    router = APIRouter()
+
+    @router.get("/metrics", include_in_schema=False)
+    async def metrics() -> PlainTextResponse:
+        try:
+            icerik = prometheus_metrik_uret(servis)
+            return PlainTextResponse(
+                icerik,
+                media_type="text/plain; version=0.0.4; charset=utf-8",
+            )
+        except Exception as exc:
+            return PlainTextResponse(
+                f"# ERROR {exc}\n",
+                status_code=500,
+                media_type="text/plain",
+            )
+
+    return router
+
+
+# Flask uyumluluğu — eski kod kırılmasın
 def metrics_route_ekle(app, servis) -> None:
-    """
-    Flask uygulamasına /metrics endpoint ekler.
-
-    app.before_request auth kontrolünü bypass etmek için
-    MUAF_ENDPOINTLER'e 'metrics' eklenmesi gerekir.
-    Çağıran (api_uygulamasi_olustur) bunu halleder.
-
-    Kullanım:
-        metrics_route_ekle(app, servis)
-    """
+    """Geriye dönük uyumluluk: Flask app'e /metrics ekler (kullanımdan kalkıyor)."""
     @app.route("/metrics")
     def metrics():
-        from flask import Response
         try:
+            from flask import Response
             icerik = prometheus_metrik_uret(servis)
             return Response(
                 icerik,
                 mimetype="text/plain; version=0.0.4; charset=utf-8",
             )
-        except Exception as e:
-            return Response(
-                f"# ERROR {e}\n",
-                status=500,
-                mimetype="text/plain",
-            )
+        except Exception as exc:
+            from flask import Response
+            return Response(f"# ERROR {exc}\n", status=500, mimetype="text/plain")
