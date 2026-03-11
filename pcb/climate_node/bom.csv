@@ -1,0 +1,41 @@
+Reference,Value,Footprint,Quantity,Manufacturer,Part Number,Supplier,Supplier PN,Description,Notes
+U1,AMS1117-3.3,Package_TO_SOT_SMD:SOT-223-3_TabPin2,1,Advanced Monolithic Systems,AMS1117-3.3,LCSC,C6186,3.3V 1A LDO Regulator,SOT-223
+U2,ESP32-S3-DevKitC-1,Module:ESP32-S3-DevKitC-1,1,Espressif Systems,ESP32-S3-DevKitC-1,Mouser,356-ESP32S3DEVKITC1,ESP32-S3 Dev Board,44-pin 2×22 header
+U3,W5500,Module:W5500_Lite,1,WIZnet,W5500-EVB,Mouser,707-W5500,Hardwired TCP/IP SPI Ethernet,Module with RJ45
+U4,PC817,Package_DIP:DIP-4_W7.62mm,1,Sharp/Everlight,PC817,LCSC,C6727,Optocoupler DIP-4 CTR≥100%,SSR CH1 isolation
+U5,PC817,Package_DIP:DIP-4_W7.62mm,1,Sharp/Everlight,PC817,LCSC,C6727,Optocoupler DIP-4 CTR≥100%,SSR CH2 isolation
+U6,PC817,Package_DIP:DIP-4_W7.62mm,1,Sharp/Everlight,PC817,LCSC,C6727,Optocoupler DIP-4 CTR≥100%,SSR CH3 isolation
+U7,PC817,Package_DIP:DIP-4_W7.62mm,1,Sharp/Everlight,PC817,LCSC,C6727,Optocoupler DIP-4 CTR≥100%,SSR CH4 isolation
+K1,G3MB-202P,Connector_PinHeader_2.54mm:PinHeader_1x02,1,Omron,G3MB-202P,Mouser,653-G3MB202P,SSR 2A 240VAC,CH1 Irrigation — panel mount
+K2,G3MB-202P,Connector_PinHeader_2.54mm:PinHeader_1x02,1,Omron,G3MB-202P,Mouser,653-G3MB202P,SSR 2A 240VAC,CH2 Heater — panel mount
+K3,G3MB-202P,Connector_PinHeader_2.54mm:PinHeader_1x02,1,Omron,G3MB-202P,Mouser,653-G3MB202P,SSR 2A 240VAC,CH3 Cooling — panel mount
+K4,G3MB-202P,Connector_PinHeader_2.54mm:PinHeader_1x02,1,Omron,G3MB-202P,Mouser,653-G3MB202P,SSR 2A 240VAC,CH4 Fan — panel mount
+PS1,HLK-PM05,Connector:HLK-PM05,1,Hi-Link,HLK-PM05,AliExpress,HLK-PM05,AC-DC 220V to 5V 0.6W,Isolated
+RV1,S14K275,Varistor:Varistor_D14.0mm_P7.50mm,1,TDK,B72214S0271K101,Mouser,871-B72214S0271K101,MOV 275V 14mm,Surge protection L-N
+F1,10A_250V,Fuse:Fuseholder_Cylinder_d5.08mm_l20mm,1,Schurter,0034.3125,Mouser,693-0034.3125,Fuse holder 5x20mm + 10A fuse,Main line protection
+C1,100uF 25V,Capacitor_THT:CP_Radial_D8.0mm_P3.50mm,1,Nichicon,UVR1E101MDD,Mouser,647-UVR1E101MDD,Electrolytic 100µF 25V,5V bulk
+C2,100uF 16V,Capacitor_THT:CP_Radial_D8.0mm_P3.50mm,1,Nichicon,UVR1C101MDD,Mouser,647-UVR1C101MDD,Electrolytic 100µF 16V,3.3V bulk
+C3,10uF,Capacitor_SMD:C_1206_3216Metric,1,Murata,GRM31CR61A106KA01L,Mouser,81-GRM31CR61A106KA01L,MLCC 10µF 10V X5R 1206,LDO output
+C4,10uF,Capacitor_SMD:C_1206_3216Metric,1,Murata,GRM31CR61A106KA01L,Mouser,81-GRM31CR61A106KA01L,MLCC 10µF 10V X5R 1206,LDO input
+C5,100nF,Capacitor_SMD:C_0805_2012Metric,1,Samsung,CL21B104KBCNNNC,LCSC,C49678,MLCC 100nF 50V X7R 0805,ESP32 bypass
+C6,100nF,Capacitor_SMD:C_0805_2012Metric,1,Samsung,CL21B104KBCNNNC,LCSC,C49678,MLCC 100nF 50V X7R 0805,W5500 bypass
+C7,100nF,Capacitor_SMD:C_0805_2012Metric,1,Samsung,CL21B104KBCNNNC,LCSC,C49678,MLCC 100nF 50V X7R 0805,PC817 bypass
+C8,100nF,Capacitor_SMD:C_0805_2012Metric,1,Samsung,CL21B104KBCNNNC,LCSC,C49678,MLCC 100nF 50V X7R 0805,PC817 bypass
+R1,330,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,603-RC0805FR-07330RL,PC817 input LED resistor,CH1
+R2,330,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,603-RC0805FR-07330RL,PC817 input LED resistor,CH2
+R3,330,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,603-RC0805FR-07330RL,PC817 input LED resistor,CH3
+R4,330,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,603-RC0805FR-07330RL,PC817 input LED resistor,CH4
+R5,330,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,603-RC0805FR-07330RL,Status LED resistor,D1 CH1
+R6,330,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,603-RC0805FR-07330RL,Status LED resistor,D2 CH2
+R7,330,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,603-RC0805FR-07330RL,Status LED resistor,D3 CH3
+R8,330,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,603-RC0805FR-07330RL,Status LED resistor,D4 CH4
+D1,LED_GREEN,LED_SMD:LED_0805_2012Metric,1,Kingbright,APT2012CGCK,Mouser,604-APT2012CGCK,Green LED CH1 status,
+D2,LED_GREEN,LED_SMD:LED_0805_2012Metric,1,Kingbright,APT2012CGCK,Mouser,604-APT2012CGCK,Green LED CH2 status,
+D3,LED_YELLOW,LED_SMD:LED_0805_2012Metric,1,Kingbright,APT2012YC,Mouser,604-APT2012YC,Yellow LED CH3 status,
+D4,LED_RED,LED_SMD:LED_0805_2012Metric,1,Kingbright,APT2012EC,Mouser,604-APT2012EC,Red LED CH4 status,
+J_AC,L/N/PE/LOAD1-4,Connector_Phoenix_MKDS:MKDS_1,5_5_5.08,1,Phoenix Contact,1729128,Mouser,651-1729128,5-pin screw terminal 5.08mm,230V AC mains
+J5,DC_Jack_2.1mm,Connector_BarrelJack:BarrelJack_Kycon_KLDX-0202-A,1,Kycon,KLDX-0202-A,Mouser,806-KLDX-0202-A,DC barrel jack 2.1mm,5V input (ext adapter)
+J6,UART_DEBUG,Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical,1,Amphenol,10129378-904001BLF,Mouser,649-1012937890400BLF,Debug header 4-pin 2.54mm,
+J7,HR911105A,Connector_RJ:RJ45_Amphenol_RJHSE538X_Horizontal,1,Hanrun,HR911105A,LCSC,C12074,RJ45 with magnetics,Ethernet
+SW1,RESET,Button_Switch_SMD:SW_SPST_SKQG_WithStem,1,Alps Alpine,SKQGABE010,Mouser,688-SKQGABE010,Reset button SPST SMD,
+MH1,M3,MountingHole:MountingHole_3.2mm_M3,4,Generic,-,-,-,M3 mounting hole 3.2mm,

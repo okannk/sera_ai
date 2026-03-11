@@ -1,0 +1,49 @@
+Reference,Value,Footprint,Quantity,Manufacturer,Part Number,Supplier,Supplier PN,Description,Notes
+U1,AMS1117-3.3,Package_TO_SOT_SMD:SOT-223-3_TabPin2,1,Advanced Monolithic Systems,AMS1117-3.3,LCSC,C6186,3.3V 1A LDO Regulator,SOT-223
+U2,ESP32-S3-DevKitC-1,Module:ESP32-S3-DevKitC-1,1,Espressif Systems,ESP32-S3-DevKitC-1,Mouser,356-ESP32S3DEVKITC1,ESP32-S3 Dev Board,44-pin 2×22 header
+U3,W5500,Module:W5500_Lite,1,WIZnet,W5500-EVB,Mouser,707-W5500,Hardwired TCP/IP SPI Ethernet,Module with RJ45
+U4,LM2596-12,Package_TO_SOT_THT:TO-263-5,1,Texas Instruments,LM2596S-12/NOPB,Mouser,595-LM2596S-12NOPB,3A Buck Converter 12V fixed TO-263,Valve supply
+PS1,HLK-PM05,Connector:HLK-PM05,1,Hi-Link,HLK-PM05,AliExpress,HLK-PM05,AC-DC 220V to 5V 0.6W,Isolated AC-DC
+Q1,IRLZ44N,Package_TO_SOT_THT:TO-220-3_Vertical,1,Infineon,IRLZ44NPBF,Mouser,942-IRLZ44NPBF,N-MOSFET 55V 47A Logic Level TO-220,Valve 1 drive
+Q2,IRLZ44N,Package_TO_SOT_THT:TO-220-3_Vertical,1,Infineon,IRLZ44NPBF,Mouser,942-IRLZ44NPBF,N-MOSFET 55V 47A Logic Level TO-220,Valve 2 drive
+L1,100uH,Inductor_THT:L_Axial_L12.5mm_D5.2mm_P17.78mm,1,Vishay,IM-1 100µH,Mouser,594-5470510H,100µH Axial inductor 2.5A,LM2596 output inductor
+C1,100uF 25V,Capacitor_THT:CP_Radial_D8.0mm_P3.50mm,1,Nichicon,UVR1E101MDD,Mouser,647-UVR1E101MDD,Electrolytic 100µF 25V,5V rail bulk
+C2,100uF 16V,Capacitor_THT:CP_Radial_D8.0mm_P3.50mm,1,Nichicon,UVR1C101MDD,Mouser,647-UVR1C101MDD,Electrolytic 100µF 16V,3.3V rail bulk
+C3,10uF,Capacitor_SMD:C_1206_3216Metric,1,Murata,GRM31CR61A106KA01L,Mouser,81-GRM31CR61A106KA01L,MLCC 10µF 10V X5R 1206,LDO output
+C4,10uF,Capacitor_SMD:C_1206_3216Metric,1,Murata,GRM31CR61A106KA01L,Mouser,81-GRM31CR61A106KA01L,MLCC 10µF 10V X5R 1206,LDO input
+C5,100nF,Capacitor_SMD:C_0805_2012Metric,1,Samsung,CL21B104KBCNNNC,LCSC,C49678,MLCC 100nF 50V X7R 0805,EZO-pH bypass
+C6,100nF,Capacitor_SMD:C_0805_2012Metric,1,Samsung,CL21B104KBCNNNC,LCSC,C49678,MLCC 100nF 50V X7R 0805,EZO-EC bypass
+C7,100nF,Capacitor_SMD:C_0805_2012Metric,1,Samsung,CL21B104KBCNNNC,LCSC,C49678,MLCC 100nF 50V X7R 0805,EZO-DO bypass
+C8,100nF,Capacitor_SMD:C_0805_2012Metric,1,Samsung,CL21B104KBCNNNC,LCSC,C49678,MLCC 100nF 50V X7R 0805,EZO-RTD bypass
+C9,100nF,Capacitor_SMD:C_0805_2012Metric,1,Samsung,CL21B104KBCNNNC,LCSC,C49678,MLCC 100nF 50V X7R 0805,EZO-PMP bypass
+C11,220uF 25V,Capacitor_THT:CP_Radial_D10.0mm_P5.00mm,1,Nichicon,UVR1E221MHD,Mouser,647-UVR1E221MHD,Electrolytic 220µF 25V,LM2596 output cap
+D1,LED_GREEN,LED_SMD:LED_0805_2012Metric,1,Kingbright,APT2012CGCK,Mouser,604-APT2012CGCK,Green LED Power OK,
+D2,LED_BLUE,LED_SMD:LED_0805_2012Metric,1,Kingbright,APT2012QBC/D,Mouser,604-APT2012QBCD,Blue LED Network,
+D3,LED_GREEN,LED_SMD:LED_0805_2012Metric,1,Kingbright,APT2012CGCK,Mouser,604-APT2012CGCK,Green LED Valve 1,
+D4,LED_YELLOW,LED_SMD:LED_0805_2012Metric,1,Kingbright,APT2012YC,Mouser,604-APT2012YC,Yellow LED Valve 2,
+D5,LED_RED,LED_SMD:LED_0805_2012Metric,1,Kingbright,APT2012EC,Mouser,604-APT2012EC,Red LED Alarm,
+D6,1N4007,Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal,1,Vishay,1N4007-E3/54,Mouser,625-1N4007-E3/54,Rectifier DO-41 1A 1000V,Valve 1 flyback
+D7,1N4007,Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal,1,Vishay,1N4007-E3/54,Mouser,625-1N4007-E3/54,Rectifier DO-41 1A 1000V,Valve 2 flyback
+R1,4.7k,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-074K7L,Mouser,603-RC0805FR-074K7L,I2C SDA pull-up,4.7kΩ to 3.3V
+R2,4.7k,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-074K7L,Mouser,603-RC0805FR-074K7L,I2C SCL pull-up,4.7kΩ to 3.3V
+R3,330,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,603-RC0805FR-07330RL,LED resistor D1,
+R4,330,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,603-RC0805FR-07330RL,LED resistor D2,
+R5,330,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,603-RC0805FR-07330RL,LED resistor D3,
+R6,330,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,603-RC0805FR-07330RL,LED resistor D4,
+R7,330,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,603-RC0805FR-07330RL,LED resistor D5,
+R9,100,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-07100RL,Mouser,603-RC0805FR-07100RL,Gate resistor Q1,100Ω MOSFET gate
+R10,100,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-07100RL,Mouser,603-RC0805FR-07100RL,Gate resistor Q2,100Ω MOSFET gate
+R11,10k,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-0710KL,Mouser,603-RC0805FR-0710KL,Flow sensor pull-up 10kΩ,YF-S201 signal
+J1,EZO_pH_0x63,Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical,1,JST,B4B-XH-A,Mouser,JST-B4B-XH-A,JST XH 4-pin,Atlas EZO-pH
+J2,EZO_EC_0x64,Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical,1,JST,B4B-XH-A,Mouser,JST-B4B-XH-A,JST XH 4-pin,Atlas EZO-EC
+J3,EZO_DO_0x61,Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical,1,JST,B4B-XH-A,Mouser,JST-B4B-XH-A,JST XH 4-pin,Atlas EZO-DO
+J4,EZO_RTD_0x66,Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical,1,JST,B4B-XH-A,Mouser,JST-B4B-XH-A,JST XH 4-pin,Atlas EZO-RTD
+J5,EZO_PMP_0x67,Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical,1,JST,B4B-XH-A,Mouser,JST-B4B-XH-A,JST XH 4-pin,Atlas EZO-PMP
+J6,VALVE_1,Connector_Phoenix_MKDS:PhoenixContact_MKDS_1.5_2_5.08,1,Phoenix Contact,1729117,Mouser,651-1729117,2-pin screw terminal 5.08mm,12V solenoid valve 1
+J7,VALVE_2,Connector_Phoenix_MKDS:PhoenixContact_MKDS_1.5_2_5.08,1,Phoenix Contact,1729117,Mouser,651-1729117,2-pin screw terminal 5.08mm,12V solenoid valve 2
+J8,YF-S201_FLOW,Connector_JST:JST_XH_B3B-XH-A_1x03_P2.50mm_Vertical,1,JST,B3B-XH-A,Mouser,JST-B3B-XH-A,JST XH 3-pin,YF-S201 flow sensor
+J9,HR911105A,Connector_RJ:RJ45_Amphenol_RJHSE538X_Horizontal,1,Hanrun,HR911105A,LCSC,C12074,RJ45 with magnetics,Ethernet
+J10,DC_Jack_2.1mm,Connector_BarrelJack:BarrelJack_Kycon_KLDX-0202-A,1,Kycon,KLDX-0202-A,Mouser,806-KLDX-0202-A,DC barrel jack 2.1mm,5V power
+J11,UART_DEBUG,Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical,1,Amphenol,10129378-904001BLF,Mouser,649-1012937890400BLF,Debug header 4-pin,
+SW1,RESET,Button_Switch_SMD:SW_SPST_SKQG_WithStem,1,Alps Alpine,SKQGABE010,Mouser,688-SKQGABE010,Reset button SPST,
+MH1,M3,MountingHole:MountingHole_3.2mm_M3,4,Generic,-,-,-,M3 mounting hole 3.2mm,
