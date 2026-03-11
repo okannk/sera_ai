@@ -1,34 +1,34 @@
-Reference,Value,Footprint,Quantity,Manufacturer,Part Number,Supplier,Supplier PN,Description,Notes
-U1,AMS1117-3.3,Package_TO_SOT_SMD:SOT-223-3_TabPin2,1,Advanced Monolithic Systems,AMS1117-3.3,LCSC,C6186,3.3V 1A LDO Regulator,SOT-223
-U2,ESP32-S3-DevKitC-1,Module:ESP32-S3-DevKitC-1,1,Espressif Systems,ESP32-S3-DevKitC-1,Mouser,356-ESP32S3DEVKITC1,ESP32-S3 Dev Board 2×22p,With 44-pin header
-U3,W5500,Module:W5500_Lite,1,WIZnet,W5500-EVB,Mouser,707-W5500,Hardwired TCP/IP SPI Ethernet,Module with RJ45
-PS1,HLK-PM05,Connector:HLK-PM05,1,Hi-Link,HLK-PM05,AliExpress,HLK-PM05,AC-DC 220V to 5V 0.6W,Isolated AC-DC
-C1,100uF 25V,Capacitor_THT:CP_Radial_D8.0mm_P3.50mm,1,Nichicon,UVR1E101MDD,Mouser,647-UVR1E101MDD,Electrolytic 100µF 25V,5V rail bulk cap
-C2,100uF 16V,Capacitor_THT:CP_Radial_D8.0mm_P3.50mm,1,Nichicon,UVR1C101MDD,Mouser,647-UVR1C101MDD,Electrolytic 100µF 16V,3.3V rail bulk cap
-C3,10uF,Capacitor_SMD:C_1206_3216Metric,1,Murata,GRM31CR61A106KA01L,Mouser,81-GRM31CR61A106KA01L,MLCC 10µF 10V X5R 1206,LDO output
-C4,10uF,Capacitor_SMD:C_1206_3216Metric,1,Murata,GRM31CR61A106KA01L,Mouser,81-GRM31CR61A106KA01L,MLCC 10µF 10V X5R 1206,LDO input
-C5,100nF,Capacitor_SMD:C_0805_2012Metric,1,Samsung,CL21B104KBCNNNC,LCSC,C49678,MLCC 100nF 50V X7R 0805,ESP32 bypass
-C6,100nF,Capacitor_SMD:C_0805_2012Metric,1,Samsung,CL21B104KBCNNNC,LCSC,C49678,MLCC 100nF 50V X7R 0805,W5500 bypass
-C7,100nF,Capacitor_SMD:C_0805_2012Metric,1,Samsung,CL21B104KBCNNNC,LCSC,C49678,MLCC 100nF 50V X7R 0805,SHT40 bypass
-C8,100nF,Capacitor_SMD:C_0805_2012Metric,1,Samsung,CL21B104KBCNNNC,LCSC,C49678,MLCC 100nF 50V X7R 0805,SCD41 bypass
-C9,100nF,Capacitor_SMD:C_0805_2012Metric,1,Samsung,CL21B104KBCNNNC,LCSC,C49678,MLCC 100nF 50V X7R 0805,AS7341 bypass
-C10,100nF,Capacitor_SMD:C_0805_2012Metric,1,Samsung,CL21B104KBCNNNC,LCSC,C49678,MLCC 100nF 50V X7R 0805,General bypass
-R1,4.7k,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-074K7L,Mouser,603-RC0805FR-074K7L,I2C SDA pull-up 4.7kΩ,Pull-up to 3.3V
-R2,4.7k,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-074K7L,Mouser,603-RC0805FR-074K7L,I2C SCL pull-up 4.7kΩ,Pull-up to 3.3V
-R3,330,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,603-RC0805FR-07330RL,LED current limiting 330Ω,Green LED
-R4,330,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,603-RC0805FR-07330RL,LED current limiting 330Ω,Blue LED
-R5,330,Resistor_SMD:R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,603-RC0805FR-07330RL,LED current limiting 330Ω,Red LED
-D1,LED_GREEN,LED_SMD:LED_0805_2012Metric,1,Kingbright,APT2012CGCK,Mouser,604-APT2012CGCK,Green LED 0805,Power/Status OK
-D2,LED_BLUE,LED_SMD:LED_0805_2012Metric,1,Kingbright,APT2012QBC/D,Mouser,604-APT2012QBCD,Blue LED 0805,Network active
-D3,LED_RED,LED_SMD:LED_0805_2012Metric,1,Kingbright,APT2012EC,Mouser,604-APT2012EC,Red LED 0805,Alarm/Error
-D4,SMBJ5.0A,Diode_SMD:D_SMB,1,Vishay,SMBJ5.0A-E3/52,Mouser,625-SMBJ5.0A-E3/52,TVS Diode 5.0V SMB,Transient protection
-D5,BAT54,Package_TO_SOT_SMD:SOT-23,1,Nexperia,BAT54,Mouser,771-BAT54,Schottky Diode SOT-23,Reverse polarity
-J1,SHT40_I2C,Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical,1,JST,B4B-XH-A,Mouser,JST-B4B-XH-A,JST XH 4-pin vertical,SHT40 T+H sensor
-J2,SCD41_I2C,Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical,1,JST,B4B-XH-A,Mouser,JST-B4B-XH-A,JST XH 4-pin vertical,SCD41 CO2 sensor
-J3,AS7341_I2C,Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical,1,JST,B4B-XH-A,Mouser,JST-B4B-XH-A,JST XH 4-pin vertical,AS7341 light sensor
-J4,TEROS12_SDI12,Connector_JST:JST_XH_B3B-XH-A_1x03_P2.50mm_Vertical,1,JST,B3B-XH-A,Mouser,JST-B3B-XH-A,JST XH 3-pin vertical,TEROS-12 soil sensor
-J5,DC_Jack_2.1mm,Connector_BarrelJack:BarrelJack_Kycon_KLDX-0202-A_Horizontal,1,Kycon,KLDX-0202-A,Mouser,806-KLDX-0202-A,DC barrel jack 2.1mm,5V power input
-J6,UART_DEBUG,Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical,1,Amphenol,10129378-904001BLF,Mouser,649-1012937890400BLF,2.54mm 4-pin header,UART debug port
-J7,HR911105A,Connector_RJ:RJ45_Amphenol_RJHSE538X_Horizontal,1,Hanrun,HR911105A,LCSC,C12074,RJ45 with transformer,10/100BASE-T
-SW1,RESET,Button_Switch_SMD:SW_SPST_SKQG_WithStem,1,Alps Alpine,SKQGABE010,Mouser,688-SKQGABE010,SPST tactile switch,Reset button
-MH1,M3,MountingHole:MountingHole_3.2mm_M3,4,Generic,-,-,-,M3 mounting hole,PCB corner mount
+Reference,Value,Footprint,Qty,Manufacturer,PartNumber,Supplier,Description
+U1,AMS1117-3.3,SOT-223-3_TabPin2,1,AMS,AMS1117-3.3,LCSC C6186,3.3V 1A LDO
+U2,ESP32-S3-DevKitC-1,Module:ESP32-S3-DevKitC-1,1,Espressif,ESP32-S3-DevKitC-1,Mouser 356-ESP32S3DEVKITC1,MCU module
+U3,W5500-EVB,Module:W5500-EVB,1,WIZnet,W5500,Mouser 720-W5500,SPI Ethernet
+PS1,HLK-PM05,Module:HLK-PM05,1,Hi-Link,HLK-PM05,LCSC C167067,AC-DC 5V 0.6A
+C1,100uF,CP_Radial_D8.0mm_P3.50mm,1,Nichicon,UVR1E101MED,Mouser,Bulk LDO in
+C2,100uF,CP_Radial_D8.0mm_P3.50mm,1,Nichicon,UVR1E101MED,Mouser,Bulk LDO out
+C3,10uF,C_1206_3216Metric,1,Murata,GRM31CR61E106KA12,Mouser,MLCC LDO in
+C4,10uF,C_1206_3216Metric,1,Murata,GRM31CR61E106KA12,Mouser,MLCC LDO out
+C5,100nF,C_0805_2012Metric,1,Yageo,CC0805ZRY5V9BB104,Mouser,Decoupling
+C6,100nF,C_0805_2012Metric,1,Yageo,CC0805ZRY5V9BB104,Mouser,Decoupling
+C7,100nF,C_0805_2012Metric,1,Yageo,CC0805ZRY5V9BB104,Mouser,Decoupling
+C8,100nF,C_0805_2012Metric,1,Yageo,CC0805ZRY5V9BB104,Mouser,Decoupling
+C9,100nF,C_0805_2012Metric,1,Yageo,CC0805ZRY5V9BB104,Mouser,Decoupling
+C10,100nF,C_0805_2012Metric,1,Yageo,CC0805ZRY5V9BB104,Mouser,Decoupling
+R1,4.7k,R_0805_2012Metric,1,Yageo,RC0805FR-074K7L,Mouser,I2C SDA pull-up
+R2,4.7k,R_0805_2012Metric,1,Yageo,RC0805FR-074K7L,Mouser,I2C SCL pull-up
+R3,330,R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,LED PWR
+R4,330,R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,LED WiFi
+R5,330,R_0805_2012Metric,1,Yageo,RC0805FR-07330RL,Mouser,LED ERR
+D1,LED_GREEN,LED_SMD:LED_0805,1,Wurth,150080VS75000,Mouser,PWR green
+D2,LED_BLUE,LED_SMD:LED_0805,1,Wurth,150080BS75000,Mouser,WiFi blue
+D3,LED_RED,LED_SMD:LED_0805,1,Wurth,150080RS75000,Mouser,ERR red
+D4,SMBJ5.0A,Diode_SMD:D_SMB,1,Vishay,SMBJ5.0A-E3/61,Mouser,TVS 5V power line
+D5,BAT54,Package_TO_SOT_SMD:SOT-23,1,Vishay,BAT54-GS08,Mouser,Schottky SDI-12 3.6V
+J1,SHT40_I2C,JST_XH_B4B-XH-A_1x04,1,JST,B4B-XH-A,Mouser 306-B4B-XH-A,SHT40 connector
+J2,SCD41_I2C,JST_XH_B4B-XH-A_1x04,1,JST,B4B-XH-A,Mouser 306-B4B-XH-A,SCD41 CO2
+J3,AS7341_I2C,JST_XH_B4B-XH-A_1x04,1,JST,B4B-XH-A,Mouser 306-B4B-XH-A,AS7341 spectral
+J4,TEROS12_SDI12,JST_XH_B3B-XH-A_1x03,1,JST,B3B-XH-A,Mouser 306-B3B-XH-A,TEROS-12
+J5,DC_Jack_2.1mm,BarrelJack_Kycon,1,Kycon,KLDX-0202-A,Mouser,5V DC input
+J6,UART_DEBUG,PinHeader_1x04_P2.54mm,1,Wurth,61300411121,Mouser,UART debug
+J7,HR911105A,RJ45_Horizontal,1,Hanrun,HR911105A,Mouser,Ethernet RJ45
+SW1,RESET,SW_SPST_SKQG,1,Alps,SKQGAFE010,Mouser 688-SKQGAFE010,Reset button
+MH1,M3_Hole,MountingHole_3.2mm_M3,4,,,,Corner mounting hole
