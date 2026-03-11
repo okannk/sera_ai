@@ -1,4 +1,4 @@
-import type { ApiYanit, SeraOzet, SeraDetay, SaglikDurumu, Alarm, KomutAdi, SeraEkleInput, SeraGuncelleInput } from './types'
+import type { ApiYanit, SeraOzet, SeraDetay, SaglikDurumu, Alarm, KomutAdi, SeraEkleInput, SeraGuncelleInput, Cihaz, CihazKayitSonuc, CihazKayitInput, ProvisioningTalep, OnaylamaYaniti, CihazDetayFull, SensorGecmis, CihazSaglikOzet } from './types'
 
 const API_KEY = import.meta.env.VITE_API_KEY ?? ''
 
@@ -61,4 +61,17 @@ export const api = {
   seraEkle:     (data: SeraEkleInput) => post<SeraOzet>(`${V1}/seralar`, data),
   seraGuncelle: (sid: string, data: SeraGuncelleInput) => put<SeraOzet>(`${V1}/seralar/${sid}`, data),
   seraSil:      (sid: string) => del_(`${V1}/seralar/${sid}`),
+  cihazlar:     () => get<Cihaz[]>(`${V1}/cihazlar`),
+  cihazDetay:   (cid: string) => get<Cihaz>(`${V1}/cihazlar/${cid}`),
+  cihazKayit:   (data: CihazKayitInput) => post<CihazKayitSonuc>(`${V1}/cihazlar/kayit`, data),
+  cihazSifirla: (cid: string) => post<{ cihaz_id: string; sifre: string }>(`${V1}/cihazlar/${cid}/sifre-sifirla`, {}),
+  cihazSil:     (cid: string) => del_(`${V1}/cihazlar/${cid}`),
+  cihazDetayFull:    (cid: string) => get<CihazDetayFull>(`${V1}/cihazlar/${cid}/detay`),
+  cihazSensorGecmis: (cid: string, tip: string) => get<SensorGecmis>(`${V1}/cihazlar/${cid}/sensor-gecmis/${encodeURIComponent(tip)}`),
+  cihazSaglikOzet:   () => get<CihazSaglikOzet>(`${V1}/cihazlar/saglik-ozet`),
+  // Provisioning
+  bekleyenTalepler: () => get<ProvisioningTalep[]>(`${V1}/provisioning/bekleyen-talepler`),
+  provisioningDurum: (id: string) => get<{ durum: string; cihaz_id?: string; token?: string }>(`${V1}/provisioning/durum/${id}`),
+  provisioningOnayla: (id: string) => post<OnaylamaYaniti>(`${V1}/provisioning/onayla/${id}`, {}),
+  provisioningReddet: (id: string) => post<{ durum: string }>(`${V1}/provisioning/reddet/${id}`, {}),
 }

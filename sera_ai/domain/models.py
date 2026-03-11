@@ -140,6 +140,102 @@ class KomutSonucu:
 
 
 # ──────────────────────────────────────────────────────────────
+# SENSÖR SAĞLIK
+# ──────────────────────────────────────────────────────────────
+
+class SensorSaglik(Enum):
+    NORMAL          = "normal"
+    UYARI           = "uyari"           # eşik dışı ama makul
+    ARIZALI         = "arizali"         # okuma yok / timeout
+    PIK             = "pik"             # anlık anormal sıçrama
+    DONMUS          = "donmus"          # uzun süre aynı değer
+    KALIBRE_HATASI  = "kalibre_hatasi"  # fiziksel sınır dışı
+
+
+@dataclass
+class SensorDurum:
+    sensor_tipi:          str
+    son_deger:            float
+    saglik:               SensorSaglik
+    aciklama:             str
+    son_gecerli_okuma:    datetime
+    ardisik_hata_sayisi:  int
+    pik_sayisi_son_1saat: int
+
+    def to_dict(self) -> dict:
+        return {
+            "sensor_tipi":           self.sensor_tipi,
+            "son_deger":             self.son_deger,
+            "saglik":                self.saglik.value,
+            "aciklama":              self.aciklama,
+            "son_gecerli_okuma":     self.son_gecerli_okuma.isoformat(),
+            "ardisik_hata_sayisi":   self.ardisik_hata_sayisi,
+            "pik_sayisi_son_1saat":  self.pik_sayisi_son_1saat,
+        }
+
+
+# ──────────────────────────────────────────────────────────────
+# CİHAZ YÖNETİMİ
+# ESP32-S3 saha node'larının kimlik ve kayıt bilgileri.
+# Provisioning → kayıt → bağlantı takibi akışı bu modeller üzerinden.
+# ──────────────────────────────────────────────────────────────
+
+@dataclass
+class CihazKimlik:
+    """
+    Bir ESP32-S3 (veya benzeri) saha node'unun kimlik kartı.
+
+    cihaz_id formatı: SERA-{tesis_kodu}-{sira_no:03d}
+    Örnek: SERA-IST01-001
+    """
+    cihaz_id:          str       # SERA-IST01-001
+    tesis_kodu:        str       # IST01
+    sera_id:           str       # s1
+    seri_no:           str       # uuid4().hex[:12]
+    mac_adresi:        str       # 00:1A:2B:3C:4D:5E
+    baglanti_tipi:     str       # WiFi | Ethernet | RS485
+    firmware_versiyon: str       # 1.0.0
+    son_gorulen:       datetime
+    aktif:             bool = True
+
+    def durum(self) -> str:
+        """Son kalp atışına göre anlık bağlantı durumu."""
+        delta = (datetime.now() - self.son_gorulen).total_seconds()
+        if delta < 30:
+            return "CEVRIMICI"
+        if delta < 90:
+            return "GECIKMELI"
+        return "KOPUK"
+
+    def to_dict(self) -> dict:
+        return {
+            "cihaz_id":          self.cihaz_id,
+            "tesis_kodu":        self.tesis_kodu,
+            "sera_id":           self.sera_id,
+            "seri_no":           self.seri_no,
+            "mac_adresi":        self.mac_adresi,
+            "baglanti_tipi":     self.baglanti_tipi,
+            "firmware_versiyon": self.firmware_versiyon,
+            "son_gorulen":       self.son_gorulen.isoformat(),
+            "aktif":             self.aktif,
+            "durum":             self.durum(),
+        }
+
+
+@dataclass
+class CihazKayit:
+    """
+    Cihazın kimlik doğrulama kaydı — MQTT broker auth için.
+
+    sifre_hash formatı: "{salt}:{sha256(salt+sifre)}"
+    """
+    cihaz_id:             str
+    sifre_hash:           str         # salt:sha256(salt+sifre)
+    izin_verilen_konular: list        # MQTT topic whitelist (yazma için)
+    kayit_tarihi:         datetime = field(default_factory=datetime.now)
+
+
+# ──────────────────────────────────────────────────────────────
 # KONFIG — Domain'e ait olanlar (bağımlılık yok)
 # ──────────────────────────────────────────────────────────────
 

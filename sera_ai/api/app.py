@@ -39,7 +39,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 
 from .auth import check_api_key, get_api_key_dep
-from .models import ApiYanit, HataYanit, KomutIstek, SeraEkleme, SeraGuncelleme
+from .models import ApiYanit, HataYanit, KomutIstek, SeraEkleme, SeraGuncelleme, CihazKayitIstek, KayitTalebiIstek
 
 
 # ── Hata kodu sabitleri ────────────────────────────────────────
@@ -231,6 +231,499 @@ class SeraApiServisi:
             for sid, d in self._durum.items()
             if d in ("ALARM", "ACIL_DURDUR", "UYARI") and sid in self._seralar
         ]
+
+
+# ── Provisioning Simülasyon Servisi (demo / geliştirme) ───────
+
+class ProvisioningApiServisi:
+    """
+    Mock Zero-Touch Provisioning servisi.
+    Başlangıçta 1 bekleyen talep içerir (test için).
+    """
+
+    def __init__(self) -> None:
+        import uuid as _uuid
+        self._talepler:    dict[str, dict] = {}
+        self._token_cache: dict[str, str]  = {}
+        self._sira = 3  # 3 mevcut mock cihaz var
+
+        # 1 mock bekleyen talep
+        _tid = str(_uuid.uuid4())
+        self._talepler[_tid] = {
+            "talep_id":          _tid,
+            "mac_adresi":        "A4:CF:12:78:5B:09",
+            "sera_id":           "s1",
+            "baglanti_tipi":     "WiFi",
+            "firmware_versiyon": "1.0.0",
+            "talep_zamani":      (datetime.now() - __import__("datetime").timedelta(minutes=3)).isoformat(),
+            "durum":             "BEKLEMEDE",
+            "cihaz_id":          "",
+        }
+
+    def bekleyen_talepler(self) -> list:
+        return [t for t in self._talepler.values() if t["durum"] == "BEKLEMEDE"]
+
+    def tum_talepler(self) -> list:
+        return list(self._talepler.values())
+
+    def kayit_talebi(self, data: dict) -> dict:
+        import uuid as _uuid
+        tid = str(_uuid.uuid4())
+        self._talepler[tid] = {
+            "talep_id":          tid,
+            "mac_adresi":        data.get("mac", ""),
+            "sera_id":           data.get("sera_id", ""),
+            "baglanti_tipi":     data.get("baglanti_tipi", "WiFi"),
+            "firmware_versiyon": data.get("firmware_versiyon", "1.0.0"),
+            "talep_zamani":      datetime.now().isoformat(),
+            "durum":             "BEKLEMEDE",
+            "cihaz_id":          "",
+        }
+        return {"talep_id": tid, "durum": "BEKLEMEDE"}
+
+    def onayla(self, talep_id: str) -> Optional[dict]:
+        t = self._talepler.get(talep_id)
+        if not t or t["durum"] != "BEKLEMEDE":
+            return None
+        import secrets as _sec
+        self._sira += 1
+        cihaz_id = f"SERA-IST01-{self._sira:03d}"
+        token    = _sec.token_urlsafe(32)
+        t["durum"]    = "ONAYLANDI"
+        t["cihaz_id"] = cihaz_id
+        self._token_cache[talep_id] = token
+        return {"talep_id": talep_id, "cihaz_id": cihaz_id, "token": token}
+
+    def reddet(self, talep_id: str) -> bool:
+        t = self._talepler.get(talep_id)
+        if not t or t["durum"] != "BEKLEMEDE":
+            return False
+        t["durum"] = "REDDEDILDI"
+        return True
+
+    def durum(self, talep_id: str) -> Optional[dict]:
+        t = self._talepler.get(talep_id)
+        if not t:
+            return None
+        r = {"durum": t["durum"], "talep_id": talep_id}
+        if t["durum"] == "ONAYLANDI":
+            r["cihaz_id"] = t["cihaz_id"]
+            r["token"]    = self._token_cache.get(talep_id, "")
+        return r
+
+
+# ── Cihaz Simülasyon Servisi (demo / geliştirme) ──────────────
+
+class CihazApiServisi:
+    """
+    Mock cihaz yönetim servisi — demo ve geliştirme modu.
+    3 önceden tanımlı ESP32 cihazı ile başlar; yeni kayıt, şifre sıfırlama,
+    silme işlemlerini bellekte simüle eder.
+    """
+
+    def __init__(self) -> None:
+        now = datetime.now()
+        self._cihazlar: dict[str, dict] = {
+            "SERA-IST01-001": {
+                "cihaz_id": "SERA-IST01-001", "tesis_kodu": "IST01", "sera_id": "s1",
+                "seri_no": "A1B2C3D4E5F6", "mac_adresi": "A4:CF:12:78:5B:01",
+                "baglanti_tipi": "WiFi", "firmware_versiyon": "1.2.0",
+                "son_gorulen": now.isoformat(), "aktif": True,
+            },
+            "SERA-IST01-002": {
+                "cihaz_id": "SERA-IST01-002", "tesis_kodu": "IST01", "sera_id": "s2",
+                "seri_no": "B2C3D4E5F6A1", "mac_adresi": "A4:CF:12:78:5B:02",
+                "baglanti_tipi": "Ethernet", "firmware_versiyon": "1.2.0",
+                "son_gorulen": now.isoformat(), "aktif": True,
+            },
+            "SERA-IST01-003": {
+                "cihaz_id": "SERA-IST01-003", "tesis_kodu": "IST01", "sera_id": "s3",
+                "seri_no": "C3D4E5F6A1B2", "mac_adresi": "A4:CF:12:78:5B:03",
+                "baglanti_tipi": "RS485", "firmware_versiyon": "1.1.0",
+                "son_gorulen": (now.replace(second=max(0, now.second - 45))).isoformat(),
+                "aktif": True,
+            },
+        }
+        self._sira = 3
+        # Canlı cihazlar için kalp atışı simülasyonu
+        threading.Thread(target=self._kalp_sim, daemon=True).start()
+
+    def _kalp_sim(self) -> None:
+        """001 ve 002 cihazlarını canlı tut, 003'ü gecikmeli simüle et."""
+        import random
+        while True:
+            now = datetime.now()
+            for cid in ("SERA-IST01-001", "SERA-IST01-002"):
+                if cid in self._cihazlar:
+                    self._cihazlar[cid]["son_gorulen"] = now.isoformat()
+            # 003: zaman zaman gecikme simülasyonu
+            if "SERA-IST01-003" in self._cihazlar:
+                delay = random.choice([10, 10, 10, 45, 120])  # çoğunlukla gecikme
+                from datetime import timedelta
+                self._cihazlar["SERA-IST01-003"]["son_gorulen"] = (
+                    now - timedelta(seconds=delay)
+                ).isoformat()
+            time.sleep(20)
+
+    def _durum_hesapla(self, son_gorulen_str: str) -> str:
+        try:
+            son = datetime.fromisoformat(son_gorulen_str)
+        except Exception:
+            return "BILINMIYOR"
+        delta = (datetime.now() - son).total_seconds()
+        if delta < 30:   return "CEVRIMICI"
+        if delta < 90:   return "GECIKMELI"
+        return "KOPUK"
+
+    def _cihaz_dict(self, c: dict) -> dict:
+        return {**c, "durum": self._durum_hesapla(c["son_gorulen"])}
+
+    def listele(self) -> list[dict]:
+        return [self._cihaz_dict(c) for c in self._cihazlar.values()]
+
+    def detay(self, cid: str) -> Optional[dict]:
+        c = self._cihazlar.get(cid)
+        return self._cihaz_dict(c) if c else None
+
+    def kayit_et(self, data: dict) -> dict:
+        """Yeni cihaz ekle. Returns: {cihaz, sifre, firmware_konfig}"""
+        import secrets as _sec
+        self._sira += 1
+        tesis = data["tesis_kodu"].strip().upper()
+        cid   = f"SERA-{tesis}-{self._sira:03d}"
+        sifre = _sec.token_urlsafe(16)
+        cihaz = {
+            "cihaz_id":          cid,
+            "tesis_kodu":        tesis,
+            "sera_id":           data["sera_id"],
+            "seri_no":           __import__("uuid").uuid4().hex[:12].upper(),
+            "mac_adresi":        data.get("mac_adresi", ""),
+            "baglanti_tipi":     data.get("baglanti_tipi", "WiFi"),
+            "firmware_versiyon": data.get("firmware_versiyon", "1.0.0"),
+            "son_gorulen":       datetime.now().isoformat(),
+            "aktif":             True,
+        }
+        self._cihazlar[cid] = cihaz
+        sera_id = data["sera_id"]
+        konfig = {
+            "cihaz_id":               cid,
+            "mqtt_host":              "mqtt.sera-ai.local",
+            "mqtt_port":              1883,
+            "mqtt_kullanici":         cid,
+            "mqtt_sifre":             sifre,
+            "sensor_topic":           f"sera/{tesis}/{sera_id}/sensor",
+            "komut_topic":            f"sera/{tesis}/{sera_id}/komut",
+            "kalp_atisi_topic":       f"cihaz/{cid}/kalp_atisi",
+            "kalp_atisi_interval_sn": 30,
+            "sensor_interval_sn":     5,
+            "wifi_ssid":              "",
+            "wifi_sifre":             "",
+        }
+        return {"cihaz": self._cihaz_dict(cihaz), "sifre": sifre, "firmware_konfig": konfig}
+
+    def sifre_sifirla(self, cid: str) -> Optional[dict]:
+        if cid not in self._cihazlar:
+            return None
+        import secrets as _sec
+        sifre = _sec.token_urlsafe(16)
+        return {"cihaz_id": cid, "sifre": sifre}
+
+    def sil(self, cid: str) -> bool:
+        if cid not in self._cihazlar:
+            return False
+        del self._cihazlar[cid]
+        return True
+
+    def detay_genisletilmis(self, cid: str) -> Optional[dict]:
+        """Genişletilmiş cihaz detayı: sensör sağlığı, aktüatörler, bağlantı geçmişi."""
+        import datetime as _dt
+        c = self._cihazlar.get(cid)
+        if c is None:
+            return None
+
+        now = datetime.now()
+
+        if cid == "SERA-IST01-001":
+            sensorler = [
+                {
+                    "tip": "SHT31", "adres": "0x44", "baglanti": "I2C",
+                    "son_deger": {"sicaklik": 23.4, "nem": 68.0},
+                    "saglik": "normal", "aciklama": "Normal çalışıyor",
+                    "son_gecerli_okuma": now.isoformat(),
+                    "pik_sayisi_son_1saat": 0, "ardisik_hata": 0, "saglik_skoru": 0.98,
+                },
+                {
+                    "tip": "MH-Z19C", "adres": "UART", "baglanti": "Serial",
+                    "son_deger": {"co2": 985},
+                    "saglik": "normal", "aciklama": "Normal çalışıyor",
+                    "son_gecerli_okuma": now.isoformat(),
+                    "pik_sayisi_son_1saat": 0, "ardisik_hata": 0, "saglik_skoru": 0.97,
+                },
+                {
+                    "tip": "BH1750", "adres": "0x23", "baglanti": "I2C",
+                    "son_deger": {"isik": 4500},
+                    "saglik": "normal", "aciklama": "Normal çalışıyor",
+                    "son_gecerli_okuma": now.isoformat(),
+                    "pik_sayisi_son_1saat": 0, "ardisik_hata": 0, "saglik_skoru": 0.99,
+                },
+                {
+                    "tip": "Kapasitif", "adres": "ADS1115", "baglanti": "I2C ADC",
+                    "son_deger": {"toprak_nem": 62.0},
+                    "saglik": "normal", "aciklama": "Normal çalışıyor",
+                    "son_gecerli_okuma": now.isoformat(),
+                    "pik_sayisi_son_1saat": 0, "ardisik_hata": 0, "saglik_skoru": 0.96,
+                },
+            ]
+            sinyal_gucu = -65
+            uptime_saniye = 14400
+            yeniden_baslama_sayisi = 2
+            bellek_bos = 180000
+            cpu_sicakligi = 45.2
+
+        elif cid == "SERA-IST01-002":
+            sensorler = [
+                {
+                    "tip": "SHT31", "adres": "0x44", "baglanti": "I2C",
+                    "son_deger": {"sicaklik": 25.1, "nem": 66.0},
+                    "saglik": "normal", "aciklama": "Normal çalışıyor",
+                    "son_gecerli_okuma": now.isoformat(),
+                    "pik_sayisi_son_1saat": 0, "ardisik_hata": 0, "saglik_skoru": 0.97,
+                },
+                {
+                    "tip": "MH-Z19C", "adres": "UART", "baglanti": "Serial",
+                    "son_deger": None,
+                    "saglik": "arizali",
+                    "aciklama": "10 ardışık okuma hatası — UART bağlantısı kopuk olabilir",
+                    "son_gecerli_okuma": (now - _dt.timedelta(minutes=18)).isoformat(),
+                    "pik_sayisi_son_1saat": 0, "ardisik_hata": 10, "saglik_skoru": 0.0,
+                },
+                {
+                    "tip": "BH1750", "adres": "0x23", "baglanti": "I2C",
+                    "son_deger": {"isik": 3800},
+                    "saglik": "normal", "aciklama": "Normal çalışıyor",
+                    "son_gecerli_okuma": now.isoformat(),
+                    "pik_sayisi_son_1saat": 0, "ardisik_hata": 0, "saglik_skoru": 0.99,
+                },
+                {
+                    "tip": "Kapasitif", "adres": "ADS1115", "baglanti": "I2C ADC",
+                    "son_deger": {"toprak_nem": 55.0},
+                    "saglik": "normal", "aciklama": "Normal çalışıyor",
+                    "son_gecerli_okuma": now.isoformat(),
+                    "pik_sayisi_son_1saat": 0, "ardisik_hata": 0, "saglik_skoru": 0.95,
+                },
+            ]
+            sinyal_gucu = -72
+            uptime_saniye = 7200
+            yeniden_baslama_sayisi = 5
+            bellek_bos = 145000
+            cpu_sicakligi = 48.7
+
+        elif cid == "SERA-IST01-003":
+            frozen_time = now - _dt.timedelta(minutes=12)
+            sensorler = [
+                {
+                    "tip": "SHT31", "adres": "0x44", "baglanti": "I2C",
+                    "son_deger": {"sicaklik": 16.2, "nem": 74.8},
+                    "saglik": "pik",
+                    "aciklama": "Son 1 saatte 3 pik tespit edildi (Z-score > 3)",
+                    "son_gecerli_okuma": now.isoformat(),
+                    "pik_sayisi_son_1saat": 3, "ardisik_hata": 0, "saglik_skoru": 0.94,
+                },
+                {
+                    "tip": "MH-Z19C", "adres": "UART", "baglanti": "Serial",
+                    "son_deger": {"co2": 820},
+                    "saglik": "normal", "aciklama": "Normal çalışıyor",
+                    "son_gecerli_okuma": now.isoformat(),
+                    "pik_sayisi_son_1saat": 0, "ardisik_hata": 0, "saglik_skoru": 0.97,
+                },
+                {
+                    "tip": "BH1750", "adres": "0x23", "baglanti": "I2C",
+                    "son_deger": {"isik": 2100},
+                    "saglik": "normal", "aciklama": "Normal çalışıyor",
+                    "son_gecerli_okuma": now.isoformat(),
+                    "pik_sayisi_son_1saat": 0, "ardisik_hata": 0, "saglik_skoru": 0.99,
+                },
+                {
+                    "tip": "Kapasitif", "adres": "ADS1115", "baglanti": "I2C ADC",
+                    "son_deger": {"toprak_nem": 45.2},
+                    "saglik": "donmus",
+                    "aciklama": "12 dakikadır aynı değer (±0.1 tolerans içinde)",
+                    "son_gecerli_okuma": frozen_time.isoformat(),
+                    "pik_sayisi_son_1saat": 0, "ardisik_hata": 0, "saglik_skoru": 0.40,
+                },
+            ]
+            sinyal_gucu = -81
+            uptime_saniye = 3600
+            yeniden_baslama_sayisi = 8
+            bellek_bos = 120000
+            cpu_sicakligi = 52.1
+        else:
+            sensorler = [
+                {
+                    "tip": "SHT31", "adres": "0x44", "baglanti": "I2C",
+                    "son_deger": {"sicaklik": 22.0, "nem": 65.0},
+                    "saglik": "normal", "aciklama": "Normal çalışıyor",
+                    "son_gecerli_okuma": now.isoformat(),
+                    "pik_sayisi_son_1saat": 0, "ardisik_hata": 0, "saglik_skoru": 0.95,
+                },
+            ]
+            sinyal_gucu = -70
+            uptime_saniye = 3600
+            yeniden_baslama_sayisi = 1
+            bellek_bos = 160000
+            cpu_sicakligi = 44.0
+
+        aktuatorler = [
+            {
+                "tip": "sulama", "gpio": 25, "durum": "kapali",
+                "son_degisim": (now - _dt.timedelta(minutes=30)).isoformat(),
+                "toplam_acik_sure": 7200,
+            },
+            {
+                "tip": "isitici", "gpio": 26,
+                "durum": "acik" if cid == "SERA-IST01-003" else "kapali",
+                "son_degisim": (now - _dt.timedelta(minutes=5)).isoformat(),
+                "toplam_acik_sure": 2700,
+            },
+            {
+                "tip": "sogutma", "gpio": 27, "durum": "kapali",
+                "son_degisim": (now - _dt.timedelta(hours=1)).isoformat(),
+                "toplam_acik_sure": 1800,
+            },
+            {
+                "tip": "fan", "gpio": 28,
+                "durum": "acik" if cid == "SERA-IST01-001" else "kapali",
+                "son_degisim": (now - _dt.timedelta(minutes=15)).isoformat(),
+                "toplam_acik_sure": 900,
+            },
+        ]
+
+        baglanti_gecmisi = [
+            {
+                "zaman": (now - _dt.timedelta(hours=4)).isoformat(),
+                "olay": "BAGLANDI",
+                "detay": f"{c.get('baglanti_tipi', 'WiFi')} — IP: 192.168.1.10{cid[-1]}",
+            },
+            {
+                "zaman": (now - _dt.timedelta(hours=4, minutes=2)).isoformat(),
+                "olay": "KOPTU",
+                "detay": "WiFi sinyal kaybı",
+            },
+            {
+                "zaman": (now - _dt.timedelta(hours=8)).isoformat(),
+                "olay": "BAGLANDI",
+                "detay": f"{c.get('baglanti_tipi', 'WiFi')} — güç sıfırlama sonrası",
+            },
+        ]
+
+        return {
+            **self._cihaz_dict(c),
+            "sinyal_gucu":            sinyal_gucu,
+            "uptime_saniye":          uptime_saniye,
+            "yeniden_baslama_sayisi": yeniden_baslama_sayisi,
+            "bellek_bos":             bellek_bos,
+            "cpu_sicakligi":          cpu_sicakligi,
+            "sensorler":              sensorler,
+            "aktuatorler":            aktuatorler,
+            "baglanti_gecmisi":       baglanti_gecmisi,
+        }
+
+    def sensor_gecmis(self, cid: str, sensor_tip: str) -> Optional[dict]:
+        """Belirli sensörün son 1 saatlik ölçümleri. Pikler işaretli."""
+        import random as _rnd
+        import datetime as _dt
+        c = self._cihazlar.get(cid)
+        if c is None:
+            return None
+
+        now = datetime.now()
+        _rnd.seed(hash(cid + sensor_tip) % (2 ** 31))
+
+        config_map = {
+            "SHT31_sicaklik":   {"baz": 23.0, "std": 0.3, "birim": "°C",  "min": 15, "max": 30},
+            "SHT31_nem":        {"baz": 68.0, "std": 1.0, "birim": "%",   "min": 60, "max": 85},
+            "MH-Z19C_co2":      {"baz": 900.0, "std": 20, "birim": "ppm", "min": 400, "max": 1500},
+            "BH1750_isik":      {"baz": 4500.0, "std": 200, "birim": "lux", "min": 0, "max": 65535},
+            "Kapasitif_toprak_nem": {"baz": 60.0, "std": 1.0, "birim": "%", "min": 0, "max": 100},
+        }
+        cfg = config_map.get(sensor_tip, {"baz": 50.0, "std": 2.0, "birim": "?", "min": 0, "max": 100})
+
+        baz   = cfg["baz"]
+        std   = cfg["std"]
+        deger = baz
+
+        pik_dakikalari: set[int] = set()
+        if cid == "SERA-IST01-003" and sensor_tip == "SHT31_sicaklik":
+            pik_dakikalari = {15, 35, 52}
+
+        # Kapasitif donmuş değer: son 20 dakika sabit
+        if cid == "SERA-IST01-003" and "Kapasitif" in sensor_tip:
+            olcumler = []
+            for i in range(60):
+                t = now - _dt.timedelta(minutes=59 - i)
+                d = baz if i < 40 else 45.2
+                olcumler.append({"zaman": t.isoformat(), "deger": round(d, 1), "pik": False})
+            return {
+                "cihaz_id": cid, "sensor_tip": sensor_tip,
+                "birim": cfg["birim"],
+                "normal_aralik": {"min": cfg["min"], "max": cfg["max"]},
+                "olcumler": olcumler,
+            }
+
+        olcumler = []
+        for i in range(60):
+            t   = now - _dt.timedelta(minutes=59 - i)
+            pik = i in pik_dakikalari
+            if pik:
+                d = deger + _rnd.gauss(15, 2)
+            else:
+                deger = deger + _rnd.gauss(0, std * 0.3) + (baz - deger) * 0.1
+                d     = deger
+            olcumler.append({"zaman": t.isoformat(), "deger": round(d, 1), "pik": pik})
+
+        return {
+            "cihaz_id": cid, "sensor_tip": sensor_tip,
+            "birim": cfg["birim"],
+            "normal_aralik": {"min": cfg["min"], "max": cfg["max"]},
+            "olcumler": olcumler,
+        }
+
+    def saglik_ozet(self) -> dict:
+        """Tüm cihazların sağlık özeti."""
+        arizali = pik = donmus = uyari = 0
+        cihaz_durumlari = []
+
+        for cid in self._cihazlar:
+            detay = self.detay_genisletilmis(cid)
+            if detay is None:
+                continue
+            cihaz_alarmlar = []
+            for s in detay.get("sensorler", []):
+                saglik = s.get("saglik", "normal")
+                if saglik == "arizali":
+                    arizali += 1
+                    cihaz_alarmlar.append({"tip": s["tip"], "saglik": saglik})
+                elif saglik == "pik":
+                    pik += 1
+                    cihaz_alarmlar.append({"tip": s["tip"], "saglik": saglik})
+                elif saglik == "donmus":
+                    donmus += 1
+                    cihaz_alarmlar.append({"tip": s["tip"], "saglik": saglik})
+                elif saglik == "uyari":
+                    uyari += 1
+            cihaz_durumlari.append({
+                "cihaz_id": cid, "durum": detay["durum"], "alarmlar": cihaz_alarmlar,
+            })
+
+        return {
+            "toplam_cihaz":   len(self._cihazlar),
+            "arizali_sensor": arizali,
+            "pik_sensor":     pik,
+            "donmus_sensor":  donmus,
+            "uyari_sensor":   uyari,
+            "genel_saglik":   "KRITIK" if arizali > 0 else ("UYARI" if (pik + donmus + uyari) > 0 else "IYI"),
+            "cihazlar":       cihaz_durumlari,
+        }
 
 
 # ── FastAPI Uygulama Factory ───────────────────────────────────
@@ -558,6 +1051,210 @@ def api_uygulamasi_olustur(
             raise HTTPException(
                 status_code=404,
                 detail=HataYanit(hata=f"Sera bulunamadı: {sid}", kod=HataKod.BULUNAMADI).model_dump(),
+            )
+        return Response(status_code=204)
+
+    # ── Provisioning endpoint'leri ─────────────────────────────
+
+    prov_servis = ProvisioningApiServisi()
+
+    # ESP32 tarafından çağrılır — auth muaf (cihaz henüz kayıtlı değil)
+    @v1.post(
+        "/provisioning/kayit-talebi",
+        status_code=201,
+        summary="ESP32 kayıt talebi gönder",
+        tags=["Provisioning"],
+    )
+    async def kayit_talebi(istek: KayitTalebiIstek) -> JSONResponse:
+        sonuc = prov_servis.kayit_talebi(istek.model_dump())
+        return JSONResponse(status_code=201, content=ApiYanit(data=sonuc).model_dump())
+
+    # ESP32 tarafından poll edilir — auth muaf
+    @v1.get(
+        "/provisioning/durum/{talep_id}",
+        summary="Provisioning talep durumu",
+        tags=["Provisioning"],
+    )
+    async def provisioning_durum(talep_id: str) -> JSONResponse:
+        d = prov_servis.durum(talep_id)
+        if d is None:
+            raise HTTPException(
+                status_code=404,
+                detail=HataYanit(hata=f"Talep bulunamadı: {talep_id}", kod=HataKod.BULUNAMADI).model_dump(),
+            )
+        return JSONResponse(content=ApiYanit(data=d).model_dump())
+
+    # Dashboard tarafından çağrılır — auth gerekli
+    @v1.get(
+        "/provisioning/bekleyen-talepler",
+        summary="Bekleyen provisioning talepleri",
+        tags=["Provisioning"],
+    )
+    @limit
+    async def bekleyen_talepler(request: Request, _: None = Depends(auth)) -> JSONResponse:
+        talepler = prov_servis.bekleyen_talepler()
+        return JSONResponse(content=ApiYanit(data=talepler).model_dump())
+
+    @v1.post(
+        "/provisioning/onayla/{talep_id}",
+        status_code=200,
+        summary="Provisioning talebini onayla",
+        tags=["Provisioning"],
+    )
+    @limit
+    async def provisioning_onayla(
+        request: Request,
+        talep_id: str,
+        _: None = Depends(auth),
+    ) -> JSONResponse:
+        sonuc = prov_servis.onayla(talep_id)
+        if sonuc is None:
+            raise HTTPException(
+                status_code=404,
+                detail=HataYanit(
+                    hata=f"Talep bulunamadı veya zaten işlendi: {talep_id}",
+                    kod=HataKod.BULUNAMADI,
+                ).model_dump(),
+            )
+        return JSONResponse(content=ApiYanit(data=sonuc).model_dump())
+
+    @v1.post(
+        "/provisioning/reddet/{talep_id}",
+        status_code=200,
+        summary="Provisioning talebini reddet",
+        tags=["Provisioning"],
+    )
+    @limit
+    async def provisioning_reddet(
+        request: Request,
+        talep_id: str,
+        _: None = Depends(auth),
+    ) -> JSONResponse:
+        silindi = prov_servis.reddet(talep_id)
+        if not silindi:
+            raise HTTPException(
+                status_code=404,
+                detail=HataYanit(
+                    hata=f"Talep bulunamadı veya zaten işlendi: {talep_id}",
+                    kod=HataKod.BULUNAMADI,
+                ).model_dump(),
+            )
+        return JSONResponse(content=ApiYanit(data={"durum": "REDDEDILDI"}).model_dump())
+
+    # ── Cihaz endpoint'leri ────────────────────────────────────
+
+    cihaz_servis = CihazApiServisi()
+
+    @v1.get("/cihazlar", summary="Tüm cihazlar", tags=["Cihazlar"])
+    @limit
+    async def cihaz_listele(request: Request, _: None = Depends(auth)) -> JSONResponse:
+        return JSONResponse(content=ApiYanit(data=cihaz_servis.listele()).model_dump())
+
+    # !! Static route'lar {cid} dynamic route'lardan ÖNCE tanımlanmalı !!
+
+    @v1.get("/cihazlar/saglik-ozet", summary="Cihaz sağlık özeti", tags=["Cihazlar"])
+    @limit
+    async def cihaz_saglik_ozet(request: Request, _: None = Depends(auth)) -> JSONResponse:
+        return JSONResponse(content=ApiYanit(data=cihaz_servis.saglik_ozet()).model_dump())
+
+    @v1.post("/cihazlar/kayit", status_code=201, summary="Yeni cihaz kaydet", tags=["Cihazlar"])
+    @limit
+    async def cihaz_kayit(
+        request: Request,
+        istek: CihazKayitIstek,
+        _: None = Depends(auth),
+    ) -> JSONResponse:
+        sonuc = cihaz_servis.kayit_et(istek.model_dump())
+        return JSONResponse(status_code=201, content=ApiYanit(data=sonuc).model_dump())
+
+    @v1.get("/cihazlar/{cid}/detay", summary="Cihaz genişletilmiş detay", tags=["Cihazlar"])
+    @limit
+    async def cihaz_detay_genisletilmis(
+        request: Request, cid: str, _: None = Depends(auth)
+    ) -> JSONResponse:
+        c = cihaz_servis.detay_genisletilmis(cid)
+        if c is None:
+            raise HTTPException(
+                status_code=404,
+                detail=HataYanit(hata=f"Cihaz bulunamadı: {cid}", kod=HataKod.BULUNAMADI).model_dump(),
+            )
+        return JSONResponse(content=ApiYanit(data=c).model_dump())
+
+    @v1.get(
+        "/cihazlar/{cid}/sensor-gecmis/{sensor_tip}",
+        summary="Sensör geçmişi (son 1 saat)",
+        tags=["Cihazlar"],
+    )
+    @limit
+    async def cihaz_sensor_gecmis(
+        request: Request, cid: str, sensor_tip: str, _: None = Depends(auth)
+    ) -> JSONResponse:
+        gecmis = cihaz_servis.sensor_gecmis(cid, sensor_tip)
+        if gecmis is None:
+            raise HTTPException(
+                status_code=404,
+                detail=HataYanit(hata=f"Cihaz bulunamadı: {cid}", kod=HataKod.BULUNAMADI).model_dump(),
+            )
+        return JSONResponse(content=ApiYanit(data=gecmis).model_dump())
+
+    @v1.get("/cihazlar/{cid}", summary="Cihaz detayı", tags=["Cihazlar"])
+    @limit
+    async def cihaz_detay(request: Request, cid: str, _: None = Depends(auth)) -> JSONResponse:
+        c = cihaz_servis.detay(cid)
+        if c is None:
+            raise HTTPException(
+                status_code=404,
+                detail=HataYanit(hata=f"Cihaz bulunamadı: {cid}", kod=HataKod.BULUNAMADI).model_dump(),
+            )
+        return JSONResponse(content=ApiYanit(data=c).model_dump())
+
+    @v1.get("/cihazlar/{cid}/durum", summary="Cihaz bağlantı durumu", tags=["Cihazlar"])
+    @limit
+    async def cihaz_durum(request: Request, cid: str, _: None = Depends(auth)) -> JSONResponse:
+        c = cihaz_servis.detay(cid)
+        if c is None:
+            raise HTTPException(
+                status_code=404,
+                detail=HataYanit(hata=f"Cihaz bulunamadı: {cid}", kod=HataKod.BULUNAMADI).model_dump(),
+            )
+        return JSONResponse(content=ApiYanit(data={
+            "cihaz_id":     c["cihaz_id"],
+            "durum":        c["durum"],
+            "son_gorulen":  c["son_gorulen"],
+        }).model_dump())
+
+    @v1.post(
+        "/cihazlar/{cid}/sifre-sifirla",
+        status_code=200,
+        summary="Cihaz şifresini sıfırla",
+        tags=["Cihazlar"],
+    )
+    @limit
+    async def cihaz_sifre_sifirla(
+        request: Request,
+        cid: str,
+        _: None = Depends(auth),
+    ) -> JSONResponse:
+        sonuc = cihaz_servis.sifre_sifirla(cid)
+        if sonuc is None:
+            raise HTTPException(
+                status_code=404,
+                detail=HataYanit(hata=f"Cihaz bulunamadı: {cid}", kod=HataKod.BULUNAMADI).model_dump(),
+            )
+        return JSONResponse(content=ApiYanit(data=sonuc).model_dump())
+
+    @v1.delete("/cihazlar/{cid}", status_code=204, summary="Cihaz sil", tags=["Cihazlar"])
+    @limit
+    async def cihaz_sil(
+        request: Request,
+        cid: str,
+        _: None = Depends(auth),
+    ) -> Response:
+        silindi = cihaz_servis.sil(cid)
+        if not silindi:
+            raise HTTPException(
+                status_code=404,
+                detail=HataYanit(hata=f"Cihaz bulunamadı: {cid}", kod=HataKod.BULUNAMADI).model_dump(),
             )
         return Response(status_code=204)
 

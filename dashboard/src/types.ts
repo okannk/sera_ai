@@ -119,3 +119,124 @@ export interface SeraGuncelleInput {
   alan?: number
   esp32_ip?: string
 }
+
+export interface ProvisioningTalep {
+  talep_id: string
+  mac_adresi: string
+  sera_id: string
+  baglanti_tipi: string
+  firmware_versiyon: string
+  talep_zamani: string
+  durum: 'BEKLEMEDE' | 'ONAYLANDI' | 'REDDEDILDI'
+  cihaz_id?: string
+}
+
+export interface OnaylamaYaniti {
+  talep_id: string
+  cihaz_id: string
+  token: string
+}
+
+export type CihazDurum = 'CEVRIMICI' | 'GECIKMELI' | 'KOPUK' | 'BILINMIYOR'
+
+export interface Cihaz {
+  cihaz_id: string
+  tesis_kodu: string
+  sera_id: string
+  seri_no: string
+  mac_adresi: string
+  baglanti_tipi: 'WiFi' | 'Ethernet' | 'RS485'
+  firmware_versiyon: string
+  son_gorulen: string
+  aktif: boolean
+  durum: CihazDurum
+}
+
+export interface CihazKayitSonuc {
+  cihaz: Cihaz
+  sifre: string
+  firmware_konfig: Record<string, unknown>
+}
+
+export interface CihazKayitInput {
+  tesis_kodu: string
+  sera_id: string
+  mac_adresi?: string
+  firmware_versiyon?: string
+  baglanti_tipi?: string
+}
+
+// ── Sensör Sağlık ──────────────────────────────────────────────
+export type SensorSaglikDurum =
+  | 'normal'
+  | 'uyari'
+  | 'arizali'
+  | 'pik'
+  | 'donmus'
+  | 'kalibre_hatasi'
+
+export interface SensorDetay {
+  tip: string
+  adres: string
+  baglanti: string
+  son_deger: Record<string, number> | null
+  saglik: SensorSaglikDurum
+  aciklama: string
+  son_gecerli_okuma: string
+  pik_sayisi_son_1saat: number
+  ardisik_hata: number
+  saglik_skoru: number
+}
+
+export interface Aktuator {
+  tip: string
+  gpio: number
+  durum: 'acik' | 'kapali'
+  son_degisim: string
+  toplam_acik_sure: number
+}
+
+export interface BaglantıOlayı {
+  zaman: string
+  olay: 'BAGLANDI' | 'KOPTU'
+  detay: string
+}
+
+export interface CihazDetayFull extends Cihaz {
+  sinyal_gucu: number
+  uptime_saniye: number
+  yeniden_baslama_sayisi: number
+  bellek_bos: number
+  cpu_sicakligi: number
+  sensorler: SensorDetay[]
+  aktuatorler: Aktuator[]
+  baglanti_gecmisi: BaglantıOlayı[]
+}
+
+export interface SensorGecmisOlcum {
+  zaman: string
+  deger: number
+  pik: boolean
+}
+
+export interface SensorGecmis {
+  cihaz_id: string
+  sensor_tip: string
+  birim: string
+  normal_aralik: { min: number; max: number }
+  olcumler: SensorGecmisOlcum[]
+}
+
+export interface CihazSaglikOzet {
+  toplam_cihaz: number
+  arizali_sensor: number
+  pik_sensor: number
+  donmus_sensor: number
+  uyari_sensor: number
+  genel_saglik: 'IYI' | 'UYARI' | 'KRITIK'
+  cihazlar: Array<{
+    cihaz_id: string
+    durum: CihazDurum
+    alarmlar: Array<{ tip: string; saglik: SensorSaglikDurum }>
+  }>
+}
