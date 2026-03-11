@@ -119,7 +119,6 @@
     )
   )
 
-  ; ── Power symbols ──────────────────────────────────────────────────────────
   (symbol (lib_id "power:GND") (at 50 210 0) (unit 1)
     (property "Reference" "#PWR01" (at 50 214 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (property "Value" "GND" (at 50 213 0) (effects (font (size 1.27 1.27))))
@@ -141,7 +140,6 @@
     (instances (project "irrigation_node" (path "/sheet1" (reference "#PWR04") (unit 1))))
   )
 
-  ; ── U1: AMS1117-3.3 ─────────────────────────────────────────────────────
   (symbol (lib_id "Device:Regulator_Linear_LDO") (at 80 80 0) (unit 1)
     (property "Reference" "U1" (at 80 70 0) (effects (font (size 1.27 1.27))))
     (property "Value" "AMS1117-3.3" (at 80 73 0) (effects (font (size 1.27 1.27))))
@@ -149,7 +147,6 @@
     (instances (project "irrigation_node" (path "/sheet1" (reference "U1") (unit 1))))
   )
 
-  ; ── U4: LM2596 Buck converter ─────────────────────────────────────────────
   (symbol (lib_id "Device:Regulator_Switching") (at 150 80 0) (unit 1)
     (property "Reference" "U4" (at 150 70 0) (effects (font (size 1.27 1.27))))
     (property "Value" "LM2596-12" (at 150 73 0) (effects (font (size 1.27 1.27))))
@@ -158,7 +155,6 @@
     (instances (project "irrigation_node" (path "/sheet1" (reference "U4") (unit 1))))
   )
 
-  ; ── L1: 100µH inductor ───────────────────────────────────────────────────
   (symbol (lib_id "Device:L") (at 175 80 0) (unit 1)
     (property "Reference" "L1" (at 177 80 0) (effects (font (size 1.27 1.27))))
     (property "Value" "100uH" (at 177 83 0) (effects (font (size 1.27 1.27))))
@@ -166,7 +162,6 @@
     (instances (project "irrigation_node" (path "/sheet1" (reference "L1") (unit 1))))
   )
 
-  ; ── C11: 220µF output capacitor ──────────────────────────────────────────
   (symbol (lib_id "Device:C") (at 190 80 0) (unit 1)
     (property "Reference" "C11" (at 192 80 90) (effects (font (size 1.27 1.27))))
     (property "Value" "220uF_25V" (at 188 80 90) (effects (font (size 1.27 1.27))))
@@ -174,14 +169,12 @@
     (instances (project "irrigation_node" (path "/sheet1" (reference "C11") (unit 1))))
   )
 
-  ; ── Q1: IRLZ44N MOSFET — Valve 1 ─────────────────────────────────────────
   (symbol (lib_id "Device:Q_NMOS_DGS") (at 180 120 0) (unit 1)
     (property "Reference" "Q1" (at 185 112 0) (effects (font (size 1.27 1.27))))
     (property "Value" "IRLZ44N" (at 185 115 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Package_TO_SOT_THT:TO-220-3_Vertical" (at 180 120 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "irrigation_node" (path "/sheet1" (reference "Q1") (unit 1))))
   )
-  ; ── Q2: IRLZ44N MOSFET — Valve 2 ─────────────────────────────────────────
   (symbol (lib_id "Device:Q_NMOS_DGS") (at 200 120 0) (unit 1)
     (property "Reference" "Q2" (at 205 112 0) (effects (font (size 1.27 1.27))))
     (property "Value" "IRLZ44N" (at 205 115 0) (effects (font (size 1.27 1.27))))
@@ -189,7 +182,6 @@
     (instances (project "irrigation_node" (path "/sheet1" (reference "Q2") (unit 1))))
   )
 
-  ; ── R9, R10: 100Ω gate resistors ─────────────────────────────────────────
   (symbol (lib_id "Device:R") (at 170 120 0) (unit 1)
     (property "Reference" "R9" (at 172 120 90) (effects (font (size 1.27 1.27))))
     (property "Value" "100" (at 168 120 90) (effects (font (size 1.27 1.27))))
@@ -203,7 +195,6 @@
     (instances (project "irrigation_node" (path "/sheet1" (reference "R10") (unit 1))))
   )
 
-  ; ── D6, D7: 1N4007 flyback diodes ────────────────────────────────────────
   (symbol (lib_id "Device:D") (at 185 110 0) (unit 1)
     (property "Reference" "D6" (at 185 106 0) (effects (font (size 1.27 1.27))))
     (property "Value" "1N4007" (at 185 113 0) (effects (font (size 1.27 1.27))))
@@ -217,7 +208,6 @@
     (instances (project "irrigation_node" (path "/sheet1" (reference "D7") (unit 1))))
   )
 
-  ; ── R11: 10kΩ flow sensor pull-up ────────────────────────────────────────
   (symbol (lib_id "Device:R") (at 215 90 0) (unit 1)
     (property "Reference" "R11" (at 217 90 90) (effects (font (size 1.27 1.27))))
     (property "Value" "10k" (at 213 90 90) (effects (font (size 1.27 1.27))))
@@ -225,57 +215,48 @@
     (instances (project "irrigation_node" (path "/sheet1" (reference "R11") (unit 1))))
   )
 
-  ; ── EZO probe connectors J1..J5 ───────────────────────────────────────────
-  ; J1: EZO-pH (I2C 0x63)
   (symbol (lib_id "Connector:Conn_01x04_Pin") (at 220 100 0) (unit 1)
     (property "Reference" "J1" (at 220 91 0) (effects (font (size 1.27 1.27))))
     (property "Value" "EZO_pH_0x63" (at 220 94 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical" (at 220 100 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "irrigation_node" (path "/sheet1" (reference "J1") (unit 1))))
   )
-  ; J2: EZO-EC (I2C 0x64)
   (symbol (lib_id "Connector:Conn_01x04_Pin") (at 220 115 0) (unit 1)
     (property "Reference" "J2" (at 220 106 0) (effects (font (size 1.27 1.27))))
     (property "Value" "EZO_EC_0x64" (at 220 109 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical" (at 220 115 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "irrigation_node" (path "/sheet1" (reference "J2") (unit 1))))
   )
-  ; J3: EZO-DO (I2C 0x61)
   (symbol (lib_id "Connector:Conn_01x04_Pin") (at 220 130 0) (unit 1)
     (property "Reference" "J3" (at 220 121 0) (effects (font (size 1.27 1.27))))
     (property "Value" "EZO_DO_0x61" (at 220 124 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical" (at 220 130 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "irrigation_node" (path "/sheet1" (reference "J3") (unit 1))))
   )
-  ; J4: EZO-RTD (I2C 0x66)
   (symbol (lib_id "Connector:Conn_01x04_Pin") (at 220 145 0) (unit 1)
     (property "Reference" "J4" (at 220 136 0) (effects (font (size 1.27 1.27))))
     (property "Value" "EZO_RTD_0x66" (at 220 139 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical" (at 220 145 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "irrigation_node" (path "/sheet1" (reference "J4") (unit 1))))
   )
-  ; J5: EZO-PMP (I2C 0x67)
   (symbol (lib_id "Connector:Conn_01x04_Pin") (at 220 160 0) (unit 1)
     (property "Reference" "J5" (at 220 151 0) (effects (font (size 1.27 1.27))))
     (property "Value" "EZO_PMP_0x67" (at 220 154 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical" (at 220 160 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "irrigation_node" (path "/sheet1" (reference "J5") (unit 1))))
   )
-  ; J6: Valve 1 screw terminal (2-pin)
   (symbol (lib_id "Connector:Conn_01x02_Pin") (at 205 135 0) (unit 1)
     (property "Reference" "J6" (at 205 131 0) (effects (font (size 1.27 1.27))))
     (property "Value" "VALVE_1" (at 205 138 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Connector_Phoenix_MKDS:PhoenixContact_MKDS_1,5_2-5.08_1x02_P5.08mm_Vertical" (at 205 135 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "irrigation_node" (path "/sheet1" (reference "J6") (unit 1))))
   )
-  ; J7: Valve 2 screw terminal (2-pin)
   (symbol (lib_id "Connector:Conn_01x02_Pin") (at 215 135 0) (unit 1)
     (property "Reference" "J7" (at 215 131 0) (effects (font (size 1.27 1.27))))
     (property "Value" "VALVE_2" (at 215 138 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Connector_Phoenix_MKDS:PhoenixContact_MKDS_1,5_2-5.08_1x02_P5.08mm_Vertical" (at 215 135 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "irrigation_node" (path "/sheet1" (reference "J7") (unit 1))))
   )
-  ; J8: YF-S201 flow sensor (3-pin)
   (symbol (lib_id "Connector:Conn_01x03_Pin") (at 215 150 0) (unit 1)
     (property "Reference" "J8" (at 215 142 0) (effects (font (size 1.27 1.27))))
     (property "Value" "YF-S201_FLOW" (at 215 145 0) (effects (font (size 1.27 1.27))))
@@ -283,7 +264,6 @@
     (instances (project "irrigation_node" (path "/sheet1" (reference "J8") (unit 1))))
   )
 
-  ; ── Status LEDs D1..D5 ───────────────────────────────────────────────────
   (symbol (lib_id "Device:LED") (at 170 95 0) (unit 1)
     (property "Reference" "D1" (at 170 91 0) (effects (font (size 1.27 1.27))))
     (property "Value" "LED_PWR" (at 170 98 0) (effects (font (size 1.27 1.27))))
@@ -315,32 +295,25 @@
     (instances (project "irrigation_node" (path "/sheet1" (reference "D5") (unit 1))))
   )
 
-  ; ── Net labels ────────────────────────────────────────────────────────────
-  (net_label "I2C_SDA" (at 160 100 0) (effects (font (size 1.27 1.27))))
-  (net_label "I2C_SCL" (at 160 105 0) (effects (font (size 1.27 1.27))))
-  (net_label "VALVE1_GATE" (at 160 110 0) (effects (font (size 1.27 1.27))))
-  (net_label "VALVE2_GATE" (at 160 115 0) (effects (font (size 1.27 1.27))))
-  (net_label "FLOW_PULSE" (at 160 120 0) (effects (font (size 1.27 1.27))))
-  (net_label "VBUS_12V" (at 160 125 0) (effects (font (size 1.27 1.27))))
+  (label "I2C_SDA" (at 160 100 0) (effects (font (size 1.27 1.27))))
+  (label "I2C_SCL" (at 160 105 0) (effects (font (size 1.27 1.27))))
+  (label "VALVE1_GATE" (at 160 110 0) (effects (font (size 1.27 1.27))))
+  (label "VALVE2_GATE" (at 160 115 0) (effects (font (size 1.27 1.27))))
+  (label "FLOW_PULSE" (at 160 120 0) (effects (font (size 1.27 1.27))))
+  (label "VBUS_12V" (at 160 125 0) (effects (font (size 1.27 1.27))))
 
-  ; ── Wires ─────────────────────────────────────────────────────────────────
-  ; LM2596 output to inductor to 12V rail
   (wire (pts (xy 155 80) (xy 175 80)))
   (wire (pts (xy 178 80) (xy 190 80)))
   (wire (pts (xy 190 80) (xy 190 50)))
-  ; MOSFET gate resistors
   (wire (pts (xy 166 120) (xy 180 120)))
   (wire (pts (xy 174 120) (xy 180 120)))
-  ; Flyback diodes
   (wire (pts (xy 185 108) (xy 185 105)))
   (wire (pts (xy 185 112) (xy 185 120)))
   (wire (pts (xy 205 108) (xy 205 105)))
   (wire (pts (xy 205 112) (xy 205 120)))
-  ; 3.3V to probe connectors
   (wire (pts (xy 50 53) (xy 50 70)))
   (wire (pts (xy 50 70) (xy 220 70)))
 
-  ; ── Text annotations ──────────────────────────────────────────────────────
   (text "LM2596-12 Buck Converter\nVin: 15-24V → Vout: 12V 3A\nFor solenoid valve drive\nL1: 100µH, C11: 220µF" (at 140 65 0)
     (effects (font (size 1.5 1.5)))
   )

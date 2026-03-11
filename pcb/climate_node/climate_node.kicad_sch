@@ -72,7 +72,6 @@
     )
   )
 
-  ; ── Power symbols ──────────────────────────────────────────────────────────
   (symbol (lib_id "power:GND") (at 50 200 0) (unit 1)
     (property "Reference" "#PWR01" (at 50 204 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (property "Value" "GND" (at 50 203 0) (effects (font (size 1.27 1.27))))
@@ -89,7 +88,6 @@
     (instances (project "climate_node" (path "/sheet1" (reference "#PWR03") (unit 1))))
   )
 
-  ; ── U1: AMS1117-3.3 ─────────────────────────────────────────────────────
   (symbol (lib_id "Device:Regulator_Linear_LDO") (at 100 80 0) (unit 1)
     (property "Reference" "U1" (at 100 70 0) (effects (font (size 1.27 1.27))))
     (property "Value" "AMS1117-3.3" (at 100 73 0) (effects (font (size 1.27 1.27))))
@@ -97,29 +95,24 @@
     (instances (project "climate_node" (path "/sheet1" (reference "U1") (unit 1))))
   )
 
-  ; ── PC817 Optocouplers (U4..U7) ──────────────────────────────────────────
-  ; U4 — Channel 1 (Irrigation/Solenoid 1)
   (symbol (lib_id "Device:PC817") (at 80 120 0) (unit 1)
     (property "Reference" "U4" (at 80 112 0) (effects (font (size 1.27 1.27))))
     (property "Value" "PC817" (at 80 115 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Package_DIP:DIP-4_W7.62mm" (at 80 120 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "climate_node" (path "/sheet1" (reference "U4") (unit 1))))
   )
-  ; U5 — Channel 2 (Heater)
   (symbol (lib_id "Device:PC817") (at 100 120 0) (unit 1)
     (property "Reference" "U5" (at 100 112 0) (effects (font (size 1.27 1.27))))
     (property "Value" "PC817" (at 100 115 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Package_DIP:DIP-4_W7.62mm" (at 100 120 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "climate_node" (path "/sheet1" (reference "U5") (unit 1))))
   )
-  ; U6 — Channel 3 (Cooling)
   (symbol (lib_id "Device:PC817") (at 120 120 0) (unit 1)
     (property "Reference" "U6" (at 120 112 0) (effects (font (size 1.27 1.27))))
     (property "Value" "PC817" (at 120 115 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Package_DIP:DIP-4_W7.62mm" (at 120 120 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "climate_node" (path "/sheet1" (reference "U6") (unit 1))))
   )
-  ; U7 — Channel 4 (Fan)
   (symbol (lib_id "Device:PC817") (at 140 120 0) (unit 1)
     (property "Reference" "U7" (at 140 112 0) (effects (font (size 1.27 1.27))))
     (property "Value" "PC817" (at 140 115 0) (effects (font (size 1.27 1.27))))
@@ -127,7 +120,6 @@
     (instances (project "climate_node" (path "/sheet1" (reference "U7") (unit 1))))
   )
 
-  ; ── R1..R4: 330Ω optocoupler input resistors ─────────────────────────────
   (symbol (lib_id "Device:R") (at 70 120 0) (unit 1)
     (property "Reference" "R1" (at 72 120 90) (effects (font (size 1.27 1.27))))
     (property "Value" "330" (at 68 120 90) (effects (font (size 1.27 1.27))))
@@ -153,7 +145,6 @@
     (instances (project "climate_node" (path "/sheet1" (reference "R4") (unit 1))))
   )
 
-  ; ── R5..R8: LED resistors 330Ω ───────────────────────────────────────────
   (symbol (lib_id "Device:R") (at 170 80 0) (unit 1)
     (property "Reference" "R5" (at 172 80 90) (effects (font (size 1.27 1.27))))
     (property "Value" "330" (at 168 80 90) (effects (font (size 1.27 1.27))))
@@ -179,7 +170,6 @@
     (instances (project "climate_node" (path "/sheet1" (reference "R8") (unit 1))))
   )
 
-  ; ── D1..D4: Status LEDs ──────────────────────────────────────────────────
   (symbol (lib_id "Device:LED") (at 170 95 0) (unit 1)
     (property "Reference" "D1" (at 170 91 0) (effects (font (size 1.27 1.27))))
     (property "Value" "LED_CH1" (at 170 98 0) (effects (font (size 1.27 1.27))))
@@ -205,7 +195,6 @@
     (instances (project "climate_node" (path "/sheet1" (reference "D4") (unit 1))))
   )
 
-  ; ── MOV: S14K275 varistor ────────────────────────────────────────────────
   (symbol (lib_id "Device:Varistor") (at 30 160 0) (unit 1)
     (property "Reference" "RV1" (at 30 156 0) (effects (font (size 1.27 1.27))))
     (property "Value" "S14K275" (at 30 163 0) (effects (font (size 1.27 1.27))))
@@ -213,7 +202,6 @@
     (instances (project "climate_node" (path "/sheet1" (reference "RV1") (unit 1))))
   )
 
-  ; ── F1: Fuse holder + 10A fuse ───────────────────────────────────────────
   (symbol (lib_id "Device:Fuse") (at 50 160 0) (unit 1)
     (property "Reference" "F1" (at 50 156 0) (effects (font (size 1.27 1.27))))
     (property "Value" "10A_250V" (at 50 163 0) (effects (font (size 1.27 1.27))))
@@ -221,7 +209,6 @@
     (instances (project "climate_node" (path "/sheet1" (reference "F1") (unit 1))))
   )
 
-  ; ── J_AC: AC Mains screw terminal 5pin ───────────────────────────────────
   (symbol (lib_id "Connector:Conn_01x05_Pin") (at 20 170 0) (unit 1)
     (property "Reference" "J_AC" (at 20 162 0) (effects (font (size 1.27 1.27))))
     (property "Value" "L/N/PE/LOAD1-4" (at 20 165 0) (effects (font (size 1.27 1.27))))
@@ -229,7 +216,6 @@
     (instances (project "climate_node" (path "/sheet1" (reference "J_AC") (unit 1))))
   )
 
-  ; ── G3MB-202P SSR symbols (external panel mount, just connectors shown) ──
   (symbol (lib_id "Connector:Conn_01x02_Pin") (at 160 140 0) (unit 1)
     (property "Reference" "K1" (at 160 136 0) (effects (font (size 1.27 1.27))))
     (property "Value" "G3MB-202P_CH1" (at 160 144 0) (effects (font (size 1.27 1.27))))
@@ -255,33 +241,27 @@
     (instances (project "climate_node" (path "/sheet1" (reference "K4") (unit 1))))
   )
 
-  ; ── Net labels ────────────────────────────────────────────────────────────
-  (net_label "SSR_CH1" (at 75 120 0) (effects (font (size 1.27 1.27))))
-  (net_label "SSR_CH2" (at 85 120 0) (effects (font (size 1.27 1.27))))
-  (net_label "SSR_CH3" (at 105 120 0) (effects (font (size 1.27 1.27))))
-  (net_label "SSR_CH4" (at 125 120 0) (effects (font (size 1.27 1.27))))
-  (net_label "AC_LINE" (at 30 155 0) (effects (font (size 1.27 1.27))))
-  (net_label "AC_NEUTRAL" (at 50 155 0) (effects (font (size 1.27 1.27))))
-  (net_label "EARTH_GND" (at 70 155 0) (effects (font (size 1.27 1.27))))
+  (label "SSR_CH1" (at 75 120 0) (effects (font (size 1.27 1.27))))
+  (label "SSR_CH2" (at 85 120 0) (effects (font (size 1.27 1.27))))
+  (label "SSR_CH3" (at 105 120 0) (effects (font (size 1.27 1.27))))
+  (label "SSR_CH4" (at 125 120 0) (effects (font (size 1.27 1.27))))
+  (label "AC_LINE" (at 30 155 0) (effects (font (size 1.27 1.27))))
+  (label "AC_NEUTRAL" (at 50 155 0) (effects (font (size 1.27 1.27))))
+  (label "EARTH_GND" (at 70 155 0) (effects (font (size 1.27 1.27))))
 
-  ; ── Wires ─────────────────────────────────────────────────────────────────
-  ; 3.3V to R1..R4 top
   (wire (pts (xy 70 116) (xy 70 50)))
   (wire (pts (xy 90 116) (xy 90 50)))
   (wire (pts (xy 110 116) (xy 110 50)))
   (wire (pts (xy 130 116) (xy 130 50)))
-  ; R bottom to PC817 input
   (wire (pts (xy 70 124) (xy 80 124)))
   (wire (pts (xy 90 124) (xy 100 124)))
   (wire (pts (xy 110 124) (xy 120 124)))
   (wire (pts (xy 130 124) (xy 140 124)))
-  ; PC817 output to SSR control
   (wire (pts (xy 80 128) (xy 160 140)))
   (wire (pts (xy 100 128) (xy 170 140)))
   (wire (pts (xy 120 128) (xy 180 140)))
   (wire (pts (xy 140 128) (xy 190 140)))
 
-  ; ── Text annotations ──────────────────────────────────────────────────────
   (text "! HIGH VOLTAGE WARNING !\n230V AC present in AC section\nMinimum 6mm clearance required\nUse conformal coating" (at 20 140 0)
     (effects (font (size 2.0 2.0) (bold yes)) (color 255 0 0 255))
   )

@@ -95,7 +95,6 @@
     )
   )
 
-  ; ── Power symbols ──────────────────────────────────────────────────────────
   (symbol (lib_id "power:GND") (at 50 175 0) (unit 1)
     (property "Reference" "#PWR01" (at 50 179 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (property "Value" "GND" (at 50 178 0) (effects (font (size 1.27 1.27))))
@@ -112,7 +111,6 @@
     (instances (project "sensor_node" (path "/sheet1" (reference "#PWR03") (unit 1))))
   )
 
-  ; ── U1: AMS1117-3.3 LDO ───────────────────────────────────────────────────
   (symbol (lib_id "Device:Regulator_Linear_LDO") (at 100 100 0) (unit 1)
     (property "Reference" "U1" (at 100 90 0) (effects (font (size 1.27 1.27))))
     (property "Value" "AMS1117-3.3" (at 100 93 0) (effects (font (size 1.27 1.27))))
@@ -121,7 +119,6 @@
     (instances (project "sensor_node" (path "/sheet1" (reference "U1") (unit 1))))
   )
 
-  ; ── C1, C2: 100µF bulk caps ───────────────────────────────────────────────
   (symbol (lib_id "Device:C") (at 75 100 0) (unit 1)
     (property "Reference" "C1" (at 77.032 100 90) (effects (font (size 1.27 1.27))))
     (property "Value" "100uF" (at 73 100 90) (effects (font (size 1.27 1.27))))
@@ -135,7 +132,6 @@
     (instances (project "sensor_node" (path "/sheet1" (reference "C2") (unit 1))))
   )
 
-  ; ── C3, C4: 10µF caps ────────────────────────────────────────────────────
   (symbol (lib_id "Device:C") (at 75 115 0) (unit 1)
     (property "Reference" "C3" (at 77.032 115 90) (effects (font (size 1.27 1.27))))
     (property "Value" "10uF" (at 73 115 90) (effects (font (size 1.27 1.27))))
@@ -149,7 +145,6 @@
     (instances (project "sensor_node" (path "/sheet1" (reference "C4") (unit 1))))
   )
 
-  ; ── C5..C10: 100nF bypass caps ───────────────────────────────────────────
   (symbol (lib_id "Device:C") (at 75 130 0) (unit 1)
     (property "Reference" "C5" (at 77.032 130 90) (effects (font (size 1.27 1.27))))
     (property "Value" "100nF" (at 73 130 90) (effects (font (size 1.27 1.27))))
@@ -187,7 +182,6 @@
     (instances (project "sensor_node" (path "/sheet1" (reference "C10") (unit 1))))
   )
 
-  ; ── R1, R2: 4.7kΩ I2C pull-ups ───────────────────────────────────────────
   (symbol (lib_id "Device:R") (at 160 90 0) (unit 1)
     (property "Reference" "R1" (at 162.032 90 90) (effects (font (size 1.27 1.27))))
     (property "Value" "4.7k" (at 158 90 90) (effects (font (size 1.27 1.27))))
@@ -201,7 +195,6 @@
     (instances (project "sensor_node" (path "/sheet1" (reference "R2") (unit 1))))
   )
 
-  ; ── R3, R4, R5: 330Ω LED resistors ───────────────────────────────────────
   (symbol (lib_id "Device:R") (at 180 90 0) (unit 1)
     (property "Reference" "R3" (at 182.032 90 90) (effects (font (size 1.27 1.27))))
     (property "Value" "330" (at 178 90 90) (effects (font (size 1.27 1.27))))
@@ -221,21 +214,18 @@
     (instances (project "sensor_node" (path "/sheet1" (reference "R5") (unit 1))))
   )
 
-  ; ── D1: Green LED ─────────────────────────────────────────────────────────
   (symbol (lib_id "Device:LED") (at 180 105 0) (unit 1)
     (property "Reference" "D1" (at 180 101 0) (effects (font (size 1.27 1.27))))
     (property "Value" "LED_GREEN" (at 180 108 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "LED_SMD:LED_0805_2012Metric" (at 180 105 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "sensor_node" (path "/sheet1" (reference "D1") (unit 1))))
   )
-  ; ── D2: Blue LED ──────────────────────────────────────────────────────────
   (symbol (lib_id "Device:LED") (at 190 105 0) (unit 1)
     (property "Reference" "D2" (at 190 101 0) (effects (font (size 1.27 1.27))))
     (property "Value" "LED_BLUE" (at 190 108 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "LED_SMD:LED_0805_2012Metric" (at 190 105 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "sensor_node" (path "/sheet1" (reference "D2") (unit 1))))
   )
-  ; ── D3: Red LED ───────────────────────────────────────────────────────────
   (symbol (lib_id "Device:LED") (at 200 105 0) (unit 1)
     (property "Reference" "D3" (at 200 101 0) (effects (font (size 1.27 1.27))))
     (property "Value" "LED_RED" (at 200 108 0) (effects (font (size 1.27 1.27))))
@@ -243,14 +233,12 @@
     (instances (project "sensor_node" (path "/sheet1" (reference "D3") (unit 1))))
   )
 
-  ; ── D4: TVS SMBJ5.0A ──────────────────────────────────────────────────────
   (symbol (lib_id "Device:D_TVS") (at 50 140 0) (unit 1)
     (property "Reference" "D4" (at 50 136 0) (effects (font (size 1.27 1.27))))
     (property "Value" "SMBJ5.0A" (at 50 143 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Diode_SMD:D_SMB" (at 50 140 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "sensor_node" (path "/sheet1" (reference "D4") (unit 1))))
   )
-  ; ── D5: BAT54 Schottky ────────────────────────────────────────────────────
   (symbol (lib_id "Device:D_Schottky") (at 65 140 0) (unit 1)
     (property "Reference" "D5" (at 65 136 0) (effects (font (size 1.27 1.27))))
     (property "Value" "BAT54" (at 65 143 0) (effects (font (size 1.27 1.27))))
@@ -258,49 +246,42 @@
     (instances (project "sensor_node" (path "/sheet1" (reference "D5") (unit 1))))
   )
 
-  ; ── J1: JST-XH 4pin — SHT40 ──────────────────────────────────────────────
   (symbol (lib_id "Connector:Conn_01x04_Pin") (at 210 100 0) (unit 1)
     (property "Reference" "J1" (at 210 91 0) (effects (font (size 1.27 1.27))))
     (property "Value" "SHT40_I2C" (at 210 94 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical" (at 210 100 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "sensor_node" (path "/sheet1" (reference "J1") (unit 1))))
   )
-  ; ── J2: JST-XH 4pin — SCD41 ──────────────────────────────────────────────
   (symbol (lib_id "Connector:Conn_01x04_Pin") (at 210 115 0) (unit 1)
     (property "Reference" "J2" (at 210 106 0) (effects (font (size 1.27 1.27))))
     (property "Value" "SCD41_I2C" (at 210 109 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical" (at 210 115 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "sensor_node" (path "/sheet1" (reference "J2") (unit 1))))
   )
-  ; ── J3: JST-XH 4pin — AS7341 ─────────────────────────────────────────────
   (symbol (lib_id "Connector:Conn_01x04_Pin") (at 210 130 0) (unit 1)
     (property "Reference" "J3" (at 210 121 0) (effects (font (size 1.27 1.27))))
     (property "Value" "AS7341_I2C" (at 210 124 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical" (at 210 130 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "sensor_node" (path "/sheet1" (reference "J3") (unit 1))))
   )
-  ; ── J4: JST-XH 3pin — TEROS-12 SDI-12 ───────────────────────────────────
   (symbol (lib_id "Connector:Conn_01x03_Pin") (at 210 145 0) (unit 1)
     (property "Reference" "J4" (at 210 137 0) (effects (font (size 1.27 1.27))))
     (property "Value" "TEROS12_SDI12" (at 210 140 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Connector_JST:JST_XH_B3B-XH-A_1x03_P2.50mm_Vertical" (at 210 145 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "sensor_node" (path "/sheet1" (reference "J4") (unit 1))))
   )
-  ; ── J5: DC Jack 2.1mm ────────────────────────────────────────────────────
   (symbol (lib_id "Connector:Barrel_Jack_Switch") (at 30 100 0) (unit 1)
     (property "Reference" "J5" (at 30 93 0) (effects (font (size 1.27 1.27))))
     (property "Value" "DC_Jack_2.1mm" (at 30 96 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Connector_BarrelJack:BarrelJack_Kycon_KLDX-0202-A_Horizontal" (at 30 100 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "sensor_node" (path "/sheet1" (reference "J5") (unit 1))))
   )
-  ; ── J6: UART Debug 4pin header ───────────────────────────────────────────
   (symbol (lib_id "Connector:Conn_01x04_Pin") (at 30 120 0) (unit 1)
     (property "Reference" "J6" (at 30 111 0) (effects (font (size 1.27 1.27))))
     (property "Value" "UART_DEBUG" (at 30 114 0) (effects (font (size 1.27 1.27))))
     (property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical" (at 30 120 0) (effects (font (size 1.27 1.27)) (hide yes)))
     (instances (project "sensor_node" (path "/sheet1" (reference "J6") (unit 1))))
   )
-  ; ── J7: RJ45 HR911105A ───────────────────────────────────────────────────
   (symbol (lib_id "Connector:RJ45") (at 30 150 0) (unit 1)
     (property "Reference" "J7" (at 30 138 0) (effects (font (size 1.27 1.27))))
     (property "Value" "HR911105A" (at 30 141 0) (effects (font (size 1.27 1.27))))
@@ -308,7 +289,6 @@
     (instances (project "sensor_node" (path "/sheet1" (reference "J7") (unit 1))))
   )
 
-  ; ── SW1: Reset button SPST ────────────────────────────────────────────────
   (symbol (lib_id "Device:SW_Push") (at 160 155 0) (unit 1)
     (property "Reference" "SW1" (at 160 151 0) (effects (font (size 1.27 1.27))))
     (property "Value" "RESET" (at 160 158 0) (effects (font (size 1.27 1.27))))
@@ -316,44 +296,34 @@
     (instances (project "sensor_node" (path "/sheet1" (reference "SW1") (unit 1))))
   )
 
-  ; ── Net labels ────────────────────────────────────────────────────────────
-  (net_label "I2C_SDA" (at 165 100 0) (effects (font (size 1.27 1.27))))
-  (net_label "I2C_SCL" (at 165 105 0) (effects (font (size 1.27 1.27))))
-  (net_label "SPI_MOSI" (at 165 110 0) (effects (font (size 1.27 1.27))))
-  (net_label "SPI_MISO" (at 165 115 0) (effects (font (size 1.27 1.27))))
-  (net_label "SPI_SCK" (at 165 120 0) (effects (font (size 1.27 1.27))))
-  (net_label "SPI_CS_W5500" (at 165 125 0) (effects (font (size 1.27 1.27))))
-  (net_label "UART_TX" (at 165 130 0) (effects (font (size 1.27 1.27))))
-  (net_label "UART_RX" (at 165 135 0) (effects (font (size 1.27 1.27))))
-  (net_label "SDI12_DATA" (at 165 140 0) (effects (font (size 1.27 1.27))))
-  (net_label "nRESET" (at 165 145 0) (effects (font (size 1.27 1.27))))
+  (label "I2C_SDA" (at 165 100 0) (effects (font (size 1.27 1.27))))
+  (label "I2C_SCL" (at 165 105 0) (effects (font (size 1.27 1.27))))
+  (label "SPI_MOSI" (at 165 110 0) (effects (font (size 1.27 1.27))))
+  (label "SPI_MISO" (at 165 115 0) (effects (font (size 1.27 1.27))))
+  (label "SPI_SCK" (at 165 120 0) (effects (font (size 1.27 1.27))))
+  (label "SPI_CS_W5500" (at 165 125 0) (effects (font (size 1.27 1.27))))
+  (label "UART_TX" (at 165 130 0) (effects (font (size 1.27 1.27))))
+  (label "UART_RX" (at 165 135 0) (effects (font (size 1.27 1.27))))
+  (label "SDI12_DATA" (at 165 140 0) (effects (font (size 1.27 1.27))))
+  (label "nRESET" (at 165 145 0) (effects (font (size 1.27 1.27))))
 
-  ; ── Wires ─────────────────────────────────────────────────────────────────
-  ; 3.3V rail to AMS1117 output
   (wire (pts (xy 50 53) (xy 50 70)))
   (wire (pts (xy 100 50) (xy 100 90)))
-  ; GND rail
   (wire (pts (xy 50 175) (xy 50 165)))
-  ; I2C pull-up resistors to 3.3V
   (wire (pts (xy 160 86) (xy 160 53)))
   (wire (pts (xy 170 86) (xy 170 53)))
-  ; Pull-up resistors to SDA/SCL
   (wire (pts (xy 160 94) (xy 160 100)))
   (wire (pts (xy 170 94) (xy 170 105)))
-  ; LED resistors
   (wire (pts (xy 180 86) (xy 180 53)))
   (wire (pts (xy 190 86) (xy 190 53)))
   (wire (pts (xy 200 86) (xy 200 53)))
-  ; LED resistors to LEDs
   (wire (pts (xy 180 94) (xy 180 101)))
   (wire (pts (xy 190 94) (xy 190 101)))
   (wire (pts (xy 200 94) (xy 200 101)))
-  ; LED cathodes to GND
   (wire (pts (xy 180 109) (xy 180 175)))
   (wire (pts (xy 190 109) (xy 190 175)))
   (wire (pts (xy 200 109) (xy 200 175)))
 
-  ; ── Text annotations ──────────────────────────────────────────────────────
   (text "ESP32-S3-DevKitC-1\n(2×22 header, 2.54mm pitch)\nSPI → W5500 Ethernet\nI2C → SHT40, SCD41, AS7341\nSDI-12 → TEROS-12" (at 50 65 0)
     (effects (font (size 1.5 1.5)))
   )
