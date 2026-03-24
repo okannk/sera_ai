@@ -26,6 +26,8 @@ class OlayTur(Enum):
     CB_ACILDI        = "cb_acildi"
     CB_KAPANDI       = "cb_kapandi"
     SISTEM_HATASI    = "sistem_hatasi"
+    HASTALIK_TESPIT  = "hastalik_tespit"   # Hastalık tespit edildi (bildirim/log)
+    HASTALIK_KRITIK  = "hastalik_kritik"   # Yanıklık gibi acil müdahale gerektiren
 
 
 class EventBus:

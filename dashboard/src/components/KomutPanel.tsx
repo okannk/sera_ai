@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { KomutAdi } from '../types'
+import { useKomutGuvenlik } from '../context/KomutGuvenlik'
 
 interface Props {
   seraId: string
@@ -15,27 +16,52 @@ const AKTÜATÖRLER: { ad: string; icon: string; ac: KomutAdi; kapat: KomutAdi }
 ]
 
 export function KomutPanel({ seraId: _seraId, onKomut }: Props) {
+  const { komutOnayIste, timerSifirla } = useKomutGuvenlik()
   const [aktifler, setAktifler] = useState<Record<string, boolean>>({
     SULAMA: false, ISITICI: false, SOGUTMA: false, FAN: false, ISIK: false,
   })
   const [yuklenen, setYuklenen] = useState<string | null>(null)
   const [sonuc, setSonuc]       = useState<{ komut: string; ok: boolean } | null>(null)
 
-  async function toggle(ad: string, acKomut: KomutAdi, kapatKomut: KomutAdi) {
+  async function gercektenToggle(ad: string, komut: KomutAdi, yeniDurum: boolean) {
     setYuklenen(ad)
     setSonuc(null)
-    const yeniDurum = !aktifler[ad]
-    const komut = yeniDurum ? acKomut : kapatKomut
     try {
       await onKomut(komut)
       setAktifler(prev => ({ ...prev, [ad]: yeniDurum }))
       setSonuc({ komut, ok: true })
+      timerSifirla()
     } catch {
       setSonuc({ komut, ok: false })
     } finally {
       setYuklenen(null)
       setTimeout(() => setSonuc(null), 2500)
     }
+  }
+
+  function toggle(ad: string, acKomut: KomutAdi, kapatKomut: KomutAdi) {
+    const yeniDurum = !aktifler[ad]
+    const komut = yeniDurum ? acKomut : kapatKomut
+    komutOnayIste(() => gercektenToggle(ad, komut, yeniDurum))
+  }
+
+  async function gercektenAcilDurdur() {
+    setYuklenen('ACIL')
+    setSonuc(null)
+    try {
+      await onKomut('ACIL_DURDUR')
+      setSonuc({ komut: 'ACIL_DURDUR', ok: true })
+      timerSifirla()
+    } catch {
+      setSonuc({ komut: 'ACIL_DURDUR', ok: false })
+    } finally {
+      setYuklenen(null)
+      setTimeout(() => setSonuc(null), 2500)
+    }
+  }
+
+  function acilDurdur() {
+    komutOnayIste(() => gercektenAcilDurdur())
   }
 
   return (
@@ -86,12 +112,7 @@ export function KomutPanel({ seraId: _seraId, onKomut }: Props) {
 
       {/* Acil durdur */}
       <button
-        onClick={async () => {
-          setYuklenen('ACIL')
-          try { await onKomut('ACIL_DURDUR'); setSonuc({ komut: 'ACIL_DURDUR', ok: true }) }
-          catch { setSonuc({ komut: 'ACIL_DURDUR', ok: false }) }
-          finally { setYuklenen(null); setTimeout(() => setSonuc(null), 2500) }
-        }}
+        onClick={acilDurdur}
         disabled={yuklenen !== null}
         className="w-full mt-2 py-3 rounded-lg font-bold text-sm transition-colors"
         style={{

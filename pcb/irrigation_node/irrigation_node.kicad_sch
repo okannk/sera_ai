@@ -1,1409 +1,4618 @@
-(kicad_sch (version 20230121) (generator eeschema)
-
-  (paper "A3")
-
-  (title_block
-    (title "Irrigation Node — Sera AI")
-    (date "2026-03-11")
-    (rev "1.0")
-    (company "Sera AI")
-    (comment 1 "ESP32-S3 + W5500 + Atlas EZO (5x I2C) + LM2596 12V + IRLZ44N valves")
-    (comment 2 "Board: 120x100mm  |  pH/EC/DO/RTD/PMP + 2x solenoid valve + flow sensor")
-  )
-
-  (lib_symbols
-    (symbol "Device:R" (pin_numbers (hide yes)) (pin_names (offset 0))
-      (property "Reference" "R" (at 2.032 0 90)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "R" (at 0 0 90)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Footprint" "" (at 1.778 0 90)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (property "Datasheet" "~" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (symbol "R_0_1"
-        (polyline
-          (pts (xy -1.016 -2.032) (xy 1.016 -2.032) (xy 1.016 2.032) (xy -1.016 2.032) (xy -1.016 -2.032))
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (pin passive line (at 0 3.81 270) (length 1.778)
-          (name "~" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at 0 -3.81 90) (length 1.778)
-          (name "~" (effects (font (size 1.27 1.27))))
-          (number "2" (effects (font (size 1.27 1.27))))
-        )
-      )
-    )
-    (symbol "Device:C" (pin_numbers (hide yes)) (pin_names (offset 0.254))
-      (property "Reference" "C" (at 1.778 0 90)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "C" (at -1.778 0 90)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (property "Datasheet" "~" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (symbol "C_0_1"
-        (polyline
-          (pts (xy -2.032 -0.762) (xy 2.032 -0.762))
-          (stroke (width 0.508) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts (xy -2.032 0.762) (xy 2.032 0.762))
-          (stroke (width 0.508) (type default))
-          (fill (type none))
-        )
-        (pin passive line (at 0 3.81 270) (length 3.048)
-          (name "~" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at 0 -3.81 90) (length 3.048)
-          (name "~" (effects (font (size 1.27 1.27))))
-          (number "2" (effects (font (size 1.27 1.27))))
-        )
-      )
-    )
-    (symbol "Device:LED" (pin_numbers (hide yes)) (pin_names (offset 1.016) (hide yes))
-      (property "Reference" "D" (at 0 2.54 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "LED" (at 0 -2.54 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (property "Datasheet" "~" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (symbol "LED_0_1"
-        (polyline
-          (pts (xy -1.27 -1.27) (xy -1.27 1.27) (xy 1.27 0) (xy -1.27 -1.27))
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts (xy 1.27 -1.27) (xy 1.27 1.27))
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (pin passive line (at -3.81 0 0) (length 2.54)
-          (name "K" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at 3.81 0 180) (length 2.54)
-          (name "A" (effects (font (size 1.27 1.27))))
-          (number "2" (effects (font (size 1.27 1.27))))
-        )
-      )
-    )
-    (symbol "Device:D" (pin_numbers (hide yes)) (pin_names (offset 0) (hide yes))
-      (property "Reference" "D" (at 0 2.54 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "D" (at 0 -2.54 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (property "Datasheet" "~" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (symbol "D_0_1"
-        (polyline
-          (pts (xy -1.27 -1.27) (xy -1.27 1.27) (xy 1.27 0) (xy -1.27 -1.27))
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts (xy 1.27 -1.27) (xy 1.27 1.27))
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (pin passive line (at -3.81 0 0) (length 2.54)
-          (name "K" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at 3.81 0 180) (length 2.54)
-          (name "A" (effects (font (size 1.27 1.27))))
-          (number "2" (effects (font (size 1.27 1.27))))
-        )
-      )
-    )
-    (symbol "Device:SW_Push" (pin_names (offset 1.016) (hide yes))
-      (property "Reference" "SW" (at 1.27 2.032 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "SW_Push" (at 1.27 -2.032 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (property "Datasheet" "~" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (symbol "SW_Push_0_1"
-        (circle (center -2.286 0) (radius 0.508)
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (circle (center 2.286 0) (radius 0.508)
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts (xy -1.778 0) (xy 1.778 0))
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (polyline
-          (pts (xy -2.032 -1.27) (xy 2.032 -1.27))
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (pin passive line (at -3.81 0 0) (length 1.524)
-          (name "1" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at 3.81 0 180) (length 1.524)
-          (name "2" (effects (font (size 1.27 1.27))))
-          (number "2" (effects (font (size 1.27 1.27))))
-        )
-      )
-    )
-    (symbol "power:GND" (power) (pin_names (offset 0) (hide yes))
-      (property "Reference" "#PWR" (at 0 -6.35 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (property "Value" "GND" (at 0 -3.81 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (symbol "GND_0_1"
-        (polyline
-          (pts (xy 0 0) (xy 0 -1.27) (xy 1.27 -1.27) (xy 0 -2.54) (xy -1.27 -1.27) (xy 0 -1.27))
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (pin power_in line (at 0 0 270) (length 0)
-          (name "~" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27))))
-        )
-      )
-    )
-    (symbol "power:+3V3" (power) (pin_names (offset 0) (hide yes))
-      (property "Reference" "#PWR" (at 0 3.556 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (property "Value" "+3V3" (at 0 3.556 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (symbol "+3V3_0_1"
-        (polyline
-          (pts (xy -0.762 1.27) (xy 0 2.54) (xy 0.762 1.27))
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (pin power_in line (at 0 0 90) (length 1.27)
-          (name "~" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27))))
-        )
-      )
-    )
-    (symbol "power:+5V" (power) (pin_names (offset 0) (hide yes))
-      (property "Reference" "#PWR" (at 0 3.556 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (property "Value" "+5V" (at 0 3.556 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (symbol "+5V_0_1"
-        (polyline
-          (pts (xy -0.762 1.27) (xy 0 2.54) (xy 0.762 1.27))
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (pin power_in line (at 0 0 90) (length 1.27)
-          (name "~" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27))))
-        )
-      )
-    )
-    (symbol "power:+12V" (power) (pin_names (offset 0) (hide yes))
-      (property "Reference" "#PWR" (at 0 3.556 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (property "Value" "+12V" (at 0 3.556 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (property "Datasheet" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (symbol "+12V_0_1"
-        (polyline
-          (pts (xy -0.762 1.27) (xy 0 2.54) (xy 0.762 1.27))
-          (stroke (width 0) (type default))
-          (fill (type none))
-        )
-        (pin power_in line (at 0 0 90) (length 1.27)
-          (name "~" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27))))
-        )
-      )
-    )
-    (symbol "Connector:Conn_01x02_Pin"
-      (property "Reference" "J" (at 0 3.810 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "Conn_01x02_Pin" (at 0 -3.810 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (property "Datasheet" "~" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (symbol "Conn_01x02_Pin_1_1"
-        (polyline
-          (pts (xy -1.27 -2.540) (xy -1.27 2.540) (xy 0 2.540) (xy 0 -2.540) (xy -1.27 -2.540))
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (pin passive line (at -5.08 1.270 0) (length 3.81)
-          (name "Pin_1" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 -1.270 0) (length 3.81)
-          (name "Pin_2" (effects (font (size 1.27 1.27))))
-          (number "2" (effects (font (size 1.27 1.27))))
-        )
-      )
-    )
-    (symbol "Connector:Conn_01x03_Pin"
-      (property "Reference" "J" (at 0 5.080 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "Conn_01x03_Pin" (at 0 -5.080 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (property "Datasheet" "~" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (symbol "Conn_01x03_Pin_1_1"
-        (polyline
-          (pts (xy -1.27 -3.810) (xy -1.27 3.810) (xy 0 3.810) (xy 0 -3.810) (xy -1.27 -3.810))
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (pin passive line (at -5.08 2.540 0) (length 3.81)
-          (name "Pin_1" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 0.000 0) (length 3.81)
-          (name "Pin_2" (effects (font (size 1.27 1.27))))
-          (number "2" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 -2.540 0) (length 3.81)
-          (name "Pin_3" (effects (font (size 1.27 1.27))))
-          (number "3" (effects (font (size 1.27 1.27))))
-        )
-      )
-    )
-    (symbol "Connector:Conn_01x04_Pin"
-      (property "Reference" "J" (at 0 6.350 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "Conn_01x04_Pin" (at 0 -6.350 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (property "Datasheet" "~" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (symbol "Conn_01x04_Pin_1_1"
-        (polyline
-          (pts (xy -1.27 -5.080) (xy -1.27 5.080) (xy 0 5.080) (xy 0 -5.080) (xy -1.27 -5.080))
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (pin passive line (at -5.08 3.810 0) (length 3.81)
-          (name "Pin_1" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 1.270 0) (length 3.81)
-          (name "Pin_2" (effects (font (size 1.27 1.27))))
-          (number "2" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 -1.270 0) (length 3.81)
-          (name "Pin_3" (effects (font (size 1.27 1.27))))
-          (number "3" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 -3.810 0) (length 3.81)
-          (name "Pin_4" (effects (font (size 1.27 1.27))))
-          (number "4" (effects (font (size 1.27 1.27))))
-        )
-      )
-    )
-    (symbol "Connector:Conn_01x05_Pin"
-      (property "Reference" "J" (at 0 7.620 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "Conn_01x05_Pin" (at 0 -7.620 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (property "Datasheet" "~" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (symbol "Conn_01x05_Pin_1_1"
-        (polyline
-          (pts (xy -1.27 -6.350) (xy -1.27 6.350) (xy 0 6.350) (xy 0 -6.350) (xy -1.27 -6.350))
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (pin passive line (at -5.08 5.080 0) (length 3.81)
-          (name "Pin_1" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 2.540 0) (length 3.81)
-          (name "Pin_2" (effects (font (size 1.27 1.27))))
-          (number "2" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 0.000 0) (length 3.81)
-          (name "Pin_3" (effects (font (size 1.27 1.27))))
-          (number "3" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 -2.540 0) (length 3.81)
-          (name "Pin_4" (effects (font (size 1.27 1.27))))
-          (number "4" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 -5.080 0) (length 3.81)
-          (name "Pin_5" (effects (font (size 1.27 1.27))))
-          (number "5" (effects (font (size 1.27 1.27))))
-        )
-      )
-    )
-    (symbol "Connector:Conn_01x08_Pin"
-      (property "Reference" "J" (at 0 11.430 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Value" "Conn_01x08_Pin" (at 0 -11.430 0)
-        (effects (font (size 1.27 1.27)))
-      )
-      (property "Footprint" "" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (property "Datasheet" "~" (at 0 0 0)
-        (effects (font (size 1.27 1.27)) (hide yes))
-      )
-      (symbol "Conn_01x08_Pin_1_1"
-        (polyline
-          (pts (xy -1.27 -10.160) (xy -1.27 10.160) (xy 0 10.160) (xy 0 -10.160) (xy -1.27 -10.160))
-          (stroke (width 0.254) (type default))
-          (fill (type none))
-        )
-        (pin passive line (at -5.08 8.890 0) (length 3.81)
-          (name "Pin_1" (effects (font (size 1.27 1.27))))
-          (number "1" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 6.350 0) (length 3.81)
-          (name "Pin_2" (effects (font (size 1.27 1.27))))
-          (number "2" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 3.810 0) (length 3.81)
-          (name "Pin_3" (effects (font (size 1.27 1.27))))
-          (number "3" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 1.270 0) (length 3.81)
-          (name "Pin_4" (effects (font (size 1.27 1.27))))
-          (number "4" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 -1.270 0) (length 3.81)
-          (name "Pin_5" (effects (font (size 1.27 1.27))))
-          (number "5" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 -3.810 0) (length 3.81)
-          (name "Pin_6" (effects (font (size 1.27 1.27))))
-          (number "6" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 -6.350 0) (length 3.81)
-          (name "Pin_7" (effects (font (size 1.27 1.27))))
-          (number "7" (effects (font (size 1.27 1.27))))
-        )
-        (pin passive line (at -5.08 -8.890 0) (length 3.81)
-          (name "Pin_8" (effects (font (size 1.27 1.27))))
-          (number "8" (effects (font (size 1.27 1.27))))
-        )
-      )
-    )
-  )
-
-  (symbol (lib_id "power:GND") (at 50 180 180) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "#PWR01" (at 50 185.000 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Value" "GND" (at 50 183.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/8434605e-be2d-4083-9b54-ac8cbcbf1c50"
-          (reference "#PWR01") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "power:+3V3") (at 50 40 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "#PWR02" (at 50 37.000 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Value" "+3V3" (at 50 35.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/a28ca98d-df43-4d9f-954f-ecacc2cd1cc7"
-          (reference "#PWR02") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "power:+5V") (at 100 40 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "#PWR03" (at 100 37.000 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Value" "+5V" (at 100 35.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/25c91875-fe55-4f74-8c83-3148617d2809"
-          (reference "#PWR03") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "power:+12V") (at 150 40 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "#PWR04" (at 150 37.000 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Value" "+12V" (at 150 35.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/45dc8756-5929-4bb5-a1b4-256fce5b4af2"
-          (reference "#PWR04") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Device:R") (at 15 100 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "U1" (at 17.032 100 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "AMS1117-3.3" (at 15 103.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Package_TO_SOT_SMD:SOT-223-3_TabPin2" (at 15 100 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 15 100 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/8c42808b-bf72-4d92-aa2b-a994429b1089"
-          (reference "U1") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Connector:Conn_01x04_Pin") (at 15 60 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "PS1" (at 17.032 60 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "HLK-PM05" (at 15 63.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Module:HLK-PM05" (at 15 60 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 15 60 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/7d82cc70-a995-4a28-8f9c-3d75ff14ac3d"
-          (reference "PS1") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Connector:Conn_01x08_Pin") (at 50 80 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "U2" (at 52.032 80 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "ESP32-S3-DevKitC-1" (at 50 83.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Module:ESP32-S3-DevKitC-1" (at 50 80 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 50 80 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/c1aec939-7264-4c6f-b70b-0f096312ea12"
-          (reference "U2") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Connector:Conn_01x08_Pin") (at 80 80 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "U3" (at 82.032 80 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "W5500-EVB" (at 80 83.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Module:W5500-EVB" (at 80 80 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 80 80 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/7afb88b4-beec-4860-907c-c9bf49f26d5b"
-          (reference "U3") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Connector:Conn_01x05_Pin") (at 130 60 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "U4" (at 132.032 60 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "LM2596-12V" (at 130 63.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Package_TO_SOT_THT:TO-263-5_TabPin3" (at 130 60 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 130 60 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/e10261c7-6222-4eb5-a60e-ae6c5330c9dd"
-          (reference "U4") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Device:C") (at 145 65 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "C11" (at 147.032 65 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "220uF" (at 145 68.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm" (at 145 65 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 145 65 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/8ee48a04-2fa8-469b-941c-3b69b1a8e948"
-          (reference "C11") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Device:R") (at 145 75 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "L1" (at 147.032 75 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "100uH" (at 145 78.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Inductor_THT:L_Axial_L16.3mm_D6.9mm_P22.86mm_Horizontal_Vishay_IM-1" (at 145 75 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 145 75 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/b3a5c63f-03bc-4efc-8cde-3ebd727006bb"
-          (reference "L1") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Connector:Conn_01x04_Pin") (at 160 80 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "J_PH" (at 162.032 80 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "EZO-pH_0x63" (at 160 83.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical" (at 160 80 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 160 80 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/3647cd13-eb57-4420-9d7f-3aabe81e06fc"
-          (reference "J_PH") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Device:C") (at 160 95 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "C12" (at 162.032 95 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "100nF" (at 160 98.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric" (at 160 95 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 160 95 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/e92e0fdf-a9c6-40ed-90db-75123f41f055"
-          (reference "C12") (unit 1)
-        )
-      )
-    )
-  )
-  (label "I2C_SDA" (at 157 75 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (label "I2C_SCL" (at 163 75 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (text "addr 0x63" (at 160 70 0)
-    (effects (font (size 1.5 1.5)))
-  )
-  (symbol (lib_id "Connector:Conn_01x04_Pin") (at 175 80 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "J_EC" (at 177.032 80 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "EZO-EC_0x64" (at 175 83.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical" (at 175 80 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 175 80 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/d32661e5-307c-4cb8-9fea-bbc0b7d85a9c"
-          (reference "J_EC") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Device:C") (at 175 95 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "C13" (at 177.032 95 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "100nF" (at 175 98.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric" (at 175 95 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 175 95 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/8e0d649c-513f-49f4-95f5-bec8d09b4d97"
-          (reference "C13") (unit 1)
-        )
-      )
-    )
-  )
-  (label "I2C_SDA" (at 172 75 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (label "I2C_SCL" (at 178 75 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (text "addr 0x64" (at 175 70 0)
-    (effects (font (size 1.5 1.5)))
-  )
-  (symbol (lib_id "Connector:Conn_01x04_Pin") (at 190 80 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "J_DO" (at 192.032 80 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "EZO-DO_0x61" (at 190 83.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical" (at 190 80 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 190 80 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/010f5afa-fc96-48fb-b199-249e2195fec9"
-          (reference "J_DO") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Device:C") (at 190 95 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "C14" (at 192.032 95 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "100nF" (at 190 98.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric" (at 190 95 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 190 95 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/6f83f0b2-e47c-4267-92ba-b9400009f059"
-          (reference "C14") (unit 1)
-        )
-      )
-    )
-  )
-  (label "I2C_SDA" (at 187 75 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (label "I2C_SCL" (at 193 75 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (text "addr 0x61" (at 190 70 0)
-    (effects (font (size 1.5 1.5)))
-  )
-  (symbol (lib_id "Connector:Conn_01x04_Pin") (at 205 80 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "J_RTD" (at 207.032 80 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "EZO-RTD_0x66" (at 205 83.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical" (at 205 80 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 205 80 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/7e5ff5ff-57ab-43c7-adc3-fb1ba630c58f"
-          (reference "J_RTD") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Device:C") (at 205 95 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "C15" (at 207.032 95 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "100nF" (at 205 98.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric" (at 205 95 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 205 95 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/0aa321b5-d259-40a6-8b3d-9951cc2c69e9"
-          (reference "C15") (unit 1)
-        )
-      )
-    )
-  )
-  (label "I2C_SDA" (at 202 75 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (label "I2C_SCL" (at 208 75 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (text "addr 0x66" (at 205 70 0)
-    (effects (font (size 1.5 1.5)))
-  )
-  (symbol (lib_id "Connector:Conn_01x04_Pin") (at 220 80 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "J_PMP" (at 222.032 80 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "EZO-PMP_0x67" (at 220 83.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical" (at 220 80 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 220 80 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/fd8577f5-6718-43a1-b02d-29382c070caf"
-          (reference "J_PMP") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Device:C") (at 220 95 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "C16" (at 222.032 95 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "100nF" (at 220 98.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric" (at 220 95 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 220 95 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/b5fe47ce-7e93-4e5d-8894-8dad5bb83e81"
-          (reference "C16") (unit 1)
-        )
-      )
-    )
-  )
-  (label "I2C_SDA" (at 217 75 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (label "I2C_SCL" (at 223 75 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (text "addr 0x67" (at 220 70 0)
-    (effects (font (size 1.5 1.5)))
-  )
-  (symbol (lib_id "Device:R") (at 130 120 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "R6" (at 132.032 120 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "100" (at 130 123.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Resistor_SMD:R_0805_2012Metric" (at 130 120 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 130 120 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/cc96c62c-496e-4d20-b709-9ea9cf10a5d1"
-          (reference "R6") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Connector:Conn_01x03_Pin") (at 130 130 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "Q1" (at 132.032 130 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "IRLZ44N_VALVE1" (at 130 133.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Package_TO_SOT_THT:TO-220-3_Vertical" (at 130 130 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 130 130 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/b56275a2-5fcf-4be5-aa2d-fa723f24edcf"
-          (reference "Q1") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Device:D") (at 130 145 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "D6" (at 132.032 145 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "1N4007" (at 130 148.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Diode_THT:D_DO-41_SOD81_P12.70mm_Horizontal" (at 130 145 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 130 145 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/3b8cf3e4-1193-404e-8990-c9f7eca5154c"
-          (reference "D6") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Connector:Conn_01x02_Pin") (at 130 158 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "J_V1" (at 132.032 158 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "VALVE_1_TERMINAL" (at 130 161.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "TerminalBlock:TerminalBlock_bornier-2_P5.08mm" (at 130 158 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 130 158 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/cafe7fe5-a444-4064-9e31-4b88d6d1ebd1"
-          (reference "J_V1") (unit 1)
-        )
-      )
-    )
-  )
-  (label "GPIO8_VALVE1" (at 125 115 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (label "+12V" (at 135 135 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (symbol (lib_id "Device:R") (at 150 120 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "R7" (at 152.032 120 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "100" (at 150 123.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Resistor_SMD:R_0805_2012Metric" (at 150 120 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 150 120 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/17271cf3-c48f-4e1a-b295-7f5f26154d87"
-          (reference "R7") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Connector:Conn_01x03_Pin") (at 150 130 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "Q2" (at 152.032 130 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "IRLZ44N_VALVE2" (at 150 133.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Package_TO_SOT_THT:TO-220-3_Vertical" (at 150 130 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 150 130 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/1bc64d5d-b75b-4df2-acf7-ea75733f67b1"
-          (reference "Q2") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Device:D") (at 150 145 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "D7" (at 152.032 145 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "1N4007" (at 150 148.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Diode_THT:D_DO-41_SOD81_P12.70mm_Horizontal" (at 150 145 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 150 145 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/150b68a1-00f7-4986-9f7f-56e2152e1fbb"
-          (reference "D7") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Connector:Conn_01x02_Pin") (at 150 158 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "J_V2" (at 152.032 158 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "VALVE_2_TERMINAL" (at 150 161.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "TerminalBlock:TerminalBlock_bornier-2_P5.08mm" (at 150 158 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 150 158 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/2941c88f-8425-493c-8871-7132d4e29d01"
-          (reference "J_V2") (unit 1)
-        )
-      )
-    )
-  )
-  (label "GPIO9_VALVE2" (at 145 115 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (label "+12V" (at 155 135 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (symbol (lib_id "Connector:Conn_01x03_Pin") (at 170 150 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "J_FLOW" (at 172.032 150 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "YF-S201_FLOW" (at 170 153.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Connector_JST:JST_XH_B3B-XH-A_1x03_P2.50mm_Vertical" (at 170 150 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 170 150 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/c324bc3e-07e2-4a7a-8c47-14845cefa8bb"
-          (reference "J_FLOW") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Device:R") (at 175 145 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "R8" (at 177.032 145 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "10k" (at 175 148.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Resistor_SMD:R_0805_2012Metric" (at 175 145 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 175 145 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/ff9ce9a2-57f6-4aca-a88d-e402f950a1fe"
-          (reference "R8") (unit 1)
-        )
-      )
-    )
-  )
-  (label "GPIO16_FLOW" (at 165 145 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (symbol (lib_id "Connector:Conn_01x08_Pin") (at 15 170 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "J7" (at 17.032 170 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "HR911105A" (at 15 173.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Connector_RJ:RJ45_Amphenol_RJHSE538X_Horizontal" (at 15 170 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 15 170 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/aeb5222d-880a-4683-8c9a-937c79923a8b"
-          (reference "J7") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Connector:Conn_01x02_Pin") (at 15 155 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "J5" (at 17.032 155 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "DC_Jack_2.1mm" (at 15 158.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Connector_BarrelJack:BarrelJack_Kycon_KLDX-0202-A_Horizontal" (at 15 155 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 15 155 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/1a22d02e-0b56-4cbc-979d-10ca0bcf3bbe"
-          (reference "J5") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Connector:Conn_01x04_Pin") (at 15 140 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "J6" (at 17.032 140 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "UART_DEBUG" (at 15 143.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical" (at 15 140 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 15 140 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/3ab2c672-9acd-46f7-9cde-65dc6a345faa"
-          (reference "J6") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Device:SW_Push") (at 130 160 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "SW1" (at 132.032 160 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "RESET" (at 130 163.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Button_Switch_SMD:SW_SPST_SKQG_WithStem" (at 130 160 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 130 160 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/d999cf07-46a9-4e25-9e0d-308e41f40cb6"
-          (reference "SW1") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Device:C") (at 25 110 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "C1" (at 27.032 110 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "100uF" (at 25 113.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm" (at 25 110 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 25 110 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/287d8960-882b-494b-bb93-63f5ed85b679"
-          (reference "C1") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Device:C") (at 35 110 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "C2" (at 37.032 110 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "10uF" (at 35 113.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Capacitor_SMD:C_1206_3216Metric" (at 35 110 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 35 110 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/1733354e-1927-431d-a9b2-754e7a8788ac"
-          (reference "C2") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Device:C") (at 45 110 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "C3" (at 47.032 110 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "100nF" (at 45 113.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric" (at 45 110 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 45 110 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/b8bb047c-9059-4672-831b-e86e0f964531"
-          (reference "C3") (unit 1)
-        )
-      )
-    )
-  )
-  (symbol (lib_id "Device:C") (at 55 110 0) (unit 1)
-    (in_bom yes) (on_board yes)
-    (property "Reference" "C4" (at 57.032 110 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Value" "100nF" (at 55 113.000 0)
-      (effects (font (size 1.27 1.27)))
-    )
-    (property "Footprint" "Capacitor_SMD:C_0805_2012Metric" (at 55 110 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (property "Datasheet" "~" (at 55 110 0)
-      (effects (font (size 1.27 1.27)) (hide yes))
-    )
-    (instances
-      (project "irrigation_node"
-        (path "/73f5e996-3505-4b2f-b3bc-ec5aeba87cf0"
-          (reference "C4") (unit 1)
-        )
-      )
-    )
-  )
-  (label "I2C_SDA" (at 60 70 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (label "I2C_SCL" (at 70 70 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (label "SPI_MOSI" (at 80 70 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (label "SPI_MISO" (at 90 70 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (label "SPI_SCK" (at 100 70 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (label "SPI_CS" (at 110 70 0)
-    (effects (font (size 1.27 1.27)))
-  )
-  (text "Atlas EZO I2C: pH/EC/DO/RTD/PMP — shared I2C bus, 4.7k pull-up to +3V3" (at 155 60 0)
-    (effects (font (size 1.5 1.5)))
-  )
-  (text "LM2596 5V->12V buck for solenoid valve coils" (at 125 50 0)
-    (effects (font (size 1.5 1.5)))
-  )
-  (text "IRLZ44N logic-level MOSFET: 100R gate, 1N4007 flyback" (at 125 125 0)
-    (effects (font (size 1.5 1.5)))
-  )
-
-  (sheet_instances
-    (path "/" (page "1"))
-  )
-
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "11e3a982-e445-42ea-9472-46b8500abaca")
+	(paper "A3")
+	(title_block
+		(title "Irrigation Node — Sera AI")
+		(date "2026-03-11")
+		(rev "1.0")
+		(company "Sera AI")
+		(comment 1 "ESP32-S3 + W5500 + Atlas EZO (5x I2C) + LM2596 12V + IRLZ44N valves")
+		(comment 2 "Board: 120x100mm  |  pH/EC/DO/RTD/PMP + 2x solenoid valve + flow sensor")
+	)
+	(lib_symbols
+		(symbol "Connector:Conn_01x02_Pin"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "J"
+				(at 0 3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Conn_01x02_Pin"
+				(at 0 -3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Conn_01x02_Pin_1_1"
+				(polyline
+					(pts
+						(xy -1.27 -2.54) (xy -1.27 2.54) (xy 0 2.54) (xy 0 -2.54) (xy -1.27 -2.54)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -5.08 1.27 0)
+					(length 3.81)
+					(name "Pin_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -1.27 0)
+					(length 3.81)
+					(name "Pin_2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Connector:Conn_01x03_Pin"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "J"
+				(at 0 5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Conn_01x03_Pin"
+				(at 0 -5.08 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Conn_01x03_Pin_1_1"
+				(polyline
+					(pts
+						(xy -1.27 -3.81) (xy -1.27 3.81) (xy 0 3.81) (xy 0 -3.81) (xy -1.27 -3.81)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -5.08 2.54 0)
+					(length 3.81)
+					(name "Pin_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 0 0)
+					(length 3.81)
+					(name "Pin_2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -2.54 0)
+					(length 3.81)
+					(name "Pin_3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Connector:Conn_01x04_Pin"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "J"
+				(at 0 6.35 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Conn_01x04_Pin"
+				(at 0 -6.35 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Conn_01x04_Pin_1_1"
+				(polyline
+					(pts
+						(xy -1.27 -5.08) (xy -1.27 5.08) (xy 0 5.08) (xy 0 -5.08) (xy -1.27 -5.08)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -5.08 3.81 0)
+					(length 3.81)
+					(name "Pin_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 1.27 0)
+					(length 3.81)
+					(name "Pin_2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -1.27 0)
+					(length 3.81)
+					(name "Pin_3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -3.81 0)
+					(length 3.81)
+					(name "Pin_4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Connector:Conn_01x05_Pin"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "J"
+				(at 0 7.62 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Conn_01x05_Pin"
+				(at 0 -7.62 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Conn_01x05_Pin_1_1"
+				(polyline
+					(pts
+						(xy -1.27 -6.35) (xy -1.27 6.35) (xy 0 6.35) (xy 0 -6.35) (xy -1.27 -6.35)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -5.08 5.08 0)
+					(length 3.81)
+					(name "Pin_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 2.54 0)
+					(length 3.81)
+					(name "Pin_2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 0 0)
+					(length 3.81)
+					(name "Pin_3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -2.54 0)
+					(length 3.81)
+					(name "Pin_4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -5.08 0)
+					(length 3.81)
+					(name "Pin_5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Connector:Conn_01x08_Pin"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "J"
+				(at 0 11.43 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "Conn_01x08_Pin"
+				(at 0 -11.43 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "Conn_01x08_Pin_1_1"
+				(polyline
+					(pts
+						(xy -1.27 -10.16) (xy -1.27 10.16) (xy 0 10.16) (xy 0 -10.16) (xy -1.27 -10.16)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -5.08 8.89 0)
+					(length 3.81)
+					(name "Pin_1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 6.35 0)
+					(length 3.81)
+					(name "Pin_2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 3.81 0)
+					(length 3.81)
+					(name "Pin_3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 1.27 0)
+					(length 3.81)
+					(name "Pin_4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -1.27 0)
+					(length 3.81)
+					(name "Pin_5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -3.81 0)
+					(length 3.81)
+					(name "Pin_6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "6"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -6.35 0)
+					(length 3.81)
+					(name "Pin_7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "7"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at -5.08 -8.89 0)
+					(length 3.81)
+					(name "Pin_8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "8"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Device:C"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0.254)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "C"
+				(at 1.778 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "C"
+				(at -1.778 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "C_0_1"
+				(polyline
+					(pts
+						(xy -2.032 0.762) (xy 2.032 0.762)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.032 -0.762) (xy 2.032 -0.762)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at 0 3.81 270)
+					(length 3.048)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 3.048)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Device:D"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "D"
+				(at 0 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "D"
+				(at 0 -2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "D_0_1"
+				(polyline
+					(pts
+						(xy -1.27 -1.27) (xy -1.27 1.27) (xy 1.27 0) (xy -1.27 -1.27)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 -1.27) (xy 1.27 1.27)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -3.81 0 0)
+					(length 2.54)
+					(name "K"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 3.81 0 180)
+					(length 2.54)
+					(name "A"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Device:LED"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "D"
+				(at 0 2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "LED"
+				(at 0 -2.54 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "LED_0_1"
+				(polyline
+					(pts
+						(xy -1.27 -1.27) (xy -1.27 1.27) (xy 1.27 0) (xy -1.27 -1.27)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 -1.27) (xy 1.27 1.27)
+					)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -3.81 0 0)
+					(length 2.54)
+					(name "K"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 3.81 0 180)
+					(length 2.54)
+					(name "A"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Device:R"
+			(pin_numbers
+				(hide yes)
+			)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "R"
+				(at 2.032 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "R"
+				(at 0 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 1.778 0 90)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "R_0_1"
+				(polyline
+					(pts
+						(xy -1.016 -2.032) (xy 1.016 -2.032) (xy 1.016 2.032) (xy -1.016 2.032) (xy -1.016 -2.032)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at 0 3.81 270)
+					(length 1.778)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -3.81 90)
+					(length 1.778)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Device:SW_Push"
+			(pin_names
+				(offset 1.016)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "SW"
+				(at 1.27 2.032 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "SW_Push"
+				(at 1.27 -2.032 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "SW_Push_0_1"
+				(circle
+					(center -2.286 0)
+					(radius 0.508)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -2.032 -1.27) (xy 2.032 -1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy -1.778 0) (xy 1.778 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 2.286 0)
+					(radius 0.508)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -3.81 0 0)
+					(length 1.524)
+					(name "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 3.81 0 180)
+					(length 1.524)
+					(name "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "power:+12V"
+			(power)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 3.556 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "+12V"
+				(at 0 3.556 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "+12V_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin power_in line
+					(at 0 0 90)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "power:+3V3"
+			(power)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 3.556 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "+3V3"
+				(at 0 3.556 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "+3V3_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin power_in line
+					(at 0 0 90)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "power:+5V"
+			(power)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 3.556 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "+5V"
+				(at 0 3.556 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "+5V_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin power_in line
+					(at 0 0 90)
+					(length 1.27)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "power:GND"
+			(power)
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 -6.35 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "GND"
+				(at 0 -3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "GND_0_1"
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 -1.27) (xy 1.27 -1.27) (xy 0 -2.54) (xy -1.27 -1.27) (xy 0 -1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin power_in line
+					(at 0 0 270)
+					(length 0)
+					(name "~"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(text "addr 0x67"
+		(exclude_from_sim no)
+		(at 220 70 0)
+		(effects
+			(font
+				(size 1.5 1.5)
+			)
+		)
+		(uuid "4fdb872b-7ff1-4b91-bf9f-cb6708533bca")
+	)
+	(text "addr 0x66"
+		(exclude_from_sim no)
+		(at 205 70 0)
+		(effects
+			(font
+				(size 1.5 1.5)
+			)
+		)
+		(uuid "74fbfcdd-3ff1-419f-a379-f616f1710047")
+	)
+	(text "IRLZ44N logic-level MOSFET: 100R gate, 1N4007 flyback"
+		(exclude_from_sim no)
+		(at 125 125 0)
+		(effects
+			(font
+				(size 1.5 1.5)
+			)
+		)
+		(uuid "7624bc58-bab0-490f-9bc3-98bcbd95f9de")
+	)
+	(text "addr 0x63"
+		(exclude_from_sim no)
+		(at 160 70 0)
+		(effects
+			(font
+				(size 1.5 1.5)
+			)
+		)
+		(uuid "7630ad24-bcef-4df9-ba9e-b0534c623c88")
+	)
+	(text "addr 0x61"
+		(exclude_from_sim no)
+		(at 190 70 0)
+		(effects
+			(font
+				(size 1.5 1.5)
+			)
+		)
+		(uuid "7d2b5453-bb39-4260-a6c0-9d56a066db4e")
+	)
+	(text "Atlas EZO I2C: pH/EC/DO/RTD/PMP — shared I2C bus, 4.7k pull-up to +3V3"
+		(exclude_from_sim no)
+		(at 155 60 0)
+		(effects
+			(font
+				(size 1.5 1.5)
+			)
+		)
+		(uuid "8e946ed1-bac8-49ab-87a2-dcaa22c8f10a")
+	)
+	(text "addr 0x64"
+		(exclude_from_sim no)
+		(at 175 70 0)
+		(effects
+			(font
+				(size 1.5 1.5)
+			)
+		)
+		(uuid "c52d23ec-9cfc-4a5c-81c2-b9a7079cf6d9")
+	)
+	(text "LM2596 5V->12V buck for solenoid valve coils"
+		(exclude_from_sim no)
+		(at 125 50 0)
+		(effects
+			(font
+				(size 1.5 1.5)
+			)
+		)
+		(uuid "dbfcb400-119c-40c4-bd10-b21d8b1e6e38")
+	)
+	(label "GPIO16_FLOW"
+		(at 165 145 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "00cf858e-c75d-40ec-899e-a5ab46ff555c")
+	)
+	(label "GPIO9_VALVE2"
+		(at 145 115 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "1491aa11-ea46-4289-8a80-0a2f6cfdd8ed")
+	)
+	(label "I2C_SCL"
+		(at 178 75 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "15652c59-0cda-40b7-9496-dad5d3c8dae7")
+	)
+	(label "I2C_SCL"
+		(at 163 75 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "2d70166a-fa05-46ee-87ce-d18d076de9c8")
+	)
+	(label "I2C_SDA"
+		(at 202 75 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "314d919e-1565-4475-9ad7-b23616edaab0")
+	)
+	(label "SPI_MOSI"
+		(at 80 70 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "32c2c4f1-1d52-4f75-85df-b289f682bcb9")
+	)
+	(label "I2C_SDA"
+		(at 60 70 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "3b52b859-69a5-4373-a0f3-b0f045eaf61e")
+	)
+	(label "+12V"
+		(at 155 135 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "49e4f70c-d597-4735-ae74-0ed7d46ef011")
+	)
+	(label "I2C_SDA"
+		(at 157 75 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "552de122-3cb0-4c01-888b-4b0bb82b18d2")
+	)
+	(label "I2C_SDA"
+		(at 187 75 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "5ab5e4ea-7e99-4e2f-a819-2dce7d128402")
+	)
+	(label "I2C_SCL"
+		(at 208 75 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "6ad4db89-20ea-4ec6-b74f-a4476e11194c")
+	)
+	(label "I2C_SDA"
+		(at 217 75 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "7d4605a9-5701-4fae-acf7-e676e2955780")
+	)
+	(label "I2C_SCL"
+		(at 223 75 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "86f54b44-4c25-4cda-ab0b-a15fb372026b")
+	)
+	(label "I2C_SCL"
+		(at 70 70 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "a9561722-9cfb-4f76-96d4-197ceb5847ae")
+	)
+	(label "GPIO8_VALVE1"
+		(at 125 115 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "af6786ff-3e56-4a56-ba30-dbe479c5cc2e")
+	)
+	(label "SPI_MISO"
+		(at 90 70 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "b1264cb8-d685-4806-a8cb-34462c7059f0")
+	)
+	(label "+12V"
+		(at 135 135 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "bfc9671e-c896-498d-b0e3-4ffb57e31edc")
+	)
+	(label "I2C_SCL"
+		(at 193 75 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "c164e512-6eed-40dd-a6e0-204b2cd7da09")
+	)
+	(label "SPI_SCK"
+		(at 100 70 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "c4599a1b-f6df-4746-8e87-fc9c5a788c76")
+	)
+	(label "I2C_SDA"
+		(at 172 75 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "ca6e37f2-3a03-4c20-b3e8-c0de53705fb2")
+	)
+	(label "SPI_CS"
+		(at 110 70 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "e4d79d10-9ad7-465f-8876-f5189ec1795a")
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x03_Pin")
+		(at 130 130 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "07a06711-fc78-4e3d-a08a-099db2648d99")
+		(property "Reference" "Q?"
+			(at 132.032 130 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "IRLZ44N_VALVE1"
+			(at 130 133 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Package_TO_SOT_THT:TO-220-3_Vertical"
+			(at 130 130 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 130 130 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 130 130 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "3"
+			(uuid "4fd287c5-a792-465b-9fda-f51fd09b8cb4")
+		)
+		(pin "1"
+			(uuid "7bdcabdd-75cd-412f-b9c7-f87b062b4f61")
+		)
+		(pin "2"
+			(uuid "d038f45f-c92b-4199-8653-552a80b8daf1")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "Q?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x08_Pin")
+		(at 15 170 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "080bed9d-3c5f-46aa-9d1d-2ccd46f19954")
+		(property "Reference" "J?"
+			(at 17.032 170 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "HR911105A"
+			(at 15 173 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Connector_RJ:RJ45_Amphenol_RJHSE538X_Horizontal"
+			(at 15 170 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 15 170 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 15 170 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "5"
+			(uuid "63bc79fb-2991-41f5-b2cd-e64347252100")
+		)
+		(pin "7"
+			(uuid "2588bdc5-54e7-4826-9228-42dbeab597ad")
+		)
+		(pin "4"
+			(uuid "37c96c67-2868-49b6-9419-c0bb379e2040")
+		)
+		(pin "2"
+			(uuid "7cfcbf6b-c79e-4c4c-87f5-c42c611ad5e5")
+		)
+		(pin "6"
+			(uuid "0047ebc5-164b-46dd-8163-25635b4dfeae")
+		)
+		(pin "3"
+			(uuid "3b1adcae-b415-4a6f-ad4d-6bd56c0a587e")
+		)
+		(pin "8"
+			(uuid "f6bfe5cd-d3f1-40bb-8213-b769dbb8cc3a")
+		)
+		(pin "1"
+			(uuid "1d028ee8-fabf-4b97-9adf-965adfa74309")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "J?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 35 110 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "0afe4433-ef3b-4e65-89b9-708e755c23f0")
+		(property "Reference" "C?"
+			(at 37.032 110 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "10uF"
+			(at 35 113 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
+			(at 35 110 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 35 110 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 35 110 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "fb9958a8-6501-4912-8525-abdcb676e1bf")
+		)
+		(pin "2"
+			(uuid "6cc0f5f8-8a4d-40e7-b1c1-186e3506ee05")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "C?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 205 95 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "11fcd6bd-6c9a-4a3e-b105-60ab26916e67")
+		(property "Reference" "C?"
+			(at 207.032 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100nF"
+			(at 205 98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+			(at 205 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 205 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 205 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "04ea2727-f257-4f82-a6af-5e2e6244a1aa")
+		)
+		(pin "2"
+			(uuid "bc052069-b622-4584-9b9d-cc79ae477594")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "C?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 175 95 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "12c707a3-9d68-48bf-a79c-17b46a951577")
+		(property "Reference" "C?"
+			(at 177.032 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100nF"
+			(at 175 98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+			(at 175 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 175 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 175 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "2b5e6ae9-c2b3-4261-8f2d-2a7bdc334f55")
+		)
+		(pin "2"
+			(uuid "8a459adf-06d3-42ee-9901-3513a48eab33")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "C?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+12V")
+		(at 150 40 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "1cd208c4-5673-411f-b5a6-1a155e7ef700")
+		(property "Reference" "#PWR?"
+			(at 150 37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+12V"
+			(at 150 35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 150 40 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 150 40 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 150 40 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "5deac49f-277d-4938-aa4e-9deb07646da9")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "#PWR?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x04_Pin")
+		(at 205 80 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "24e3f027-641e-4b30-a327-4d6f6b95d846")
+		(property "Reference" "J_RTD?"
+			(at 207.032 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "EZO-RTD_0x66"
+			(at 205 83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical"
+			(at 205 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 205 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 205 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "3"
+			(uuid "e5c23731-8ed4-451c-b921-c488659f0a8a")
+		)
+		(pin "1"
+			(uuid "5ec3e213-fd5c-4270-8808-5d796c028ce6")
+		)
+		(pin "4"
+			(uuid "b4ffefcf-a7f7-4964-b9ef-76a59ae60b4f")
+		)
+		(pin "2"
+			(uuid "f5f04df6-64e5-4ab9-b2fd-10394972ddbd")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "J_RTD?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+5V")
+		(at 100 40 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "28b3ee15-6159-42dd-8553-136b498f403a")
+		(property "Reference" "#PWR?"
+			(at 100 37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+5V"
+			(at 100 35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 100 40 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 100 40 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 100 40 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "e0218f86-c704-4aff-9b23-66dacd32f09a")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "#PWR?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x08_Pin")
+		(at 50 80 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "2b32edf5-e352-4b9e-ba75-a351392c3f63")
+		(property "Reference" "U?"
+			(at 52.032 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "ESP32-S3-DevKitC-1"
+			(at 50 83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Module:ESP32-S3-DevKitC-1"
+			(at 50 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 50 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 50 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "042e0530-761f-421c-ac61-4d2854d97f05")
+		)
+		(pin "3"
+			(uuid "9112e010-1168-45b1-a6c4-79949a0ba7ba")
+		)
+		(pin "4"
+			(uuid "a01adfde-9622-44c2-90b8-ec92cd22a5c8")
+		)
+		(pin "2"
+			(uuid "d280ffe7-36da-47ef-9b65-c708b84b3c61")
+		)
+		(pin "6"
+			(uuid "b7b9c00c-2ceb-4715-88af-8b617d79245d")
+		)
+		(pin "7"
+			(uuid "8720f5f7-2a67-4d03-86a5-fdd1d72903b3")
+		)
+		(pin "5"
+			(uuid "1272b980-52c5-47bf-aa51-d8c08f54b752")
+		)
+		(pin "8"
+			(uuid "696bcee7-7d4d-48b1-b5f7-084884189088")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "U?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 15 100 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "3f717e4b-19e9-4a84-b80c-33fe7733a155")
+		(property "Reference" "U?"
+			(at 17.032 100 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "AMS1117-3.3"
+			(at 15 103 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-223-3_TabPin2"
+			(at 15 100 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 15 100 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 15 100 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "566cdbd7-1625-4e80-93f6-7061e9bb5c9c")
+		)
+		(pin "1"
+			(uuid "8ca98cb0-bd73-4fa5-9358-9300a768126a")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "U?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 160 95 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "3f86e8c1-e049-442b-92a0-944c91d97409")
+		(property "Reference" "C?"
+			(at 162.032 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100nF"
+			(at 160 98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+			(at 160 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 160 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 160 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "979488bc-09fa-4bc9-b1b0-ffb6597e4b39")
+		)
+		(pin "1"
+			(uuid "f98c0756-186d-4dd2-8a3e-421c3be74977")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "C?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x03_Pin")
+		(at 150 130 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "42ee7fb8-b276-4c35-8ee3-751c4270d1d0")
+		(property "Reference" "Q?"
+			(at 152.032 130 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "IRLZ44N_VALVE2"
+			(at 150 133 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Package_TO_SOT_THT:TO-220-3_Vertical"
+			(at 150 130 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 150 130 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 150 130 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "5e32ee32-bec1-40ff-8a90-183a568a68d1")
+		)
+		(pin "3"
+			(uuid "9901e5ca-0468-4afa-8e37-ac19c5d9eb80")
+		)
+		(pin "2"
+			(uuid "4bca08a2-0733-4a0b-a48c-e28d44f3734e")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "Q?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 175 145 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "58a1f59d-2f1f-4716-9005-e0bb6bb8399e")
+		(property "Reference" "R?"
+			(at 177.032 145 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "10k"
+			(at 175 148 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
+			(at 175 145 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 175 145 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 175 145 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "c92e8814-dafc-48fb-a7dc-23ba2efd6d5c")
+		)
+		(pin "1"
+			(uuid "bd39fb84-1376-49fd-bac3-322b96c184d2")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "R?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x04_Pin")
+		(at 175 80 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "59baabe3-13f5-46d9-8824-e4bec9f9297b")
+		(property "Reference" "J_EC?"
+			(at 177.032 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "EZO-EC_0x64"
+			(at 175 83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical"
+			(at 175 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 175 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 175 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "18d19bf4-2a18-4d67-b75d-704175b234fc")
+		)
+		(pin "3"
+			(uuid "0d229343-bda2-4c74-bf13-7a5c9aff79ff")
+		)
+		(pin "4"
+			(uuid "e958750a-99d7-4d49-a8ba-61ffe0062e90")
+		)
+		(pin "1"
+			(uuid "9fef0932-2f5e-4235-8a90-dbf339eeb0ad")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "J_EC?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x02_Pin")
+		(at 15 155 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "5ae58d34-fce5-41ea-b5be-5bd3f6b3d40b")
+		(property "Reference" "J?"
+			(at 17.032 155 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "DC_Jack_2.1mm"
+			(at 15 158 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Connector_BarrelJack:BarrelJack_Kycon_KLDX-0202-A_Horizontal"
+			(at 15 155 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 15 155 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 15 155 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "1c702e08-51ce-454e-a654-455d65e0cbbc")
+		)
+		(pin "2"
+			(uuid "0a60d163-0c36-4958-9407-f3bdddca09c8")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "J?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x04_Pin")
+		(at 190 80 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "738c7914-4c79-4d72-9f6a-4c554ac312e6")
+		(property "Reference" "J_DO?"
+			(at 192.032 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "EZO-DO_0x61"
+			(at 190 83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical"
+			(at 190 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 190 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 190 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "3"
+			(uuid "f4949f3d-84af-490d-a0b5-6d7febe00e69")
+		)
+		(pin "2"
+			(uuid "065c74ff-1d0a-43fc-a511-044ba3866d2f")
+		)
+		(pin "4"
+			(uuid "03a6c6f2-4576-4e0c-ac0a-0e11887923cb")
+		)
+		(pin "1"
+			(uuid "7d43c304-0435-477e-8e44-38ac73ea4dc0")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "J_DO?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x04_Pin")
+		(at 15 60 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "7808b203-cee0-4cfd-b38a-240094b66e47")
+		(property "Reference" "PS?"
+			(at 17.032 60 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "HLK-PM05"
+			(at 15 63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Module:HLK-PM05"
+			(at 15 60 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 15 60 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 15 60 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "ff79b4b9-e934-4f1b-a5d9-5c8851641a3e")
+		)
+		(pin "3"
+			(uuid "97930202-6813-4177-9bd1-7cf17c1dcad2")
+		)
+		(pin "4"
+			(uuid "b0065888-9d35-4d45-a884-ba042a6b832a")
+		)
+		(pin "1"
+			(uuid "ef0e3419-d989-4998-b879-6b2e4296bd51")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "PS?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x03_Pin")
+		(at 170 150 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "788cc7b3-9113-4896-9fd1-1ddb7f83385c")
+		(property "Reference" "J_FLOW?"
+			(at 172.032 150 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "YF-S201_FLOW"
+			(at 170 153 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Connector_JST:JST_XH_B3B-XH-A_1x03_P2.50mm_Vertical"
+			(at 170 150 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 170 150 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 170 150 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "4f5bf401-0b5f-4297-b30d-27d4f1a9c644")
+		)
+		(pin "2"
+			(uuid "074d4be8-97c1-4c63-b3f3-cb59db668596")
+		)
+		(pin "3"
+			(uuid "63185d03-f8b6-4996-b036-fe0c801c24c4")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "J_FLOW?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 55 110 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "7a90b219-2e95-451f-a3fa-781bc6d6bac3")
+		(property "Reference" "C?"
+			(at 57.032 110 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100nF"
+			(at 55 113 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+			(at 55 110 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 55 110 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 55 110 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "db2fea3d-3d2f-4c94-8f49-ade34b8f335c")
+		)
+		(pin "2"
+			(uuid "67689086-3804-47dd-b388-7111247593e7")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "C?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:D")
+		(at 130 145 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "7e5b5567-d09a-486f-94d5-f54b72779d61")
+		(property "Reference" "D?"
+			(at 132.032 145 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "1N4007"
+			(at 130 148 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Diode_THT:D_DO-41_SOD81_P12.70mm_Horizontal"
+			(at 130 145 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 130 145 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 130 145 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "2c83b2cc-9963-4d88-8a71-1c4854a9525a")
+		)
+		(pin "2"
+			(uuid "68b2f39c-3e63-4682-9d9e-f4ed005eb8b6")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "D?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 25 110 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "7fbe0bfc-a6c0-4efd-8d7d-f357d1edd824")
+		(property "Reference" "C?"
+			(at 27.032 110 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100uF"
+			(at 25 113 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Capacitor_THT:CP_Radial_D8.0mm_P3.50mm"
+			(at 25 110 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 25 110 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 25 110 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "bdd73aec-ba0c-410d-89fa-e8e556d627a5")
+		)
+		(pin "2"
+			(uuid "eb83f67c-7c4c-457b-a194-a1f9a155e670")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "C?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x08_Pin")
+		(at 80 80 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "8df23f91-c93d-4ee5-857e-7677a7617fc3")
+		(property "Reference" "U?"
+			(at 82.032 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "W5500-EVB"
+			(at 80 83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Module:W5500-EVB"
+			(at 80 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 80 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 80 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "5"
+			(uuid "5add41ca-02ba-4d67-b95c-db2e34d1a733")
+		)
+		(pin "4"
+			(uuid "a69d2954-44f8-4e82-b86b-bae3ed9d2e93")
+		)
+		(pin "8"
+			(uuid "ebebd254-663e-48ad-8d58-4ee12db0febc")
+		)
+		(pin "2"
+			(uuid "3dbe19a2-b3f8-442f-8776-bf0c2e76787a")
+		)
+		(pin "7"
+			(uuid "21f7a0d8-300a-4483-bcfc-9f4f53895bb1")
+		)
+		(pin "1"
+			(uuid "3507963d-4201-485a-bc74-b90607e86710")
+		)
+		(pin "3"
+			(uuid "6719789e-dc3b-463d-bf51-360a1df9f1ee")
+		)
+		(pin "6"
+			(uuid "3d352b71-e565-4609-90da-49e0959c808e")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "U?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 190 95 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "8ecdca08-58d2-4af1-9f70-00ed039fea3c")
+		(property "Reference" "C?"
+			(at 192.032 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100nF"
+			(at 190 98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+			(at 190 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 190 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 190 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "c1344215-c695-43b6-ae88-d5d7129417d4")
+		)
+		(pin "2"
+			(uuid "1bcc2fc9-2e01-4aa1-87b9-207421b68e52")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "C?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x04_Pin")
+		(at 15 140 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "8fe50003-336b-4f57-94c5-20087f0abf10")
+		(property "Reference" "J?"
+			(at 17.032 140 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "UART_DEBUG"
+			(at 15 143 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical"
+			(at 15 140 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 15 140 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 15 140 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "69a9d2da-111b-4370-b2e4-63f3ceea7ce0")
+		)
+		(pin "2"
+			(uuid "43f68b8d-5da7-450e-8a41-7fa4e4f0e43a")
+		)
+		(pin "3"
+			(uuid "c7bb52f4-5def-472b-bbb7-10e914a46da6")
+		)
+		(pin "4"
+			(uuid "0feb1367-f8dc-4c03-8439-cee2b7e16215")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "J?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 145 65 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "94db94c5-7e02-4c9c-a741-704867cafa67")
+		(property "Reference" "C?"
+			(at 147.032 65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "220uF"
+			(at 145 68 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Capacitor_THT:CP_Radial_D10.0mm_P5.00mm"
+			(at 145 65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 145 65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 145 65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "95b39bf6-e943-45b5-82fe-ff846ba2f12e")
+		)
+		(pin "2"
+			(uuid "246931e1-1d58-45e6-9dd4-46ec6515e3c2")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "C?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x04_Pin")
+		(at 160 80 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "9dd31ee1-7d42-44f6-ae71-a9d082b4bbc9")
+		(property "Reference" "J_PH?"
+			(at 162.032 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "EZO-pH_0x63"
+			(at 160 83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical"
+			(at 160 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 160 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 160 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "4"
+			(uuid "4092bf18-14e5-4fc9-b68e-c94f92a3b513")
+		)
+		(pin "2"
+			(uuid "467cfc1f-10ab-4c90-9f21-90fdfcee8dd1")
+		)
+		(pin "3"
+			(uuid "fdf6a357-c79e-4663-930f-23729ae696b8")
+		)
+		(pin "1"
+			(uuid "c4d32939-6117-4ee6-8712-7bef72e1b727")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "J_PH?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x04_Pin")
+		(at 220 80 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a4f198fe-78c9-4ac7-b766-6c8e00339353")
+		(property "Reference" "J_PMP?"
+			(at 222.032 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "EZO-PMP_0x67"
+			(at 220 83 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Connector_JST:JST_XH_B4B-XH-A_1x04_P2.50mm_Vertical"
+			(at 220 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 220 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 220 80 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "eb39796e-7398-4cec-8ebb-3d91ff21785e")
+		)
+		(pin "3"
+			(uuid "056dd415-147f-42c3-a80c-945177ea06a5")
+		)
+		(pin "4"
+			(uuid "cf2534c1-7bbe-429b-9457-22439dbabc61")
+		)
+		(pin "1"
+			(uuid "ea20cf4d-f6a9-45fe-9df1-9a6c872801a3")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "J_PMP?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 130 120 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "adcd8c9d-7c37-49f5-b087-88bebc672673")
+		(property "Reference" "R?"
+			(at 132.032 120 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100"
+			(at 130 123 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
+			(at 130 120 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 130 120 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 130 120 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "80be5b1f-80f7-4a39-9f17-8ef908af9441")
+		)
+		(pin "2"
+			(uuid "24a797bc-f9a8-46f3-8650-08d7c53f5f02")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "R?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 45 110 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "bee3738e-e337-4828-99b6-d8696fc87ab4")
+		(property "Reference" "C?"
+			(at 47.032 110 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100nF"
+			(at 45 113 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+			(at 45 110 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 45 110 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 45 110 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "1295f54b-e53a-4a83-b21e-7532c3202c48")
+		)
+		(pin "2"
+			(uuid "000760da-cfa7-4f00-ba2a-44b9af08fa87")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "C?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x02_Pin")
+		(at 150 158 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "c0f1beb8-596f-48e2-8097-4d859f967501")
+		(property "Reference" "J_V?"
+			(at 152.032 158 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "VALVE_2_TERMINAL"
+			(at 150 161 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "TerminalBlock:TerminalBlock_bornier-2_P5.08mm"
+			(at 150 158 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 150 158 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 150 158 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "424e4866-81d5-4b5a-b20a-572636b7fbc4")
+		)
+		(pin "2"
+			(uuid "5707cd2f-6de5-4032-8d91-0fc301495355")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "J_V?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x05_Pin")
+		(at 130 60 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "c6de571d-556d-4cc2-8f2f-8dfabc4109b0")
+		(property "Reference" "U?"
+			(at 132.032 60 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "LM2596-12V"
+			(at 130 63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Package_TO_SOT_THT:TO-263-5_TabPin3"
+			(at 130 60 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 130 60 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 130 60 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "5"
+			(uuid "c94fc4a0-fbd7-45f3-982a-34d9fb6d20f8")
+		)
+		(pin "3"
+			(uuid "d50bab7d-e744-4b92-8adf-6372afbed938")
+		)
+		(pin "2"
+			(uuid "bc527ccf-8c4e-4a11-85cb-ad40f6f9dae1")
+		)
+		(pin "1"
+			(uuid "dd33a781-41a8-4cf6-b5dd-005d1e0a467c")
+		)
+		(pin "4"
+			(uuid "b5694ec8-f5a9-4f31-8cea-a2fe073cc8d5")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "U?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:D")
+		(at 150 145 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "cb627ae9-8303-4c73-a9aa-c0fee1106496")
+		(property "Reference" "D?"
+			(at 152.032 145 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "1N4007"
+			(at 150 148 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Diode_THT:D_DO-41_SOD81_P12.70mm_Horizontal"
+			(at 150 145 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 150 145 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 150 145 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "2a6f2cca-3c23-48f9-a3b0-4a83281b4165")
+		)
+		(pin "2"
+			(uuid "23c17b34-ff97-4c33-94d8-047b103c8930")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "D?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 50 180 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "dc3debea-02ec-4c03-9121-39e2c7118b74")
+		(property "Reference" "#PWR?"
+			(at 50 185 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 50 183 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 50 180 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 50 180 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 50 180 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "843e6e28-d585-410c-9dc7-a84f46b37f05")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "#PWR?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:Conn_01x02_Pin")
+		(at 130 158 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "df57a068-7e5a-42d0-95c9-91985b9a96a6")
+		(property "Reference" "J_V?"
+			(at 132.032 158 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "VALVE_1_TERMINAL"
+			(at 130 161 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "TerminalBlock:TerminalBlock_bornier-2_P5.08mm"
+			(at 130 158 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 130 158 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 130 158 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "2"
+			(uuid "649df2fa-8a5b-49c0-adb9-c114463cc9e9")
+		)
+		(pin "1"
+			(uuid "9fc32888-9efe-40be-ac1b-627a2cd4ae41")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "J_V?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+3V3")
+		(at 50 40 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "f3cc549d-0b74-4db8-b9d4-83954d675185")
+		(property "Reference" "#PWR?"
+			(at 50 37 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 50 35 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 50 40 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 50 40 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 50 40 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "16d80ed2-aa85-4bc3-a26d-53f5e3d3d368")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "#PWR?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:C")
+		(at 220 95 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "f6ff0a81-bc57-47c1-ab11-6dc5f5f7345f")
+		(property "Reference" "C?"
+			(at 222.032 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100nF"
+			(at 220 98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+			(at 220 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 220 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 220 95 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "b9e5fab4-db3a-48af-a2e8-2199f0fba35b")
+		)
+		(pin "2"
+			(uuid "0b7b7f2d-7aff-443e-b5f8-b0d217971995")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "C?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 145 75 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "f7798182-de71-40d6-8f2b-cdb8f7d65dad")
+		(property "Reference" "L?"
+			(at 147.032 75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100uH"
+			(at 145 78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Inductor_THT:L_Axial_L16.3mm_D6.9mm_P22.86mm_Horizontal_Vishay_IM-1"
+			(at 145 75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 145 75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 145 75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "1e50285e-9943-4e4e-9720-8b34d323fe4a")
+		)
+		(pin "2"
+			(uuid "e7adb1e0-a60e-4138-843a-e0d780d69edf")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "L?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:SW_Push")
+		(at 130 160 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "f96de9ab-d518-44ba-b529-7a9b3de32bc8")
+		(property "Reference" "SW?"
+			(at 132.032 160 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "RESET"
+			(at 130 163 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Button_Switch_SMD:SW_SPST_SKQG_WithStem"
+			(at 130 160 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 130 160 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 130 160 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "0753087d-3755-4474-a905-16b793d8480e")
+		)
+		(pin "2"
+			(uuid "de3020cf-4abb-4e13-8ba6-207cb26a6134")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "SW?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 150 120 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "fb88ce25-6924-45f9-9791-a3b50f93f060")
+		(property "Reference" "R?"
+			(at 152.032 120 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "100"
+			(at 150 123 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0805_2012Metric"
+			(at 150 120 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 150 120 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 150 120 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "e9695cbf-d9b5-40eb-a90d-1313fadeca3d")
+		)
+		(pin "2"
+			(uuid "2052a106-25f5-4348-81ea-fef21622d004")
+		)
+		(instances
+			(project "irrigation_node"
+				(path "/11e3a982-e445-42ea-9472-46b8500abaca"
+					(reference "R?")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(sheet_instances
+		(path "/"
+			(page "1")
+		)
+	)
+	(embedded_fonts no)
 )

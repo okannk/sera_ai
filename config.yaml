@@ -147,6 +147,24 @@ api:
   port:        5000
   api_key_env: SERA_API_KEY   # Bu env var tanımlıysa auth aktif olur
 
+# ── Görüntü İşleme / Hastalık Tespiti ────────────────────────
+# Kamera görüntüleri ile bitki hastalığı tespiti.
+# Model eğitimi: python -m sera_ai.goruntu.egitim --n 500
+goruntu:
+  aktif:             false     # true → kontrol döngüsüne entegre edilir
+  kamera:            mock      # mock | esp32_cam
+  tespit:            mock      # mock | model
+  kontrol_aralik_sn: 30        # Her kaç saniyede bir tespit yapılsın
+  model_yolu:        models/hastalik_tespiti.pkl
+  guven_esigi:       0.60      # Bu değerin altı anomali sayılır
+  seralar:           []        # Kamerası olan seralar
+  # Örnek:
+  # seralar:
+  #   - id:  s1
+  #     url: http://192.168.1.201/capture   # ESP32-CAM endpoint (esp32_cam için)
+  #   - id:  s2
+  #     url: http://192.168.1.202/capture
+
 # ── Intelligence / Optimizer ──────────────────────────────────
 # ⚠️  DONANIM BAĞLARKEN KONTROL LİSTESİ:
 #   1. donanim.saha:   mock  →  esp32_s3

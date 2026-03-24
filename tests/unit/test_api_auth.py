@@ -39,23 +39,35 @@ def test_buyuk_kucuk_harf_duyarli():
 # ── FastAPI TestClient testleri ───────────────────────────────
 
 @pytest.fixture
-def api_key_ile():
-    """X-API-Key korumalı FastAPI test client'ı."""
+def jwt_header():
+    """Geçerli JWT Bearer token header'ı."""
+    from sera_ai.api.jwt_auth import access_token_uret
+    token = access_token_uret(1, "test_admin", "admin")
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def api_key_ile(jwt_header):
+    """FastAPI test client'ı + JWT header."""
     fastapi = pytest.importorskip("fastapi")
     from fastapi.testclient import TestClient
     from sera_ai.api.app import api_uygulamasi_olustur
     app = api_uygulamasi_olustur(api_key="test-anahtar-123")
-    return TestClient(app, raise_server_exceptions=False)
+    client = TestClient(app, raise_server_exceptions=False)
+    client._jwt_header = jwt_header
+    return client
 
 
 @pytest.fixture
-def api_key_siz():
-    """Key tanımlı olmayan FastAPI test client'ı (dev modu)."""
+def api_key_siz(jwt_header):
+    """Key tanımlı olmayan FastAPI test client'ı."""
     pytest.importorskip("fastapi")
     from fastapi.testclient import TestClient
     from sera_ai.api.app import api_uygulamasi_olustur
     app = api_uygulamasi_olustur(api_key="")
-    return TestClient(app, raise_server_exceptions=False)
+    client = TestClient(app, raise_server_exceptions=False)
+    client._jwt_header = jwt_header
+    return client
 
 
 def test_key_olmadan_401(api_key_ile):
@@ -71,8 +83,8 @@ def test_yanlis_key_401(api_key_ile):
 
 
 def test_dogru_key_200(api_key_ile):
-    """Doğru key → 200."""
-    r = api_key_ile.get("/api/v1/seralar", headers={"X-API-Key": "test-anahtar-123"})
+    """Geçerli JWT → 200."""
+    r = api_key_ile.get("/api/v1/seralar", headers=api_key_ile._jwt_header)
     assert r.status_code == 200
 
 
@@ -82,9 +94,9 @@ def test_saglik_auth_gerektirmez(api_key_ile):
     assert r.status_code in (200, 503)
 
 
-def test_key_siz_modda_auth_yok(api_key_siz):
-    """Key tanımlı değilse tüm endpoint'ler açık (dev modu)."""
-    r = api_key_siz.get("/api/v1/seralar")
+def test_jwt_ile_erisim_basarili(api_key_siz):
+    """JWT Bearer token ile endpoint'e erişim başarılı."""
+    r = api_key_siz.get("/api/v1/seralar", headers=api_key_siz._jwt_header)
     assert r.status_code == 200
 
 
@@ -104,11 +116,11 @@ def test_komut_endpoint_key_zorunlu(api_key_ile):
 
 
 def test_komut_dogru_key_ile_basarili(api_key_ile):
-    """Doğru key + geçerli komut → 201."""
+    """Geçerli JWT + geçerli komut → 201."""
     r = api_key_ile.post(
         "/api/v1/seralar/s1/komut",
         json={"komut": "FAN_AC"},
-        headers={"X-API-Key": "test-anahtar-123"},
+        headers=api_key_ile._jwt_header,
     )
     assert r.status_code == 201
 
@@ -118,7 +130,7 @@ def test_gecersiz_komut_400(api_key_ile):
     r = api_key_ile.post(
         "/api/v1/seralar/s1/komut",
         json={"komut": "UCAK_KALDIR"},
-        headers={"X-API-Key": "test-anahtar-123"},
+        headers=api_key_ile._jwt_header,
     )
     assert r.status_code == 400
 
@@ -127,7 +139,7 @@ def test_bilinmeyen_sera_404(api_key_ile):
     """Olmayan sera → 404."""
     r = api_key_ile.get(
         "/api/v1/seralar/s999",
-        headers={"X-API-Key": "test-anahtar-123"},
+        headers=api_key_ile._jwt_header,
     )
     assert r.status_code == 404
 
@@ -136,19 +148,19 @@ def test_bilinmeyen_sera_404(api_key_ile):
 
 def test_bos_komut_422(api_key_siz):
     """Boş komut string → 422 Unprocessable Entity."""
-    r = api_key_siz.post("/api/v1/seralar/s1/komut", json={"komut": "   "})
+    r = api_key_siz.post("/api/v1/seralar/s1/komut", json={"komut": "   "}, headers=api_key_siz._jwt_header)
     assert r.status_code == 422
 
 
 def test_komut_alani_eksik_422(api_key_siz):
     """komut alanı hiç gönderilmemiş → 422."""
-    r = api_key_siz.post("/api/v1/seralar/s1/komut", json={})
+    r = api_key_siz.post("/api/v1/seralar/s1/komut", json={}, headers=api_key_siz._jwt_header)
     assert r.status_code == 422
 
 
 def test_422_yanit_formati(api_key_siz):
     """422 yanıtı {"success": false, "hata": ..., "kod": "GECERSIZ_ISTEK"} formatında."""
-    r = api_key_siz.post("/api/v1/seralar/s1/komut", json={"komut": ""})
+    r = api_key_siz.post("/api/v1/seralar/s1/komut", json={"komut": ""}, headers=api_key_siz._jwt_header)
     veri = r.json()
     assert veri["success"] is False
     assert "hata" in veri

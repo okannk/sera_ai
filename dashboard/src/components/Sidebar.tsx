@@ -1,36 +1,96 @@
-import type { Durum } from '../types'
+import { useState } from 'react'
+import { useData } from '../context/DataContext'
+import type { Durum, KomutAdi, SeraOzet } from '../types'
 
 export type Sayfa =
   | 'genel' | 'grafikler' | 'alarm'
+  | 'sulama' | 'sulama_grup'
   | 'ekonomi' | 'loglar' | 'ayarlar'
 
-interface NavItem {
-  id: Sayfa
-  label: string
-  icon: string
-  alarmBadge?: boolean
-}
+const BITKI_EMOJI: Record<string, string> = { Domates: '🍅', Biber: '🌶️', Marul: '🥬' }
 
-const NAV: NavItem[] = [
-  { id: 'genel',     label: 'Genel Bakış',   icon: '🗺' },
-  { id: 'grafikler', label: 'Grafikler',      icon: '📊' },
-  { id: 'alarm',     label: 'Alarm Merkezi', icon: '🚨', alarmBadge: true },
-  { id: 'ekonomi',   label: 'Ekonomi',       icon: '💰' },
-  { id: 'loglar',    label: 'Log & Komutlar', icon: '📋' },
-  { id: 'ayarlar',   label: 'Ayarlar',        icon: '⚙️' },
+const AKTUATORLER: { komutAc: KomutAdi; komutKapat: KomutAdi; icon: string }[] = [
+  { komutAc: 'SULAMA_AC',  komutKapat: 'SULAMA_KAPAT',  icon: '💧' },
+  { komutAc: 'SOGUTMA_AC', komutKapat: 'SOGUTMA_KAPAT', icon: '❄️' },
+  { komutAc: 'FAN_AC',     komutKapat: 'FAN_KAPAT',     icon: '🌀' },
+  { komutAc: 'ISITICI_AC', komutKapat: 'ISITICI_KAPAT', icon: '🔥' },
 ]
 
+function SeraItem({ sera }: { sera: SeraOzet }) {
+  const { komutGonder, komutLog } = useData()
+  const [yuklenen, setYuklenen] = useState<string | null>(null)
+
+  function isAcik(komutAc: string, komutKapat: string): boolean {
+    const son = komutLog
+      .filter(k => k.sera_id === sera.id && (k.komut === komutAc || k.komut === komutKapat))
+      .sort((a, b) => new Date(b.zaman).getTime() - new Date(a.zaman).getTime())[0]
+    return son?.komut === komutAc
+  }
+
+  async function toggle(komutAc: KomutAdi, komutKapat: KomutAdi, icon: string) {
+    const acik = isAcik(komutAc, komutKapat)
+    setYuklenen(icon)
+    await komutGonder(sera.id, acik ? komutKapat : komutAc, sera.isim)
+    setYuklenen(null)
+  }
+
+  const c = durumRengi(sera.durum)
+
+  return (
+    <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)' }}>
+      {/* Sera adı + durum noktası */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+        <span style={{
+          width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+          background: c, boxShadow: `0 0 5px ${c}`,
+          animation: (sera.durum === 'ALARM' || sera.durum === 'ACIL_DURDUR') ? 'pulse 1.5s infinite' : 'none',
+        }} />
+        <span style={{ fontSize: 13 }}>{BITKI_EMOJI[sera.bitki] ?? '🌱'}</span>
+        <span style={{
+          fontSize: 12, fontWeight: 600, color: 'var(--t1)',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1,
+        }}>
+          {sera.isim}
+        </span>
+      </div>
+
+      {/* Aktüatör toggle'ları */}
+      <div style={{ display: 'flex', gap: 3 }}>
+        {AKTUATORLER.map(({ komutAc, komutKapat, icon }) => {
+          const on = isAcik(komutAc, komutKapat)
+          return (
+            <button
+              key={komutAc}
+              onClick={() => toggle(komutAc, komutKapat, icon)}
+              disabled={yuklenen !== null}
+              title={`${komutAc.replace('_AC', '')} — ${on ? 'Kapat' : 'Aç'}`}
+              style={{
+                flex: 1, height: 24, fontSize: 11,
+                background: on ? 'var(--accent-dim)' : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${on ? 'rgba(0,212,170,0.35)' : 'var(--border)'}`,
+                borderRadius: 4, cursor: 'pointer',
+                opacity: yuklenen !== null ? 0.5 : 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                transition: 'background 0.15s, border-color 0.15s',
+              }}
+            >
+              {yuklenen === icon ? '·' : icon}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 interface Props {
-  aktif: Sayfa
-  onChange: (s: Sayfa) => void
-  alarmSayisi: number
   hata: boolean
   acik: boolean
   onKapat: () => void
 }
 
-export function Sidebar({ aktif, onChange, alarmSayisi, hata, acik, onKapat }: Props) {
-  function sec(s: Sayfa) { onChange(s); onKapat() }
+export function Sidebar({ hata, acik, onKapat }: Props) {
+  const { seralar } = useData()
 
   return (
     <>
@@ -45,89 +105,55 @@ export function Sidebar({ aktif, onChange, alarmSayisi, hata, acik, onKapat }: P
 
       {/* Sidebar panel */}
       <aside
-        className="fixed top-0 left-0 h-full z-40 flex flex-col sidebar-panel"
+        className="fixed left-0 z-40 flex flex-col sidebar-panel"
         style={{
-          width: 220,
+          top: 44,
+          bottom: 0,
+          width: 200,
           background: 'var(--card)',
           borderRight: '1px solid var(--border)',
           transform: acik ? 'translateX(0)' : 'translateX(-100%)',
           transition: 'transform 0.25s ease',
         }}
       >
-        {/* Logo */}
-        <div
-          className="flex items-center gap-3 px-5"
-          style={{
-            height: 60, borderBottom: '1px solid var(--border)',
-            flexShrink: 0,
-          }}
-        >
-          <span style={{ fontSize: 22 }}>🌿</span>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--t1)' }}>Sera AI</div>
-            <div style={{ fontSize: 11, color: 'var(--t3)' }}>v1.0 · FastAPI</div>
-          </div>
-          {/* Mobile close */}
-          <button
-            onClick={onKapat}
-            className="ml-auto lg:hidden"
-            style={{ color: 'var(--t3)', fontSize: 18, background: 'none', border: 'none', cursor: 'pointer' }}
-          >✕</button>
+        {/* Header */}
+        <div style={{
+          padding: '7px 12px',
+          borderBottom: '1px solid var(--border)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexShrink: 0,
+        }}>
+          <span className="scada-label" style={{ color: 'var(--t2)' }}>Seralar</span>
+          <span style={{
+            fontFamily: 'monospace', fontSize: 11, fontWeight: 700,
+            color: 'var(--accent)', background: 'var(--accent-dim)',
+            padding: '1px 7px', borderRadius: 4,
+          }}>
+            {seralar.length}
+          </span>
         </div>
 
-        {/* Nav */}
-        <nav className="flex-1 overflow-y-auto py-3">
-          {NAV.map(item => {
-            const isActive = aktif === item.id
-            return (
-              <button
-                key={item.id}
-                onClick={() => sec(item.id)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-left relative"
-                style={{
-                  background:  isActive ? 'var(--accent-dim)' : 'transparent',
-                  color:       isActive ? 'var(--accent)'     : 'var(--t2)',
-                  borderLeft:  isActive ? '3px solid var(--accent)' : '3px solid transparent',
-                  fontSize:    14,
-                  fontWeight:  isActive ? 600 : 400,
-                  transition:  'all 0.15s',
-                  cursor:      'pointer',
-                  border:      'none',
-                  width:       '100%',
-                }}
-                onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.04)' }}
-                onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'transparent' }}
-              >
-                <span style={{ fontSize: 17, width: 24, textAlign: 'center' }}>{item.icon}</span>
-                <span>{item.label}</span>
-                {item.alarmBadge && alarmSayisi > 0 && (
-                  <span
-                    className="ml-auto rounded-full text-xs font-bold flex items-center justify-center"
-                    style={{
-                      background: 'var(--alarm)', color: '#fff',
-                      minWidth: 20, height: 20, padding: '0 5px', fontSize: 11,
-                    }}
-                  >
-                    {alarmSayisi}
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </nav>
+        {/* Sera listesi */}
+        <div className="flex-1 overflow-y-auto">
+          {seralar.map(sera => (
+            <SeraItem key={sera.id} sera={sera} />
+          ))}
+          {seralar.length === 0 && (
+            <div style={{ padding: 24, textAlign: 'center', color: 'var(--t3)', fontSize: 12 }}>
+              Bağlantı bekleniyor…
+            </div>
+          )}
+        </div>
 
-        {/* Alt bilgi */}
-        <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
-          <div className="flex items-center gap-2">
-            <span
-              className="rounded-full"
-              style={{
-                width: 7, height: 7,
-                background: hata ? 'var(--alarm)' : 'var(--accent)',
-                boxShadow: hata ? '0 0 6px var(--alarm)' : '0 0 6px var(--accent)',
-              }}
-            />
-            <span style={{ fontSize: 12, color: 'var(--t3)' }}>
+        {/* Durum footer */}
+        <div style={{ padding: '8px 12px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <span className="rounded-full" style={{
+              width: 6, height: 6, display: 'inline-block',
+              background: hata ? 'var(--alarm)' : 'var(--accent)',
+              boxShadow: hata ? '0 0 5px var(--alarm)' : '0 0 5px var(--accent)',
+            }} />
+            <span style={{ fontSize: 11, color: 'var(--t3)', fontFamily: 'monospace' }}>
               {hata ? 'Bağlantı hatası' : 'Sistem çalışıyor'}
             </span>
           </div>
@@ -137,7 +163,8 @@ export function Sidebar({ aktif, onChange, alarmSayisi, hata, acik, onKapat }: P
   )
 }
 
-// Durum renk yardımcısı — tüm sayfalarda kullanılır
+// ─── Utility helpers (used across pages) ─────────────────────────────────────
+
 export function durumRengi(durum: Durum): string {
   switch (durum) {
     case 'NORMAL':      return 'var(--accent)'

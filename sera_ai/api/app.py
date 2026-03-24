@@ -34,11 +34,13 @@ import time
 from datetime import datetime
 from typing import Any, Optional
 
-from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 
 from .auth import check_api_key, get_api_key_dep
+from .jwt_auth import get_kullanici_db, get_aktif_kullanici
+from .auth_router import auth_router
 from .models import ApiYanit, HataYanit, KomutIstek, SeraEkleme, SeraGuncelleme, CihazKayitIstek, KayitTalebiIstek
 
 
@@ -87,43 +89,67 @@ class SeraApiServisi:
         self._baslangic = time.time()
         threading.Thread(target=self._sim_dongu, daemon=True).start()
 
+    # Bitki profiline göre gerçekçi aralıklar
+    _ARALIKLAR = {
+        "Domates": {"optT": 23, "optH": 70, "optCO2": 1000, "optToprak": 500,
+                    "minH": 63, "maxH": 77, "uyariT": 1.8},
+        "Biber":   {"optT": 25, "optH": 67, "optCO2":  900, "optToprak": 490,
+                    "minH": 58, "maxH": 77, "uyariT": 1.8},
+        "Marul":   {"optT": 16, "optH": 75, "optCO2":  800, "optToprak": 510,
+                    "minH": 67, "maxH": 83, "uyariT": 1.8},
+    }
+
     def _sim_dongu(self) -> None:
         s: dict[str, dict] = {}
         while True:
             # Yeni eklenen seraları simülasyona dahil et
             for sid in list(self._seralar.keys()):
                 if sid not in s:
-                    p = self.PROFILLER.get(self._seralar[sid].get("bitki", "Domates"), self.PROFILLER["Domates"])
-                    s[sid] = {"T": float(p["optT"]), "H": 70.0, "co2": 950}
+                    bitki = self._seralar[sid].get("bitki", "Domates")
+                    a = self._ARALIKLAR.get(bitki, self._ARALIKLAR["Domates"])
+                    s[sid] = {
+                        "T":      float(a["optT"]),
+                        "H":      float(a["optH"]),
+                        "co2":    float(a["optCO2"]),
+                        "toprak": float(a["optToprak"]),
+                    }
                 if sid not in self._durum:
                     self._durum[sid] = "NORMAL"
             # Silinen seraları kaldır
             for sid in list(s.keys()):
                 if sid not in self._seralar:
                     del s[sid]
+
             for sid, st in list(s.items()):
-                p    = self.PROFILLER.get(self._seralar[sid]["bitki"], self.PROFILLER["Domates"])
-                opt  = p["optT"]
-                # Mean-reversion: değer opt'a doğru çekiliyor, küçük gürültü ekleniyor
-                st["T"]   = round(st["T"]   + random.gauss(0, 0.12) + (opt      - st["T"])   * 0.05, 2)
-                st["H"]   = round(st["H"]   + random.gauss(0, 0.20) + (70.0     - st["H"])   * 0.04, 2)
-                st["co2"] = round(st["co2"] + random.gauss(0, 8)    + (950.0    - st["co2"]) * 0.03, 1)
-                # Gerçekçi sınırlar: T opt±4°C, H 55-85%, CO₂ 800-1200 ppm
-                st["T"]   = max(opt - 4,  min(opt + 4,  st["T"]))
-                st["H"]   = max(55,       min(85,        st["H"]))
-                st["co2"] = max(800,      min(1200,      st["co2"]))
-                if   abs(st["T"] - opt) > 8: self._durum[sid] = "ACIL_DURDUR"
-                elif abs(st["T"] - opt) > 5: self._durum[sid] = "ALARM"
-                elif abs(st["T"] - opt) > 2: self._durum[sid] = "UYARI"
-                else:                         self._durum[sid] = "NORMAL"
+                bitki = self._seralar[sid]["bitki"]
+                a   = self._ARALIKLAR.get(bitki, self._ARALIKLAR["Domates"])
+                opt = a["optT"]
+
+                # Mean-reversion + küçük gürültü
+                st["T"]      = st["T"]      + random.gauss(0, 0.06) + (opt            - st["T"])      * 0.04
+                st["H"]      = st["H"]      + random.gauss(0, 0.12) + (float(a["optH"]) - st["H"])    * 0.03
+                st["co2"]    = st["co2"]    + random.gauss(0, 6)    + (float(a["optCO2"]) - st["co2"]) * 0.05
+                st["toprak"] = st["toprak"] + random.gauss(0, 2)    + (float(a["optToprak"]) - st["toprak"]) * 0.02
+
+                # Demo sınırları: UYARI mümkün, ACİL_DURDUR imkânsız
+                st["T"]      = max(opt - 2.5, min(opt + 2.5, st["T"]))
+                st["H"]      = max(a["minH"],  min(a["maxH"], st["H"]))
+                st["co2"]    = max(a["optCO2"] - 120, min(a["optCO2"] + 120, st["co2"]))
+                st["toprak"] = max(380, min(620, st["toprak"]))
+
+                # Durum: UYARI eşiği ±1.8°C, ACİL_DURDUR hiçbir zaman
+                sapma = abs(st["T"] - opt)
+                if   sapma > a["uyariT"]: self._durum[sid] = "UYARI"
+                else:                      self._durum[sid] = "NORMAL"
+
                 self._sensor[sid] = {
                     "T":      round(st["T"], 1),
                     "H":      round(st["H"], 1),
                     "co2":    int(st["co2"]),
-                    "isik":   random.randint(200, 900),
-                    "toprak": random.randint(300, 700),
-                    "ph":     round(random.uniform(5.8, 7.2), 2),
-                    "ec":     round(random.uniform(1.4, 2.8), 2),
+                    "isik":   random.randint(800, 6000),
+                    "toprak": int(st["toprak"]),
+                    "ph":     round(random.uniform(5.9, 6.8), 2),
+                    "ec":     round(random.uniform(1.6, 2.4), 2),
                     "zaman":  datetime.now().isoformat(),
                 }
             time.sleep(2)
@@ -757,21 +783,20 @@ def api_uygulamasi_olustur(
         allow_headers=["*"],
     )
 
+    # JWT DB başlat (admin kullanıcıyı oluşturur)
+    get_kullanici_db()
+
     # ── Servis & key kurulumu ──────────────────────────────────
 
     if servis is None:
         print(
-            "[API] Uyarı: servis=None → Mock simülasyon aktif. "
+            "[API] Uyari: servis=None -> Mock simulasyon aktif. "
             "Gerçek veri için MerkezApiServisi kullanın."
         )
         servis = SeraApiServisi()
 
-    _api_key = api_key if api_key is not None else os.getenv("SERA_API_KEY", "")
-
-    if not _api_key:
-        print("[API] Uyarı: SERA_API_KEY tanımlı değil — kimlik doğrulama devre dışı")
-
-    auth = get_api_key_dep(_api_key)
+    # JWT ile kimlik doğrulama — tüm korumalı route'lar Bearer token ister
+    auth = get_aktif_kullanici
 
     # ── Rate limiting ──────────────────────────────────────────
 
@@ -780,7 +805,7 @@ def api_uygulamasi_olustur(
         from slowapi.errors import RateLimitExceeded
         from slowapi.util import get_remote_address
 
-        limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
+        limiter = Limiter(key_func=get_remote_address, default_limits=["600/minute"])
         app.state.limiter = limiter
         app.add_exception_handler(
             RateLimitExceeded,
@@ -788,8 +813,8 @@ def api_uygulamasi_olustur(
         )
 
         def limit(func):
-            """Endpoint'e 60/minute rate limit uygular (request: Request gerektirir)."""
-            return limiter.limit("60/minute")(func)
+            """Endpoint'e 600/minute rate limit uygular (request: Request gerektirir)."""
+            return limiter.limit("600/minute")(func)
     except ImportError:
         print("[API] Uyarı: slowapi kurulu değil — rate limiting devre dışı")
 
@@ -896,9 +921,10 @@ def api_uygulamasi_olustur(
         request: Request,
         sid: str,
         istek: KomutIstek,
-        _: None = Depends(auth),
+        kullanici: dict = Depends(auth),
     ) -> JSONResponse:
-        sonuc = servis.komut_gonder(sid, istek.komut, istek.kaynak, istek.kullanici_id or "")
+        kullanici_adi = kullanici.get("kullanici_adi", istek.kullanici_id or "operator")
+        sonuc = servis.komut_gonder(sid, istek.komut, istek.kaynak, kullanici_adi)
         if not sonuc.get("basarili"):
             hata_mesaji = sonuc.get("hata", "Komut gönderilemedi")
             kod = HataKod.GECERSIZ_KOMUT if "gecerli" in sonuc else HataKod.BULUNAMADI
@@ -1258,7 +1284,68 @@ def api_uygulamasi_olustur(
             )
         return Response(status_code=204)
 
+    # ── Görüntü analizi ───────────────────────────────────────
+    _IZIN_VERILEN_MIME = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+
+    @v1.post(
+        "/goruntu/analiz",
+        summary="Sera fotoğrafını Claude Vision ile analiz et",
+        tags=["Görüntü"],
+    )
+    @limit
+    async def goruntu_analiz(
+        request: Request,
+        sera_id: str = Form(...),
+        sera_isim: str = Form(...),
+        goruntu: UploadFile = File(...),
+        _: None = Depends(auth),
+    ) -> JSONResponse:
+        if goruntu.content_type not in _IZIN_VERILEN_MIME:
+            raise HTTPException(
+                status_code=400,
+                detail=HataYanit(
+                    hata="Desteklenmeyen dosya türü. JPEG, PNG veya WebP gönderin.",
+                    kod=HataKod.GECERSIZ_ISTEK,
+                ).model_dump(),
+            )
+
+        icerik = await goruntu.read()
+        if len(icerik) > 5 * 1024 * 1024:
+            raise HTTPException(
+                status_code=400,
+                detail=HataYanit(
+                    hata="Dosya 5 MB'dan büyük olamaz.",
+                    kod=HataKod.GECERSIZ_ISTEK,
+                ).model_dump(),
+            )
+
+        try:
+            from ..goruntu.analizci import goruntu_analiz_et
+            sonuc = goruntu_analiz_et(icerik, goruntu.content_type, sera_isim)
+            sonuc["sera_id"] = sera_id
+            sonuc["sera_isim"] = sera_isim
+            return JSONResponse(content=ApiYanit(data=sonuc).model_dump())
+        except Exception as exc:
+            raise HTTPException(
+                status_code=500,
+                detail=HataYanit(
+                    hata=f"Analiz hatası: {exc}",
+                    kod=HataKod.SUNUCU_HATASI,
+                ).model_dump(),
+            ) from exc
+
+    # DB-tabanlı sera CRUD (v1'den önce — aynı path'leri gölgeler)
+    from .seralar_router import create_seralar_router
+    app.include_router(create_seralar_router(servis), prefix="/api/v1")
+
     app.include_router(v1)
+
+    # JWT auth router
+    app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
+
+    # Sulama sistemi
+    from .sulama_router import sulama_router
+    app.include_router(sulama_router, prefix="/api/v1")
 
     # Prometheus metrics
     from .metrics import metrics_router_olustur

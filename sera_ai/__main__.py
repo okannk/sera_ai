@@ -18,6 +18,13 @@ from datetime import datetime
 if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+# .env dosyasını yükle (python-dotenv varsa)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 from .config.settings import konfig_yukle, saha_node_olustur
 from .application.event_bus import EventBus, OlayTur
 
@@ -100,7 +107,7 @@ def main():
         konfig.merkez_donanim = "raspberry_pi"   # Tam kontrol döngüsü çalışsın
         konfig.sensor_interval_sn = 0.8
         if args.adim is None:
-            args.adim = 15
+            args.adim = None if args.api else 15  # --api varsa sonsuz çalış
 
     # Event bus — demo modunda canlı terminal çıktısı için abone eklenir
     bus = EventBus()

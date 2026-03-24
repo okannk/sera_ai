@@ -117,6 +117,7 @@ def konfig_yukle(yol: str = "config.yaml") -> SistemKonfig:
         bildirim=bildirim,
         optimizer_tip=ham.get("intelligence", {}).get("optimizer", "kural_motoru"),
         model_dizin=ham.get("intelligence", {}).get("model_dizin", "models"),
+        goruntu_konfig=ham.get("goruntu", {}),
     )
 
 
@@ -261,6 +262,94 @@ def optimizer_olustur(konfig: SistemKonfig, profil):
         f"Bilinmeyen optimizer: {tip!r}. "
         f"Geçerli seçenekler: kural_motoru, ml_motor, rl_ajan"
     )
+
+
+def kamera_olustur(kamera_konfig: dict):
+    """
+    config.yaml kamera tanımından doğru KameraBase implementasyonunu oluştur.
+
+    Yeni kamera eklemek → goruntu/ altına yeni dosya + buraya 3 satır.
+    """
+    tip = kamera_konfig.get("tip", "mock").lower()
+
+    if tip == "esp32_cam":
+        from ..goruntu.esp32_kamera import ESP32Kamera
+        return ESP32Kamera(
+            url=kamera_konfig.get("url", "http://192.168.1.200/capture"),
+            zaman_asimi_sn=kamera_konfig.get("zaman_asimi_sn", 5.0),
+        )
+
+    if tip == "mock":
+        from ..goruntu.mock import MockKamera
+        return MockKamera(
+            hata_orani=kamera_konfig.get("hata_orani", 0.0),
+        )
+
+    raise ValueError(
+        f"Bilinmeyen kamera tipi: {tip!r}. "
+        f"Geçerli seçenekler: esp32_cam, mock"
+    )
+
+
+def tespit_olustur(goruntu_konfig: dict):
+    """
+    config.yaml görüntü tanımından doğru HastalikTespitBase implementasyonunu oluştur.
+    """
+    tip = goruntu_konfig.get("tespit", "mock").lower()
+
+    if tip == "model":
+        from ..goruntu.model import HastalikModeli
+        return HastalikModeli(
+            model_yolu=goruntu_konfig.get("model_yolu", "models/hastalik_tespiti.pkl")
+        )
+
+    if tip == "mock":
+        from ..goruntu.mock import MockHastalıkTespit
+        return MockHastalıkTespit()
+
+    raise ValueError(
+        f"Bilinmeyen tespit tipi: {tip!r}. "
+        f"Geçerli seçenekler: model, mock"
+    )
+
+
+def goruntu_servisleri_olustur(konfig: SistemKonfig, olay_bus=None) -> dict:
+    """
+    config.yaml'daki goruntu.seralar listesine göre per-sera GorüntuServisi oluştur.
+
+    Döner: {sera_id: GorüntuServisi}
+    goruntu.aktif: false ise boş dict döner.
+    """
+    from ..goruntu.base import GorüntuServisi
+
+    goruntu_konfig = getattr(konfig, "goruntu_konfig", {})
+    if not goruntu_konfig.get("aktif", False):
+        return {}
+
+    genel_tespit_konfig = {
+        "tespit":     goruntu_konfig.get("tespit", "mock"),
+        "model_yolu": goruntu_konfig.get("model_yolu", "models/hastalik_tespiti.pkl"),
+    }
+    guven_esigi = goruntu_konfig.get("guven_esigi", 0.60)
+
+    servisler = {}
+    for sera_conf in goruntu_konfig.get("seralar", []):
+        sera_id = sera_conf.get("id")
+        if not sera_id:
+            continue
+        kamera = kamera_olustur({
+            "tip": goruntu_konfig.get("kamera", "mock"),
+            **sera_conf,
+        })
+        tespit = tespit_olustur(genel_tespit_konfig)
+        servisler[sera_id] = GorüntuServisi(
+            kamera=kamera,
+            tespit=tespit,
+            olay_bus=olay_bus,
+            guven_esigi=guven_esigi,
+        )
+
+    return servisler
 
 
 def tam_sistem_kur(konfig: SistemKonfig):

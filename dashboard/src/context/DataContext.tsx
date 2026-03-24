@@ -7,6 +7,17 @@ import type {
 
 const MAX_GECMIS = 300
 
+function lsYukle<T>(anahtar: string, varsayilan: T): T {
+  try {
+    const raw = localStorage.getItem(anahtar)
+    return raw ? (JSON.parse(raw) as T) : varsayilan
+  } catch { return varsayilan }
+}
+
+function lsKaydet(anahtar: string, deger: unknown) {
+  try { localStorage.setItem(anahtar, JSON.stringify(deger)) } catch { /* quota aşıldı */ }
+}
+
 interface DataCtx {
   seralar: SeraOzet[]
   saglik: SaglikDurumu | null
@@ -33,24 +44,27 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [alarmlar, setAlarmlar]       = useState<Alarm[]>([])
   const [sensorGecmis, setSensorGecmis] = useState<Record<string, SensorGecmis[]>>({})
   const [alarmGecmis, setAlarmGecmis] = useState<AlarmGecmisKaydi[]>([])
-  const [komutLog, setKomutLog]       = useState<KomutLog[]>([])
-  const [sistemLog, setSistemLog]     = useState<SistemLog[]>(() => [
+  const [komutLog, setKomutLog]       = useState<KomutLog[]>(() => lsYukle('sera_komut_log', []))
+  const [sistemLog, setSistemLog]     = useState<SistemLog[]>(() => lsYukle('sera_sistem_log', [
     { id: logId(), seviye: 'INFO',  mesaj: 'Sera AI sistemi başlatıldı',              zaman: new Date().toISOString() },
     { id: logId(), seviye: 'INFO',  mesaj: 'FastAPI sunucu bağlantısı kuruldu',        zaman: new Date().toISOString() },
     { id: logId(), seviye: 'INFO',  mesaj: 'RLAjan Q-tablosu yüklendi (2430 durum)', zaman: new Date().toISOString() },
-  ])
+  ]))
   const [yukleniyor, setYukleniyor]   = useState(true)
   const [hata, setHata]               = useState<string | null>(null)
   const [sonGuncelleme, setSonGuncelleme] = useState<Date | null>(null)
 
+  useEffect(() => { lsKaydet('sera_komut_log', komutLog) }, [komutLog])
+  useEffect(() => { lsKaydet('sera_sistem_log', sistemLog) }, [sistemLog])
+
   const oncekiAlarmIdler = useRef<Set<string>>(new Set())
   const pollSayac = useRef(0)
 
-  const addSistemLog = useCallback((seviye: SistemLog['seviye'], mesaj: string, sera_id?: string) => {
+  const addSistemLog = useCallback((seviye: SistemLog['seviye'], mesaj: string, sera_id?: string, kullanici_adi?: string) => {
     setSistemLog(prev => [
-      { id: logId(), seviye, mesaj, zaman: new Date().toISOString(), sera_id },
+      { id: logId(), seviye, mesaj, zaman: new Date().toISOString(), sera_id, kullanici_adi },
       ...prev,
-    ].slice(0, 200))
+    ])
   }, [])
 
   const yukle = useCallback(async () => {
@@ -133,34 +147,74 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   }, [addSistemLog])
 
+  // sera-listesi-guncellendi eventi → anında yenile
   useEffect(() => {
-    yukle()
-    const id = setInterval(yukle, 2000)
-    return () => clearInterval(id)
+    function hemenYukle() { yukle() }
+    window.addEventListener('sera-listesi-guncellendi', hemenYukle)
+    return () => window.removeEventListener('sera-listesi-guncellendi', hemenYukle)
   }, [yukle])
+
+  // Token yoksa otomatik login (admin/sera2024!)
+  useEffect(() => {
+    async function baslat() {
+      if (!localStorage.getItem('access_token')) {
+        try {
+          const r = await fetch('/api/v1/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ kullanici_adi: 'admin', sifre: 'sera2024!' }),
+          })
+          if (r.ok) {
+            const d = await r.json()
+            const token = d?.access_token ?? d?.data?.access_token ?? ''
+            const refresh = d?.refresh_token ?? d?.data?.refresh_token ?? ''
+            if (token) {
+              localStorage.setItem('access_token', token)
+              if (refresh) localStorage.setItem('refresh_token', refresh)
+              window.dispatchEvent(new Event('auth:token-updated'))
+            }
+          }
+        } catch { /* backend henüz hazır değil, yukle() hata yakalar */ }
+      }
+      yukle()
+      const id = setInterval(yukle, 2000)
+      return () => clearInterval(id)
+    }
+    baslat()
+  }, [yukle])
+
+  function aktifKullaniciAdi(): string | undefined {
+    try {
+      const token = localStorage.getItem('access_token')
+      if (!token) return undefined
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      return payload.adi || payload.kullanici_adi || payload.sub || undefined
+    } catch { return undefined }
+  }
 
   const komutGonder = useCallback(async (
     sid: string, komut: KomutAdi, seraIsim = sid, kaynak: KomutKaynak = 'kullanici'
   ) => {
+    const kullanici_adi = aktifKullaniciAdi()
     try {
       await api.komutGonder(sid, komut)
       const log: KomutLog = {
         id: `${sid}-${komut}-${Date.now()}`, sera_id: sid,
         sera_isim: seraIsim, komut, zaman: new Date().toISOString(),
-        basarili: true, kaynak,
+        basarili: true, kaynak, kullanici_adi,
       }
-      setKomutLog(prev => [log, ...prev].slice(0, 100))
-      addSistemLog('INFO', `Komut: ${seraIsim} → ${komut}`, sid)
+      setKomutLog(prev => [log, ...prev])
+      addSistemLog('INFO', `Komut: ${seraIsim} → ${komut}`, sid, kullanici_adi)
       return { ok: true, mesaj: `${komut} gönderildi` }
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Hata'
       const log: KomutLog = {
         id: `${sid}-${komut}-${Date.now()}`, sera_id: sid,
         sera_isim: seraIsim, komut, zaman: new Date().toISOString(),
-        basarili: false, kaynak,
+        basarili: false, kaynak, kullanici_adi,
       }
-      setKomutLog(prev => [log, ...prev].slice(0, 100))
-      addSistemLog('ERROR', `Komut başarısız: ${seraIsim} → ${komut} (${msg})`, sid)
+      setKomutLog(prev => [log, ...prev])
+      addSistemLog('ERROR', `Komut başarısız: ${seraIsim} → ${komut} (${msg})`, sid, kullanici_adi)
       return { ok: false, mesaj: msg }
     }
   }, [addSistemLog])
@@ -181,6 +235,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useData() {
   const ctx = useContext(DataContext)
   if (!ctx) throw new Error('useData must be used within DataProvider')

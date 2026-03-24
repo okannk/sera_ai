@@ -190,16 +190,20 @@ def fastapi_client(merkez, konfig):
     pytest.importorskip("fastapi")
     from fastapi.testclient import TestClient
     from sera_ai.api.app import api_uygulamasi_olustur
+    from sera_ai.api.jwt_auth import access_token_uret
     from sera_ai.api.servis import MerkezApiServisi
     servis = MerkezApiServisi(merkez, konfig)
     app = api_uygulamasi_olustur(servis=servis, api_key="")
-    return TestClient(app, raise_server_exceptions=False), konfig
+    client = TestClient(app, raise_server_exceptions=False)
+    token = access_token_uret(1, "test_admin", "admin")
+    client._jwt_header = {"Authorization": f"Bearer {token}"}
+    return client, konfig
 
 
 def test_fastapi_tum_seralar_endpoint(fastapi_client):
     """MerkezApiServisi ile /api/v1/seralar endpoint'i çalışmalı."""
     c, konfig = fastapi_client
-    r = c.get("/api/v1/seralar")
+    r = c.get("/api/v1/seralar", headers=c._jwt_header)
     assert r.status_code == 200
     veri = r.json()
     assert veri["success"] is True
@@ -209,7 +213,7 @@ def test_fastapi_tum_seralar_endpoint(fastapi_client):
 def test_fastapi_sera_detay_endpoint(fastapi_client):
     """MerkezApiServisi ile /api/v1/seralar/{sid} çalışmalı."""
     c, konfig = fastapi_client
-    r = c.get(f"/api/v1/seralar/{konfig.seralar[0].id}")
+    r = c.get(f"/api/v1/seralar/{konfig.seralar[0].id}", headers=c._jwt_header)
     assert r.status_code == 200
     veri = r.json()
     assert "profil" in veri["data"]
@@ -221,6 +225,7 @@ def test_fastapi_komut_endpoint(fastapi_client):
     r = c.post(
         f"/api/v1/seralar/{konfig.seralar[0].id}/komut",
         json={"komut": "FAN_AC"},
+        headers=c._jwt_header,
     )
     assert r.status_code == 201
     veri = r.json()

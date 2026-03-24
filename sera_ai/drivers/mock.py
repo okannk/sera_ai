@@ -23,9 +23,13 @@ from ..domain.models import BitkilProfili, Komut, SensorOkuma
 @dataclass
 class MockDurum:
     """Bir seranın simüle edilen anlık fiziksel durumu."""
-    T:   float
-    H:   float
-    co2: float
+    T:          float
+    H:          float
+    co2:        float
+    isik:       float   # lux — sabah/akşam döngüsü
+    toprak_nem: float   # ADC 0-1023
+    ph:         float   # çözelti pH
+    ec:         float   # elektriksel iletkenlik mS/cm
     # Aktüatör durumları — idempotent test için
     sulama_acik:  bool = False
     isitici_acik: bool = False
@@ -63,12 +67,17 @@ class MockSahaNode(SahaNodeBase):
         self._baglandı        = False
         # Gönderilen komutların kaydı — test assertion'ları için
         self.komutlar: list[Komut] = []
-        # Fiziksel simülasyon durumu
+        # Fiziksel simülasyon durumu — gerçekçi başlangıç değerleri
         self._durum = MockDurum(
             T=profil.opt_T,
             H=(profil.min_H + profil.max_H) / 2,
             co2=float(profil.opt_CO2),
+            isik=float(profil.opt_isik // 2),
+            toprak_nem=500.0,
+            ph=profil.opt_pH,
+            ec=profil.opt_EC,
         )
+        self._adim_sayaci = 0  # ışık döngüsü için
 
     def baglan(self) -> bool:
         self._baglandı = True
@@ -89,10 +98,10 @@ class MockSahaNode(SahaNodeBase):
             T=round(self._durum.T, 1),
             H=round(self._durum.H, 1),
             co2=int(self._durum.co2),
-            isik=random.randint(200, 900),
-            toprak_nem=random.randint(300, 700),
-            ph=round(random.uniform(5.8, 7.2), 2),
-            ec=round(random.uniform(1.4, 2.8), 2),
+            isik=int(self._durum.isik),
+            toprak_nem=int(self._durum.toprak_nem),
+            ph=round(self._durum.ph, 2),
+            ec=round(self._durum.ec, 2),
         )
 
     def komut_gonder(self, komut: Komut) -> bool:
@@ -115,27 +124,64 @@ class MockSahaNode(SahaNodeBase):
 
     def _fizik_adimi(self):
         """
-        Gaussian drift ile gerçekçi sensör davranışı.
-        Aktüatörler açıksa fizik buna göre şekillenir.
+        Gerçekçi sera simülasyonu: mean-reversion + küçük Gaussian gürültü.
+
+        Tasarım kararları:
+        - Mean-reversion: değerler her adımda optimal'a doğru çekilir.
+          Bu, sonsuz drift'i önler ve sensörü gerçek kontrol döngüsüne benzetir.
+        - Gürültü std çok küçük (0.06°C) → ölçüm gürültüsü, fiziksel olay değil.
+        - Demo'da UYARI çıkabilir ama ACİL_DURDUR çıkmaz:
+          T sınırları opt ± 2.5°C (KuralMotoru UYARI eşiği opt ± 2°C'dir).
+        - Aktüatör etkileri gerçekçi: ısıtıcı +0.2°C/adım, fan H -0.15%/adım.
         """
+        self._adim_sayaci += 1
         d = self._durum
         p = self.profil
 
-        # Temel drift (termal gürültü + dış etkenler)
-        d.T   += random.gauss(0, 0.15)
-        d.H   += random.gauss(0, 0.25)
-        d.co2 += random.gauss(0, 10)
+        opt_T   = p.opt_T
+        opt_H   = (p.min_H + p.max_H) / 2
+        opt_co2 = float(p.opt_CO2)
 
-        # Aktüatör etkileri
-        if d.sogutma_acik: d.T   -= 0.3
-        if d.isitici_acik: d.T   += 0.4
-        if d.fan_acik:     d.H   -= 0.2
-        if d.sulama_acik:  d.H   += 0.3
+        # ── Sıcaklık ──────────────────────────────────────────
+        # Mean-reversion katsayısı 0.04 → ~25 adımda yarıya döner
+        d.T += (opt_T - d.T) * 0.04 + random.gauss(0, 0.06)
+        if d.sogutma_acik: d.T -= 0.20
+        if d.isitici_acik: d.T += 0.25
+        # Demo sınırı: opt ± 2.5°C → UYARI mümkün, ACİL_DURDUR imkânsız
+        d.T = max(opt_T - 2.5, min(opt_T + 2.5, d.T))
 
-        # Fiziksel sınırlar
-        d.T   = max(5,   min(45,   d.T))
-        d.H   = max(20,  min(98,   d.H))
-        d.co2 = max(300, min(2000, d.co2))
+        # ── Nem ───────────────────────────────────────────────
+        d.H += (opt_H - d.H) * 0.03 + random.gauss(0, 0.12)
+        if d.fan_acik:    d.H -= 0.15
+        if d.sulama_acik: d.H += 0.20
+        d.H = max(p.min_H - 2, min(p.max_H + 2, d.H))
+
+        # ── CO₂ ───────────────────────────────────────────────
+        d.co2 += (opt_co2 - d.co2) * 0.05 + random.gauss(0, 6)
+        # CO₂ aralığı: opt ± 120 ppm
+        d.co2 = max(opt_co2 - 120, min(opt_co2 + 120, d.co2))
+
+        # ── Toprak Nemi (ADC) ─────────────────────────────────
+        # 400-600 ADC arası, mean-reversion 500'e
+        d.toprak_nem += (500 - d.toprak_nem) * 0.02 + random.gauss(0, 3)
+        if d.sulama_acik: d.toprak_nem += 5
+        d.toprak_nem = max(380, min(620, d.toprak_nem))
+
+        # ── Işık (lux) — sabah/akşam sinüs döngüsü ───────────
+        import math as _math
+        # 120 adımda bir tam döngü (simülasyon hızına bağlı)
+        faz = _math.sin(self._adim_sayaci * _math.pi / 60)
+        opt_isik = p.opt_isik
+        d.isik = opt_isik * (0.5 + 0.5 * max(0, faz)) + random.gauss(0, opt_isik * 0.02)
+        d.isik = max(p.min_isik, min(p.max_isik, d.isik))
+
+        # ── pH ────────────────────────────────────────────────
+        d.ph += (p.opt_pH - d.ph) * 0.02 + random.gauss(0, 0.02)
+        d.ph = max(p.min_pH, min(p.max_pH, d.ph))
+
+        # ── EC ────────────────────────────────────────────────
+        d.ec += (p.opt_EC - d.ec) * 0.02 + random.gauss(0, 0.03)
+        d.ec = max(p.min_EC, min(p.max_EC, d.ec))
 
     def _aktüatör_güncelle(self, komut: Komut):
         d = self._durum

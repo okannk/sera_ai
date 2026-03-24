@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useData } from '../context/DataContext'
+import { useKomutGuvenlik } from '../context/KomutGuvenlik'
 import { api } from '../api'
-import type { SeraOzet, SeraEkleInput, SeraGuncelleInput, Cihaz, CihazDurum, CihazKayitSonuc, CihazKayitInput, ProvisioningTalep, OnaylamaYaniti } from '../types'
+import type { SeraOzet, SeraEkleInput, SeraGuncelleInput, Cihaz, CihazDurum, CihazKayitSonuc, CihazKayitInput, ProvisioningTalep, OnaylamaYaniti, BitkiProfilDetay } from '../types'
 import { CihazDetay } from './CihazDetay'
 
 const SISTEM_BILGI = {
@@ -41,7 +42,13 @@ function Toggle({ label, aciklama, aktif, onChange }: {
 }
 
 const BITKI_EMOJI: Record<string, string> = { Domates: '🍅', Biber: '🌶️', Marul: '🥬', Salatalık: '🥒', Diğer: '🌱' }
-const BITKI_SECENEKLER = ['Domates', 'Biber', 'Marul', 'Salatalık', 'Diğer']
+const VARSAYILAN_BITKILER = ['Domates', 'Biber', 'Marul', 'Salatalık', 'Diğer']
+
+const SENSOR_TIPI_SECENEKLER = [
+  { deger: 'mock',  etiket: 'Mock (Simülasyon)' },
+  { deger: 'mqtt',  etiket: 'MQTT (ESP32-S3)' },
+  { deger: 'rs485', etiket: 'RS485 (Modbus)' },
+]
 
 // ── Sera Form Modal ────────────────────────────────────────────
 interface FormModal {
@@ -49,16 +56,23 @@ interface FormModal {
   sera?: SeraOzet
 }
 
-function SeraFormModal({ mod, sera, onKapat, onKaydet }: FormModal & {
+function SeraFormModal({ mod, sera, bitkiProfilleri, onKapat, onKaydet }: FormModal & {
+  bitkiProfilleri: BitkiProfilDetay[]
   onKapat: () => void
   onKaydet: () => void
 }) {
-  const [isim, setIsim]         = useState(sera?.isim ?? '')
-  const [bitki, setBitki]       = useState(sera?.bitki ?? 'Domates')
-  const [alan, setAlan]         = useState(String(sera?.alan ?? ''))
-  const [ip, setIp]             = useState((sera as any)?.esp32_ip ?? '')
-  const [bekliyor, setBekliyor] = useState(false)
-  const [hata, setHata]         = useState<string | null>(null)
+  const [isim, setIsim]               = useState(sera?.isim ?? '')
+  const [bitki, setBitki]             = useState(sera?.bitki ?? 'Domates')
+  const [alan, setAlan]               = useState(String(sera?.alan ?? ''))
+  const [sensorTipi, setSensorTipi]   = useState(sera?.sensor_tipi ?? 'mock')
+  const [mqttTopic, setMqttTopic]     = useState(sera?.mqtt_topic ?? '')
+  const [aciklama, setAciklama]       = useState(sera?.aciklama ?? '')
+  const [bekliyor, setBekliyor]       = useState(false)
+  const [hata, setHata]               = useState<string | null>(null)
+
+  const bitkiListesi = bitkiProfilleri.length > 0
+    ? bitkiProfilleri.map(p => p.isim)
+    : VARSAYILAN_BITKILER
 
   async function kaydet() {
     if (!isim.trim()) { setHata('Sera adı zorunludur'); return }
@@ -67,10 +81,20 @@ function SeraFormModal({ mod, sera, onKapat, onKaydet }: FormModal & {
     setBekliyor(true); setHata(null)
     try {
       if (mod === 'ekle') {
-        const veri: SeraEkleInput = { isim: isim.trim(), bitki, alan: alanSayi, esp32_ip: ip.trim() }
+        const veri: SeraEkleInput = {
+          isim: isim.trim(), bitki, alan: alanSayi,
+          sensor_tipi: sensorTipi,
+          mqtt_topic: mqttTopic.trim() || undefined,
+          aciklama: aciklama.trim() || undefined,
+        }
         await api.seraEkle(veri)
       } else if (sera) {
-        const veri: SeraGuncelleInput = { isim: isim.trim(), bitki, alan: alanSayi, esp32_ip: ip.trim() }
+        const veri: SeraGuncelleInput = {
+          isim: isim.trim(), bitki, alan: alanSayi,
+          sensor_tipi: sensorTipi,
+          mqtt_topic: mqttTopic.trim() || undefined,
+          aciklama: aciklama.trim() || undefined,
+        }
         await api.seraGuncelle(sera.id, veri)
       }
       onKaydet()
@@ -92,8 +116,9 @@ function SeraFormModal({ mod, sera, onKapat, onKaydet }: FormModal & {
     >
       <div style={{
         background: 'var(--card)', border: '1px solid var(--border)',
-        borderRadius: 16, padding: 24, width: '100%', maxWidth: 460,
+        borderRadius: 16, padding: 24, width: '100%', maxWidth: 480,
         boxShadow: '0 24px 64px rgba(0,0,0,0.5)',
+        maxHeight: '90vh', overflowY: 'auto',
       }}>
         <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--t1)', marginBottom: 20 }}>
           {mod === 'ekle' ? '🌿 Yeni Sera Ekle' : '✏️ Sera Düzenle'}
@@ -117,7 +142,7 @@ function SeraFormModal({ mod, sera, onKapat, onKaydet }: FormModal & {
               value={bitki}
               onChange={e => setBitki(e.target.value)}
             >
-              {BITKI_SECENEKLER.map(b => (
+              {bitkiListesi.map(b => (
                 <option key={b} value={b}>{BITKI_EMOJI[b] ?? '🌱'} {b}</option>
               ))}
             </select>
@@ -134,12 +159,40 @@ function SeraFormModal({ mod, sera, onKapat, onKaydet }: FormModal & {
           </div>
 
           <div>
-            <label style={{ fontSize: 12, color: 'var(--t2)', display: 'block', marginBottom: 5 }}>ESP32 IP Adresi</label>
+            <label style={{ fontSize: 12, color: 'var(--t2)', display: 'block', marginBottom: 5 }}>Sensör Tipi</label>
+            <select
+              className="input-field" style={{ width: '100%' }}
+              value={sensorTipi}
+              onChange={e => setSensorTipi(e.target.value)}
+            >
+              {SENSOR_TIPI_SECENEKLER.map(s => (
+                <option key={s.deger} value={s.deger}>{s.etiket}</option>
+              ))}
+            </select>
+          </div>
+
+          {sensorTipi === 'mqtt' && (
+          <div>
+            <label style={{ fontSize: 12, color: 'var(--t2)', display: 'block', marginBottom: 5 }}>
+              MQTT Topic
+              <span style={{ color: 'var(--t3)', marginLeft: 6, fontSize: 11 }}>ör. sera/s{sera?.id ?? '{id}'}/sensor</span>
+            </label>
             <input
               className="input-field" style={{ width: '100%' }}
-              placeholder="ör. 192.168.1.101"
-              value={ip}
-              onChange={e => setIp(e.target.value)}
+              placeholder={`sera/s${sera?.id ?? '{id}'}/sensor`}
+              value={mqttTopic}
+              onChange={e => setMqttTopic(e.target.value)}
+            />
+          </div>
+          )}
+
+          <div>
+            <label style={{ fontSize: 12, color: 'var(--t2)', display: 'block', marginBottom: 5 }}>Açıklama (isteğe bağlı)</label>
+            <input
+              className="input-field" style={{ width: '100%' }}
+              placeholder="ör. Kuzey blok, A-3 satırı"
+              value={aciklama}
+              onChange={e => setAciklama(e.target.value)}
             />
           </div>
 
@@ -257,12 +310,13 @@ function CihazDurumBadge({ durum }: { durum: CihazDurum }) {
   )
 }
 
-function CihazEkleModal({ onKapat, onEklendi }: {
+function CihazEkleModal({ seralar: seraListesi, onKapat, onEklendi }: {
+  seralar: SeraOzet[]
   onKapat: () => void
   onEklendi: (sonuc: CihazKayitSonuc) => void
 }) {
-  const [tesis, setTesis]       = useState('IST01')
-  const [seraId, setSeraId]     = useState('s1')
+  const [cihazId, setCihazId]   = useState('')
+  const [seraId, setSeraId]     = useState(seraListesi[0]?.id ?? '')
   const [mac, setMac]           = useState('')
   const [tip, setTip]           = useState('WiFi')
   const [firmware, setFirmware] = useState('1.0.0')
@@ -270,11 +324,11 @@ function CihazEkleModal({ onKapat, onEklendi }: {
   const [hata, setHata]         = useState<string | null>(null)
 
   async function kaydet() {
-    if (!tesis.trim() || !seraId.trim()) { setHata('Tesis kodu ve sera ID zorunludur'); return }
+    if (!seraId.trim()) { setHata('Sera seçimi zorunludur'); return }
     setBekliyor(true); setHata(null)
     try {
       const veri: CihazKayitInput = {
-        tesis_kodu: tesis.trim().toUpperCase(),
+        tesis_kodu: cihazId.trim().toUpperCase() || 'IST01',
         sera_id: seraId.trim(),
         mac_adresi: mac.trim(),
         baglanti_tipi: tip,
@@ -307,20 +361,24 @@ function CihazEkleModal({ onKapat, onEklendi }: {
           📡 Yeni Cihaz Ekle
         </h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div>
-              <label style={{ fontSize: 12, color: 'var(--t2)', display: 'block', marginBottom: 5 }}>Tesis Kodu *</label>
-              <input className="input-field" style={{ width: '100%' }} placeholder="IST01"
-                value={tesis} onChange={e => setTesis(e.target.value)} />
-            </div>
-            <div>
-              <label style={{ fontSize: 12, color: 'var(--t2)', display: 'block', marginBottom: 5 }}>Sera ID *</label>
-              <input className="input-field" style={{ width: '100%' }} placeholder="s1"
-                value={seraId} onChange={e => setSeraId(e.target.value)} />
-            </div>
+          <div>
+            <label style={{ fontSize: 12, color: 'var(--t2)', display: 'block', marginBottom: 5 }}>
+              Cihaz ID <span style={{ color: 'var(--t3)', fontSize: 11 }}>(isteğe bağlı — otomatik üretilir)</span>
+            </label>
+            <input className="input-field" style={{ width: '100%' }} placeholder="ör. IST01"
+              value={cihazId} onChange={e => setCihazId(e.target.value)} />
           </div>
           <div>
-            <label style={{ fontSize: 12, color: 'var(--t2)', display: 'block', marginBottom: 5 }}>MAC Adresi</label>
+            <label style={{ fontSize: 12, color: 'var(--t2)', display: 'block', marginBottom: 5 }}>Sera *</label>
+            <select className="input-field" style={{ width: '100%' }}
+              value={seraId} onChange={e => setSeraId(e.target.value)}>
+              {seraListesi.map(s => (
+                <option key={s.id} value={s.id}>{BITKI_EMOJI[s.bitki] ?? '🌱'} {s.isim} ({s.id})</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 12, color: 'var(--t2)', display: 'block', marginBottom: 5 }}>MAC Adresi <span style={{ color: 'var(--t3)', fontSize: 11 }}>(isteğe bağlı)</span></label>
             <input className="input-field" style={{ width: '100%' }} placeholder="A4:CF:12:78:5B:01"
               value={mac} onChange={e => setMac(e.target.value)} />
           </div>
@@ -334,7 +392,7 @@ function CihazEkleModal({ onKapat, onEklendi }: {
               </select>
             </div>
             <div>
-              <label style={{ fontSize: 12, color: 'var(--t2)', display: 'block', marginBottom: 5 }}>Firmware</label>
+              <label style={{ fontSize: 12, color: 'var(--t2)', display: 'block', marginBottom: 5 }}>Firmware <span style={{ color: 'var(--t3)', fontSize: 11 }}>(isteğe bağlı)</span></label>
               <input className="input-field" style={{ width: '100%' }} placeholder="1.0.0"
                 value={firmware} onChange={e => setFirmware(e.target.value)} />
             </div>
@@ -513,6 +571,390 @@ function CihazSilModal({ cihaz, onKapat, onSilindi }: { cihaz: Cihaz; onKapat: (
 }
 
 // ── Ana Sayfa ──────────────────────────────────────────────────
+// ─── Şifre Değiştir ──────────────────────────────────────────────────────────
+
+function SifreDegistir() {
+  const { kilitli } = useKomutGuvenlik()
+  const [mevcut, setMevcut]     = useState('')
+  const [yeni, setYeni]         = useState('')
+  const [yeniTekrar, setYeniTekrar] = useState('')
+  const [hata, setHata]         = useState<string | null>(null)
+  const [mesaj, setMesaj]       = useState<string | null>(null)
+  const [yukleniyor, setYuk]    = useState(false)
+
+  async function gonder(e: React.FormEvent) {
+    e.preventDefault()
+    setHata(null); setMesaj(null)
+    if (yeni !== yeniTekrar) { setHata('Yeni şifreler eşleşmiyor'); return }
+    if (yeni.length < 3)     { setHata('Şifre en az 3 karakter olmalı'); return }
+    setYuk(true)
+    try {
+      const token = localStorage.getItem('access_token') ?? ''
+      const r = await fetch('/api/v1/auth/sifre-degistir', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ mevcut_sifre: mevcut, yeni_sifre: yeni }),
+      })
+      const d = await r.json()
+      if (!r.ok) { setHata(d.detail ?? 'Hata'); return }
+      setMesaj('Şifre güncellendi ✅')
+      setMevcut(''); setYeni(''); setYeniTekrar('')
+    } catch { setHata('Bağlantı hatası') }
+    finally   { setYuk(false) }
+  }
+
+  const inputStyle: React.CSSProperties = {
+    padding: '7px 10px', background: 'var(--bg)',
+    border: '1px solid var(--border)', borderRadius: 4,
+    color: 'var(--t1)', fontFamily: 'var(--mono)', fontSize: 12,
+    outline: 'none', width: '100%', boxSizing: 'border-box',
+  }
+
+  return (
+    <div className="card rounded-xl">
+      <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', fontWeight: 600, fontSize: 14, color: 'var(--t1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span>🔑 Şifre Değiştir</span>
+        {kilitli && <span style={{ fontSize: 10, color: 'var(--t3)', fontFamily: 'var(--mono)' }}>Komut kilidini açın</span>}
+      </div>
+      <div style={{ padding: 20 }}>
+        {kilitli ? (
+          <div className="lbl">Bu bölüme erişmek için önce komut kilidini açın (şifre doğrulama).</div>
+        ) : (
+          <form onSubmit={gonder} style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 320 }}>
+            <div>
+              <label className="lbl" style={{ display: 'block', marginBottom: 4 }}>MEVCUT ŞİFRE</label>
+              <input type="password" value={mevcut} onChange={e => setMevcut(e.target.value)} required style={inputStyle} />
+            </div>
+            <div>
+              <label className="lbl" style={{ display: 'block', marginBottom: 4 }}>YENİ ŞİFRE</label>
+              <input type="password" value={yeni} onChange={e => setYeni(e.target.value)} required style={inputStyle} />
+            </div>
+            <div>
+              <label className="lbl" style={{ display: 'block', marginBottom: 4 }}>YENİ ŞİFRE (TEKRAR)</label>
+              <input type="password" value={yeniTekrar} onChange={e => setYeniTekrar(e.target.value)} required style={inputStyle} />
+            </div>
+            {hata  && <div style={{ color: 'var(--alarm)', fontSize: 11 }}>⚠ {hata}</div>}
+            {mesaj && <div style={{ color: 'var(--accent)', fontSize: 11 }}>{mesaj}</div>}
+            <button
+              type="submit" disabled={yukleniyor}
+              style={{ padding: '8px 16px', background: yukleniyor ? 'var(--border)' : 'var(--accent)', color: '#000', border: 'none', borderRadius: 4, fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 11, cursor: yukleniyor ? 'not-allowed' : 'pointer', alignSelf: 'flex-start' }}
+            >
+              {yukleniyor ? 'DEĞİŞTİRİLİYOR…' : 'DEĞİŞTİR'}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Kullanıcı Yönetimi ───────────────────────────────────────────────────────
+
+interface Kullanici { id: number; kullanici_adi: string; rol: string; olusturulma: string }
+
+function KullaniciYonetimi() {
+  // ── Giriş state ─────────────────────────────────────────────
+  const [girdi, setGirdi]         = useState('')
+  const [loginYuk, setLoginYuk]   = useState(false)
+  const [loginHata, setLoginHata] = useState<string | null>(null)
+
+  // ── Mod state ───────────────────────────────────────────────
+  const [adminMod, setAdminMod]   = useState(false)
+  const [masterMod, setMasterMod] = useState(false)
+  const [adminToken, setAdminToken] = useState('')
+  const [masterKey, setMasterKey]   = useState('')
+
+  // ── Kullanıcı listesi ────────────────────────────────────────
+  const [kullanicilar, setKullanicilar] = useState<Kullanici[]>([])
+  const [listHata, setListHata]         = useState<string | null>(null)
+
+  // ── Yeni kullanıcı ───────────────────────────────────────────
+  const [yeniAdi, setYeniAdi]     = useState('')
+  const [yeniSifre, setYeniSifre] = useState('')
+  const [yeniRol, setYeniRol]     = useState('operator')
+  const [ekleHata, setEkleHata]   = useState<string | null>(null)
+  const [ekleMesaj, setEkleMesaj] = useState<string | null>(null)
+
+  // ── Inline şifre sıfırlama ───────────────────────────────────
+  const [sifirlaAcikId, setSifirlaAcikId] = useState<number | null>(null)
+  const [sifirlaYeni, setSifirlaYeni]     = useState('')
+  const [sifirlaHata, setSifirlaHata]     = useState<string | null>(null)
+  const [sifirlaYuk, setSifirlaYuk]       = useState(false)
+  const [sifirlaOk, setSifirlaOk]         = useState<number | null>(null)  // başarı göstergesi
+
+  const listele = useCallback(async (token: string, master: string, isAdmin: boolean) => {
+    setListHata(null)
+    try {
+      const headers: HeadersInit = isAdmin
+        ? { Authorization: `Bearer ${token}` }
+        : { 'X-Master-Key': master }
+      const r = await fetch('/api/v1/auth/kullanicilar', { headers })
+      if (!r.ok) { setListHata('Liste alınamadı'); return }
+      setKullanicilar(await r.json())
+    } catch { setListHata('Bağlantı hatası') }
+  }, [])
+
+  async function girisYap(e: React.FormEvent) {
+    e.preventDefault()
+    setLoginYuk(true); setLoginHata(null)
+
+    // Önce admin girişi dene
+    try {
+      const r = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kullanici_adi: 'admin', sifre: girdi }),
+      })
+      if (r.ok) {
+        const d = await r.json()
+        const token = d.access_token
+        setAdminToken(token)
+        setAdminMod(true)
+        await listele(token, '', true)
+        setLoginYuk(false)
+        return
+      }
+    } catch { /* devam */ }
+
+    // Admin başarısızsa master key dene
+    try {
+      const r = await fetch('/api/v1/auth/kullanicilar', {
+        headers: { 'X-Master-Key': girdi },
+      })
+      if (r.ok) {
+        setMasterKey(girdi)
+        setMasterMod(true)
+        setKullanicilar(await r.json())
+        setLoginYuk(false)
+        return
+      }
+    } catch { /* devam */ }
+
+    setLoginHata('Geçersiz şifre')
+    setLoginYuk(false)
+  }
+
+  async function sil(id: number) {
+    if (!confirm('Kullanıcı silinsin mi?')) return
+    const headers: HeadersInit = adminMod
+      ? { Authorization: `Bearer ${adminToken}` }
+      : { 'X-Master-Key': masterKey }
+    const r = await fetch(`/api/v1/auth/kullanici/${id}`, { method: 'DELETE', headers })
+    if (r.ok) listele(adminToken, masterKey, adminMod)
+    else { const d = await r.json(); setListHata(d.detail ?? 'Silinemedi') }
+  }
+
+  function sifirlaAc(id: number) {
+    setSifirlaAcikId(prev => prev === id ? null : id)
+    setSifirlaYeni(''); setSifirlaHata(null); setSifirlaOk(null)
+  }
+
+  async function sifirlaGonder(kullanici_adi: string, id: number) {
+    setSifirlaHata(null); setSifirlaYuk(true)
+    const r = await fetch('/api/v1/auth/sifre-sifirla', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(adminMod ? { Authorization: `Bearer ${adminToken}` } : {}),
+      },
+      body: JSON.stringify({
+        kullanici_adi,
+        yeni_sifre: sifirlaYeni,
+        master_sifre: masterMod ? masterKey : '',
+      }),
+    })
+    setSifirlaYuk(false)
+    const d = await r.json()
+    if (!r.ok) { setSifirlaHata(d.detail ?? 'Hata'); return }
+    setSifirlaOk(id)
+    setSifirlaAcikId(null)
+    setSifirlaYeni('')
+  }
+
+  async function ekle(e: React.FormEvent) {
+    e.preventDefault(); setEkleHata(null); setEkleMesaj(null)
+    const r = await fetch('/api/v1/auth/kullanici-ekle', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(adminMod ? { Authorization: `Bearer ${adminToken}` } : { 'X-Master-Key': masterKey }),
+      },
+      body: JSON.stringify({ kullanici_adi: yeniAdi, sifre: yeniSifre, rol: yeniRol }),
+    })
+    const d = await r.json()
+    if (!r.ok) { setEkleHata(d.detail ?? 'Hata'); return }
+    setEkleMesaj(d.mesaj); setYeniAdi(''); setYeniSifre('')
+    listele(adminToken, masterKey, adminMod)
+  }
+
+  const inputStyle: React.CSSProperties = {
+    padding: '7px 10px', background: 'var(--bg)',
+    border: '1px solid var(--border)', borderRadius: 4,
+    color: 'var(--t1)', fontFamily: 'var(--mono)', fontSize: 12,
+    outline: 'none', width: '100%', boxSizing: 'border-box',
+  }
+  const btnStyle: React.CSSProperties = {
+    padding: '7px 14px', background: 'var(--accent)', color: '#000',
+    border: 'none', borderRadius: 4, fontFamily: 'var(--mono)',
+    fontWeight: 700, fontSize: 11, cursor: 'pointer',
+  }
+  const sectionTitle = (t: string) => (
+    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--t2)', fontFamily: 'var(--mono)', letterSpacing: '1px', marginBottom: 10 }}>
+      {t}
+    </div>
+  )
+
+  const girisYapildi = adminMod || masterMod
+
+  return (
+    <div className="card rounded-xl">
+      <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', fontWeight: 600, fontSize: 14, color: 'var(--t1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span>👥 Kullanıcı Yönetimi</span>
+        {girisYapildi && (
+          <span style={{
+            fontSize: 10, padding: '3px 8px', borderRadius: 3, fontFamily: 'var(--mono)', fontWeight: 700,
+            background: adminMod ? 'rgba(239,68,68,.15)' : 'rgba(0,212,170,.12)',
+            color: adminMod ? 'var(--alarm)' : 'var(--accent)',
+          }}>
+            {adminMod ? 'ADMIN MOD' : 'MASTER MOD'}
+          </span>
+        )}
+      </div>
+
+      {!girisYapildi ? (
+        /* ── Giriş ekranı ── */
+        <div style={{ padding: 20 }}>
+          <div className="lbl" style={{ marginBottom: 12 }}>
+            Bu bölüme erişmek için Admin şifre girin.
+          </div>
+          <form onSubmit={girisYap} style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+            <div style={{ flex: 1 }}>
+              <input
+                type="password" value={girdi} onChange={e => setGirdi(e.target.value)}
+                placeholder="Admin şifre" required style={inputStyle}
+              />
+            </div>
+            <button type="submit" disabled={loginYuk} style={btnStyle}>
+              {loginYuk ? '…' : 'GİRİŞ'}
+            </button>
+          </form>
+          {loginHata && <div style={{ color: 'var(--alarm)', fontSize: 11, marginTop: 8 }}>⚠ {loginHata}</div>}
+        </div>
+      ) : (
+        /* ── Yönetim paneli ── */
+        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+          {/* Kullanıcı listesi */}
+          <div>
+            {sectionTitle('MEVCUT KULLANICILAR')}
+            {listHata && <div style={{ color: 'var(--alarm)', fontSize: 11, marginBottom: 8 }}>⚠ {listHata}</div>}
+            <div style={{ border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                <thead>
+                  <tr style={{ background: 'rgba(0,0,0,0.3)' }}>
+                    {['ID', 'Kullanıcı Adı', 'Rol', 'Oluşturulma', 'İşlemler'].map(h => (
+                      <th key={h} style={{ padding: '7px 10px', textAlign: 'left', color: 'var(--t3)', fontWeight: 600, fontFamily: 'var(--mono)', fontSize: 10 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {kullanicilar.map(k => (
+                    <>
+                      <tr key={k.id} style={{ borderTop: '1px solid var(--border)' }}>
+                        <td style={{ padding: '7px 10px', color: 'var(--t3)' }}>{k.id}</td>
+                        <td style={{ padding: '7px 10px', color: 'var(--t1)', fontWeight: 500 }}>{k.kullanici_adi}</td>
+                        <td style={{ padding: '7px 10px' }}>
+                          <span style={{
+                            fontSize: 10, padding: '2px 7px', borderRadius: 3,
+                            background: k.rol === 'admin' ? 'rgba(239,68,68,.15)' : 'var(--accent-dim)',
+                            color: k.rol === 'admin' ? 'var(--alarm)' : 'var(--accent)',
+                            fontFamily: 'var(--mono)', fontWeight: 700,
+                          }}>{k.rol}</span>
+                        </td>
+                        <td style={{ padding: '7px 10px', color: 'var(--t3)', fontSize: 11 }}>
+                          {k.olusturulma?.slice(0, 16).replace('T', ' ')}
+                        </td>
+                        <td style={{ padding: '7px 8px', display: 'flex', gap: 4 }}>
+                          <button
+                            onClick={() => sifirlaAc(k.id)}
+                            title="Şifre Sıfırla"
+                            style={{
+                              fontSize: 10, padding: '3px 8px', borderRadius: 3, cursor: 'pointer',
+                              fontFamily: 'var(--mono)', border: '1px solid var(--border)',
+                              background: sifirlaAcikId === k.id ? 'var(--accent-dim)' : 'var(--bg)',
+                              color: sifirlaAcikId === k.id ? 'var(--accent)' : 'var(--t2)',
+                            }}
+                          >🔑 Sıfırla</button>
+                          <button
+                            onClick={() => sil(k.id)}
+                            title="Kullanıcı Sil"
+                            style={{ fontSize: 10, padding: '3px 8px', background: 'rgba(239,68,68,.15)', color: 'var(--alarm)', border: '1px solid rgba(239,68,68,.3)', borderRadius: 3, cursor: 'pointer', fontFamily: 'var(--mono)' }}
+                          >🗑 Sil</button>
+                          {sifirlaOk === k.id && (
+                            <span style={{ fontSize: 10, color: 'var(--accent)', alignSelf: 'center' }}>✓</span>
+                          )}
+                        </td>
+                      </tr>
+                      {/* Inline şifre sıfırlama formu */}
+                      {sifirlaAcikId === k.id && (
+                        <tr style={{ background: 'rgba(0,212,170,0.04)', borderTop: '1px solid var(--border)' }}>
+                          <td colSpan={5} style={{ padding: '10px 12px' }}>
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: 11, color: 'var(--t2)', fontFamily: 'var(--mono)' }}>
+                                {k.kullanici_adi} için yeni şifre:
+                              </span>
+                              <input
+                                type="password"
+                                value={sifirlaYeni}
+                                onChange={e => setSifirlaYeni(e.target.value)}
+                                placeholder="Yeni şifre"
+                                style={{ ...inputStyle, width: 180 }}
+                                autoFocus
+                              />
+                              <button
+                                onClick={() => sifirlaGonder(k.kullanici_adi, k.id)}
+                                disabled={sifirlaYuk || !sifirlaYeni}
+                                style={{ ...btnStyle, opacity: sifirlaYuk || !sifirlaYeni ? 0.5 : 1 }}
+                              >{sifirlaYuk ? '…' : 'Onayla'}</button>
+                              <button
+                                onClick={() => { setSifirlaAcikId(null); setSifirlaHata(null) }}
+                                style={{ fontSize: 11, padding: '6px 12px', background: 'var(--bg)', color: 'var(--t2)', border: '1px solid var(--border)', borderRadius: 4, cursor: 'pointer' }}
+                              >İptal</button>
+                              {sifirlaHata && <span style={{ fontSize: 11, color: 'var(--alarm)' }}>⚠ {sifirlaHata}</span>}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Yeni kullanıcı ekle */}
+          <div>
+            {sectionTitle('➕ YENİ KULLANICI EKLE')}
+            <form onSubmit={ekle} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto auto', gap: 8, alignItems: 'end' }}>
+              <input value={yeniAdi} onChange={e => setYeniAdi(e.target.value)} placeholder="Kullanıcı adı" required style={inputStyle} />
+              <input type="password" value={yeniSifre} onChange={e => setYeniSifre(e.target.value)} placeholder="Şifre" required style={inputStyle} />
+              <select value={yeniRol} onChange={e => setYeniRol(e.target.value)} style={{ ...inputStyle, width: 'auto' }}>
+                <option value="operator">operator</option>
+                <option value="viewer">viewer</option>
+                <option value="admin">admin</option>
+              </select>
+              <button type="submit" style={btnStyle}>EKLE</button>
+            </form>
+            {ekleHata  && <div style={{ color: 'var(--alarm)', fontSize: 11, marginTop: 6 }}>⚠ {ekleHata}</div>}
+            {ekleMesaj && <div style={{ color: 'var(--accent)', fontSize: 11, marginTop: 6 }}>✓ {ekleMesaj}</div>}
+          </div>
+
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function Ayarlar() {
   const { seralar, saglik, hata, sonGuncelleme } = useData()
 
@@ -520,9 +962,16 @@ export function Ayarlar() {
   const [silModal, setSilModal]     = useState<SeraOzet | null>(null)
   const [yenilemeSayac, setYenilemeSayac] = useState(0)  // force UI refresh
 
+  // ── Bitki profilleri (DB'den) ──────────────────────────────────
+  const [bitkiProfilleri, setBitkiProfilleri] = useState<BitkiProfilDetay[]>([])
+  useEffect(() => {
+    api.bitkiProfilleri().then(setBitkiProfilleri).catch(() => {})
+  }, [])
+
   function yenile() {
     setFormModal(null); setSilModal(null)
-    setYenilemeSayac(n => n + 1)  // DataContext 2sn içinde güncelleyecek
+    setYenilemeSayac(n => n + 1)
+    window.dispatchEvent(new Event('sera-listesi-guncellendi'))
   }
 
   // ── Cihaz state ─────────────────────────────────────────────
@@ -608,6 +1057,7 @@ export function Ayarlar() {
         <SeraFormModal
           mod={formModal.mod}
           sera={formModal.sera}
+          bitkiProfilleri={bitkiProfilleri}
           onKapat={() => setFormModal(null)}
           onKaydet={yenile}
         />
@@ -621,6 +1071,7 @@ export function Ayarlar() {
       )}
       {cihazEkleAcik && (
         <CihazEkleModal
+          seralar={seralar}
           onKapat={() => setCihazEkleAcik(false)}
           onEklendi={sonuc => { setCihazEkleAcik(false); setKayitSonuc(sonuc); cihazYenile() }}
         />
@@ -690,7 +1141,7 @@ export function Ayarlar() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
         {/* Sera Yönetimi */}
-        <div className="card rounded-xl" style={{ gridColumn: '1 / -1' }}>
+        <div className="card rounded-xl">
           <div style={{
             padding: '14px 16px', borderBottom: '1px solid var(--border)',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -719,16 +1170,14 @@ export function Ayarlar() {
                         <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--t1)' }}>{s.isim}</div>
                         <div style={{ fontSize: 11, color: 'var(--t3)' }}>
                           {s.bitki} · {s.alan} m²
-                          {s.esp32_ip && <span style={{ marginLeft: 8 }}>IP: {s.esp32_ip}</span>}
+                          {s.sensor_tipi && <span style={{ marginLeft: 8, color: s.sensor_tipi === 'mock' ? 'var(--t3)' : 'var(--accent)' }}>{s.sensor_tipi}</span>}
+                          {s.mqtt_topic && <span style={{ marginLeft: 8, fontFamily: 'monospace' }}>{s.mqtt_topic}</span>}
                         </div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{ textAlign: 'right', marginRight: 8 }}>
                         <div style={{ fontSize: 11, color: 'var(--t2)' }}>ID: {s.id}</div>
-                        <div style={{ fontSize: 11, color: 'var(--t3)' }}>
-                          {s.sensor ? `${s.sensor.T}°C · ${s.sensor.H}%` : 'Veri yok'}
-                        </div>
                       </div>
                       <button
                         title="Düzenle"
@@ -829,7 +1278,7 @@ export function Ayarlar() {
         )}
 
         {/* Cihaz Yönetimi */}
-        <div className="card rounded-xl" style={{ gridColumn: '1 / -1' }}>
+        <div className="card rounded-xl">
           <div style={{
             padding: '14px 16px', borderBottom: '1px solid var(--border)',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -981,6 +1430,12 @@ export function Ayarlar() {
             )}
           </div>
         </div>
+
+        {/* Şifre Değiştir */}
+        <SifreDegistir />
+
+        {/* Kullanıcı Yönetimi */}
+        <KullaniciYonetimi />
 
         {/* Sistem bilgisi */}
         <div className="card rounded-xl">

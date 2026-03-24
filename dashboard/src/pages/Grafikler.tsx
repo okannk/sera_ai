@@ -53,7 +53,7 @@ function Grafik({ baslik, alan, birim, renk, data, optLine, mod, tumData, serala
 
   return (
     <div className="card rounded-xl p-4 flex flex-col">
-      <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--t1)', marginBottom: 12, flexShrink: 0 }}>
+      <div className="panel-title" style={{ marginBottom: 12, flexShrink: 0 }}>
         {baslik}
         {sonDeger != null && mod === 'tekli' && (
           <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--t3)', marginLeft: 8 }}>
@@ -70,12 +70,12 @@ function Grafik({ baslik, alan, birim, renk, data, optLine, mod, tumData, serala
             <XAxis
               dataKey="zaman"
               tickFormatter={formatTime}
-              tick={{ fontSize: 9, fill: 'var(--t3)' }}
+              tick={{ fontSize: 9, fill: 'var(--t3)', fontFamily: 'monospace' }}
               interval="preserveStartEnd"
             />
-            <YAxis tick={{ fontSize: 9, fill: 'var(--t3)' }} tickFormatter={v => `${Math.round(v)}`} />
+            <YAxis tick={{ fontSize: 9, fill: 'var(--t3)', fontFamily: 'monospace' }} tickFormatter={v => `${Math.round(v)}`} />
             <Tooltip
-              contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 11 }}
+              contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 11, fontFamily: 'monospace' }}
               labelFormatter={v => formatTime(v as string)}
               formatter={(v) => [`${Number(v).toFixed(1)}${birim}`, '']}
             />

@@ -19,6 +19,9 @@ export interface SeraOzet {
   durum: Durum
   sensor: SensorOkuma | null
   esp32_ip?: string
+  sensor_tipi?: string
+  mqtt_topic?: string
+  aciklama?: string
 }
 
 export interface BitkiProfil {
@@ -86,6 +89,7 @@ export interface KomutLog {
   basarili: boolean
   kaynak: KomutKaynak
   kullanici_id?: string
+  kullanici_adi?: string
 }
 
 export interface AlarmGecmisKaydi {
@@ -104,20 +108,36 @@ export interface SistemLog {
   mesaj: string
   zaman: string
   sera_id?: string
+  kullanici_adi?: string
 }
 
 export interface SeraEkleInput {
   isim: string
   bitki?: string
   alan?: number
-  esp32_ip?: string
+  sensor_tipi?: string
+  mqtt_topic?: string
+  aciklama?: string
 }
 
 export interface SeraGuncelleInput {
   isim?: string
   bitki?: string
   alan?: number
-  esp32_ip?: string
+  sensor_tipi?: string
+  mqtt_topic?: string
+  aciklama?: string
+}
+
+export interface BitkiProfilDetay {
+  isim: string
+  min_T: number; max_T: number; opt_T: number
+  min_H: number; max_H: number; opt_H: number
+  opt_CO2: number
+  min_ph: number; max_ph: number; opt_ph: number
+  min_ec: number; max_ec: number
+  min_isik: number; max_isik: number
+  renk: string
 }
 
 export interface ProvisioningTalep {

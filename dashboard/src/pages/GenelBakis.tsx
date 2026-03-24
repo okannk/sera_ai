@@ -1,392 +1,558 @@
-import { useState } from 'react'
-import {
-  AreaChart, Area, YAxis, LineChart, Line,
-  XAxis, Tooltip, CartesianGrid,
-  ResponsiveContainer, Legend,
-} from 'recharts'
+import { useState, useEffect } from 'react'
 import { useData } from '../context/DataContext'
-import { durumBadgeClass, durumLabel, durumRengi } from '../components/Sidebar'
+import { durumBadgeClass, durumLabel } from '../components/Sidebar'
 import { SeraDetayPanel } from '../components/SeraDetayPanel'
-import { KaynakBadge } from '../components/KaynakBadge'
-import type { KomutAdi, KomutKaynak, SeraOzet } from '../types'
+import { GoruntuAnaliz } from '../components/GoruntuAnaliz'
+import { useKomutGuvenlik } from '../context/KomutGuvenlik'
+import type { KomutAdi, SeraOzet } from '../types'
 
 const BITKI_EMOJI: Record<string, string> = { Domates: '🍅', Biber: '🌶️', Marul: '🥬' }
 
-// Renk haritası — CSS variable yerine hex (SVG uyumlu)
-const DURUM_HEX: Record<string, string> = {
-  NORMAL:      '#00d4aa',
-  UYARI:       '#f59e0b',
-  ALARM:       '#ef4444',
-  ACIL_DURDUR: '#7c3aed',
+// ─── Bitki Profilleri ─────────────────────────────────────────────────────────
+
+interface SinirDeger {
+  min: number
+  opt: [number, number]
+  max: number
 }
+
+interface BitkiSinirlar {
+  sicaklik: SinirDeger
+  nem: SinirDeger
+  co2: SinirDeger
+  isik: SinirDeger
+  toprakNem: SinirDeger
+  toprakIsi: SinirDeger
+  ph: SinirDeger
+  ec: SinirDeger
+}
+
+const BITKI_PROFIL: Record<string, BitkiSinirlar> = {
+  Domates: {
+    sicaklik:  { min: 15,  opt: [20, 24],     max: 35    },
+    nem:       { min: 40,  opt: [60, 80],     max: 95    },
+    co2:       { min: 400, opt: [800, 1200],  max: 2000  },
+    isik:      { min: 0,   opt: [15000, 25000], max: 50000 },
+    toprakNem: { min: 0,   opt: [60, 75],     max: 100   },
+    toprakIsi: { min: 10,  opt: [18, 24],     max: 35    },
+    ph:        { min: 5.5, opt: [6.0, 7.0],   max: 8.0   },
+    ec:        { min: 0,   opt: [2.0, 3.5],   max: 5.0   },
+  },
+  Biber: {
+    sicaklik:  { min: 18,  opt: [22, 26],     max: 35    },
+    nem:       { min: 40,  opt: [55, 75],     max: 90    },
+    co2:       { min: 400, opt: [800, 1200],  max: 2000  },
+    isik:      { min: 0,   opt: [10000, 20000], max: 50000 },
+    toprakNem: { min: 0,   opt: [55, 70],     max: 100   },
+    toprakIsi: { min: 12,  opt: [20, 26],     max: 35    },
+    ph:        { min: 5.5, opt: [6.0, 6.8],   max: 8.0   },
+    ec:        { min: 0,   opt: [2.0, 3.5],   max: 5.0   },
+  },
+  Marul: {
+    sicaklik:  { min: 5,   opt: [15, 20],     max: 30    },
+    nem:       { min: 40,  opt: [60, 80],     max: 95    },
+    co2:       { min: 400, opt: [700, 1000],  max: 2000  },
+    isik:      { min: 0,   opt: [8000, 15000], max: 30000 },
+    toprakNem: { min: 0,   opt: [60, 75],     max: 100   },
+    toprakIsi: { min: 8,   opt: [16, 22],     max: 30    },
+    ph:        { min: 5.5, opt: [6.0, 7.0],   max: 8.0   },
+    ec:        { min: 0,   opt: [1.5, 2.5],   max: 5.0   },
+  },
+}
+
+const VARSAYILAN_PROFIL: BitkiSinirlar = BITKI_PROFIL.Domates
+
+function gaugeRenk(deger: number | null | undefined, profil: SinirDeger): string {
+  if (deger == null) return '#2a4055'
+  if (deger >= profil.opt[0] && deger <= profil.opt[1]) return '#00d4aa'
+  if (deger < profil.opt[0] && deger > profil.min + (profil.opt[0] - profil.min) * 0.3) return '#f59e0b'
+  if (deger > profil.opt[1] && deger < profil.max - (profil.max - profil.opt[1]) * 0.3) return '#f59e0b'
+  return '#ef4444'
+}
+
 function durumHex(durum: string): string {
-  return DURUM_HEX[durum] ?? '#475569'
+  if (durum === 'ALARM' || durum === 'ACIL_DURDUR') return '#ef4444'
+  if (durum === 'UYARI') return '#f59e0b'
+  if (durum === 'BAKIM') return '#6b7280'
+  return '#00d4aa'
 }
 
-// Sera renkleri (trend grafiği için)
-const SERA_RENK: Record<string, string> = {
-  s1: '#00d4aa',
-  s2: '#f59e0b',
-  s3: '#a855f7',
-  s4: '#3b82f6',
-  s5: '#f97316',
+// ─── Gauge ────────────────────────────────────────────────────────────────────
+
+interface GaugeProps {
+  label: string
+  birim: string
+  deger: number | null | undefined
+  profil: SinirDeger
 }
 
-function fmt(v: number | null | undefined, suffix = ''): string {
-  if (v == null) return '—'
-  return `${v}${suffix}`
+function fmtGaugeVal(deger: number | null | undefined, label: string): string {
+  if (deger == null) return '—'
+  if (label === 'CO₂' || label === 'Işık') {
+    return deger >= 1000 ? `${(deger / 1000).toFixed(0)}k` : String(Math.round(deger))
+  }
+  if (label === 'PH' || label === 'EC') return deger.toFixed(1)
+  return String(Math.round(deger * 10) / 10)
 }
 
-function SummaryCard({ icon, label, value, sub, color = '#00d4aa', pulse = false }: {
-  icon: string; label: string; value: string | number; sub?: string; color?: string; pulse?: boolean
-}) {
+function optDurum(deger: number | null | undefined, profil: SinirDeger): { text: string; color: string } | null {
+  if (deger == null) return null
+  const renk = gaugeRenk(deger, profil)
+  if (deger >= profil.opt[0] && deger <= profil.opt[1]) return { text: '✓ optimal', color: renk }
+  if (deger < profil.min || deger > profil.max)          return { text: '✗ kritik',  color: renk }
+  return { text: '⚠ sınırda', color: renk }
+}
+
+function Gauge({ label, birim, deger, profil }: GaugeProps) {
+  const renk   = gaugeRenk(deger, profil)
+  const offset = deger == null
+    ? 130
+    : 130 - (Math.min(Math.max(deger, profil.min), profil.max) / profil.max * 130)
+  const d      = 'M 10 42 A 26 26 0 1 1 54 42'
+  const durum  = optDurum(deger, profil)
+  const valStr = fmtGaugeVal(deger, label)
+
   return (
-    <div className="card rounded-xl p-5 flex flex-col gap-2">
-      <div className="flex items-start justify-between">
-        <span style={{ fontSize: 22 }}>{icon}</span>
-        <span
-          className="rounded-full"
-          style={{
-            width: 8, height: 8, background: color,
-            boxShadow: `0 0 8px ${color}`, marginTop: 4,
-            animation: pulse ? 'pulse 2s infinite' : undefined,
-          }}
-        />
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+      <svg viewBox="0 0 64 48" width="66" height="50" style={{ overflow: 'visible' }}>
+        {/* Track */}
+        <path d={d} fill="none" stroke="#1a2535" strokeWidth="5" strokeLinecap="round" />
+        {/* Fill */}
+        {deger != null && (
+          <path
+            d={d}
+            fill="none"
+            stroke={renk}
+            strokeWidth="5"
+            strokeLinecap="round"
+            strokeDasharray="130"
+            strokeDashoffset={offset}
+            style={{ transition: 'stroke-dashoffset 0.45s ease, stroke 0.3s ease' }}
+          />
+        )}
+        {/* Value */}
+        <text
+          x="32" y="40"
+          textAnchor="middle"
+          fill={deger == null ? '#4a6070' : renk}
+          fontSize="9.5" fontWeight="700" fontFamily="var(--mono)"
+        >
+          {valStr}
+        </text>
+      </svg>
+      <div style={{ fontSize: 8, color: 'var(--t3)', fontFamily: 'var(--mono)', marginTop: -1 }}>{birim}</div>
+      <div style={{ fontSize: 9, color: 'var(--t2)', fontWeight: 600, textAlign: 'center' }}>{label}</div>
+      <div style={{ fontSize: 8, color: durum?.color ?? 'transparent', minHeight: 10, textAlign: 'center' }}>
+        {durum?.text ?? ''}
       </div>
-      <div style={{ fontSize: 28, fontWeight: 700, color, lineHeight: 1 }}>{value}</div>
-      <div style={{ fontSize: 12, color: 'var(--t2)' }}>{label}</div>
-      {sub && <div style={{ fontSize: 11, color: 'var(--t3)' }}>{sub}</div>}
     </div>
   )
 }
 
-// SVG gradient fix: use style prop, not presentation attributes
-function Sparkline({ values, color }: { values: number[]; color: string }) {
-  const gecerli = values.filter(v => v != null && !isNaN(v))
-  const minV = gecerli.length ? Math.min(...gecerli) : 0
-  const maxV = gecerli.length ? Math.max(...gecerli) : 0
-  if (gecerli.length < 3 || maxV - minV < 0.05) {
-    return (
-      <div style={{ height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: 9, color: 'var(--t3)' }}>veri toplanıyor…</span>
-      </div>
-    )
-  }
-  const data = gecerli.map(v => ({ v }))
-  const gradId = `sp-${color.replace(/[^a-z0-9]/gi, '')}`
-  // Veri aralığına göre padding: küçük varyasyonlar görünür olsun
-  const range = Math.max(maxV - minV, 0.1)
-  const domainMin = minV - range * 0.4
-  const domainMax = maxV + range * 0.4
-  return (
-    <ResponsiveContainer width="100%" height={36}>
-      <AreaChart data={data} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
-        {/* YAxis gizli ama domain data-relative → sparkline eğri görünür */}
-        <YAxis hide domain={[domainMin, domainMax]} />
-        <defs>
-          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%"  style={{ stopColor: color, stopOpacity: 0.35 }} />
-            <stop offset="95%" style={{ stopColor: color, stopOpacity: 0 }} />
-          </linearGradient>
-        </defs>
-        <Area
-          type="monotone" dataKey="v" stroke={color} strokeWidth={1.5}
-          fill={`url(#${gradId})`} dot={false} isAnimationActive={false}
-        />
-      </AreaChart>
-    </ResponsiveContainer>
-  )
-}
+// ─── SeraKart ─────────────────────────────────────────────────────────────────
 
-function SeraKart({ sera, onDetay }: { sera: SeraOzet; onDetay: (id: string) => void }) {
-  const { sensorGecmis, komutLog, komutGonder } = useData()
+interface SulamaEcPh { ec: number | null; ph: number | null }
+
+function SeraKart({ sera, onDetay, sulamaEcPh }: { sera: SeraOzet; onDetay: (id: string) => void; sulamaEcPh?: SulamaEcPh }) {
+  const { komutLog, komutGonder } = useData()
   const [komutYuklenen, setKomutYuklenen] = useState<string | null>(null)
   const [komutSonuc, setKomutSonuc]       = useState<{ ok: boolean; mesaj: string } | null>(null)
+  const { komutOnayIste, timerSifirla } = useKomutGuvenlik()
 
-  const gecmis      = sensorGecmis[sera.id] ?? []
-  const sicakliklar = gecmis.map(g => g.T)
-  const s           = sera.sensor
-  const c           = durumRengi(sera.durum)
-  const cHex        = durumHex(sera.durum)
-  const sonKomut    = komutLog.find(k => k.sera_id === sera.id)
+  const s      = sera.sensor
+  const profil = BITKI_PROFIL[sera.bitki] ?? VARSAYILAN_PROFIL
+  const border  = durumHex(sera.durum)
+
+  function isAcik(ac: KomutAdi, kapat: KomutAdi): boolean {
+    const son = komutLog
+      .filter(k => k.sera_id === sera.id && (k.komut === ac || k.komut === kapat))
+      .sort((a, b) => new Date(b.zaman).getTime() - new Date(a.zaman).getTime())[0]
+    return son?.komut === ac
+  }
 
   async function gonder(komut: KomutAdi) {
-    setKomutYuklenen(komut)
-    setKomutSonuc(null)
-    const sonuc = await komutGonder(sera.id, komut, sera.isim)
-    setKomutSonuc(sonuc)
-    setKomutYuklenen(null)
-    setTimeout(() => setKomutSonuc(null), 2500)
+    const impl = async () => {
+      setKomutYuklenen(komut); setKomutSonuc(null)
+      const r = await komutGonder(sera.id, komut, sera.isim)
+      setKomutSonuc(r); setKomutYuklenen(null)
+      setTimeout(() => setKomutSonuc(null), 2500)
+      timerSifirla()
+    }
+    komutOnayIste(impl)
   }
+
+  const AKTUATORLER: { ac: KomutAdi; kapat: KomutAdi; ico: string }[] = [
+    { ac: 'SULAMA_AC',  kapat: 'SULAMA_KAPAT',  ico: '💧' },
+    { ac: 'SOGUTMA_AC', kapat: 'SOGUTMA_KAPAT', ico: '❄️' },
+    { ac: 'FAN_AC',     kapat: 'FAN_KAPAT',     ico: '🌀' },
+    { ac: 'ISITICI_AC', kapat: 'ISITICI_KAPAT', ico: '🔥' },
+  ]
 
   return (
     <div
-      className="card card-hover rounded-xl flex flex-col"
-      style={{ borderTop: `3px solid ${c}`, cursor: 'pointer' }}
-      onClick={e => {
-        // Buton tıklamalarının karta tıklamayla çakışmaması için
-        if ((e.target as HTMLElement).closest('button')) return
-        onDetay(sera.id)
-      }}
+      className="card card-hover flex flex-col"
+      style={{ borderLeft: `3px solid ${border}`, borderTop: `1px solid ${border}22`, cursor: 'pointer' }}
+      onClick={e => { if ((e.target as HTMLElement).closest('button')) return; onDetay(sera.id) }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 pb-2">
-        <div className="flex items-center gap-2">
-          <span style={{ fontSize: 24 }}>{BITKI_EMOJI[sera.bitki] ?? '🌱'}</span>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--t1)' }}>{sera.isim}</div>
-            <div style={{ fontSize: 11, color: 'var(--t3)' }}>{sera.bitki} · {sera.alan} m²</div>
-          </div>
-        </div>
-        <span
-          className={`${durumBadgeClass(sera.durum)} rounded-full px-2.5 py-1 text-xs font-semibold flex items-center gap-1`}
-          style={{ flexShrink: 0 }}
+      {/* Header — Tünel SVG silüeti + Sera bilgisi */}
+      <div style={{ position: 'relative', padding: '10px 12px 8px' }}>
+        {/* Tünel sera silüeti */}
+        <svg
+          viewBox="0 0 320 76"
+          preserveAspectRatio="none"
+          style={{
+            position: 'absolute', top: 0, left: 0,
+            width: '100%', height: 46,
+            opacity: 0.15, pointerEvents: 'none',
+          }}
         >
-          {(sera.durum === 'ALARM' || sera.durum === 'ACIL_DURDUR') && (
-            <span style={{
-              width: 5, height: 5, borderRadius: '50%', background: 'currentColor',
-              display: 'inline-block', animation: 'pulse 1.5s infinite',
-            }} />
-          )}
-          {durumLabel(sera.durum)}
-        </span>
-      </div>
+          <path
+            d="M 25 68 Q 25 8 160 8 Q 295 8 295 68"
+            fill="none"
+            stroke={border}
+            strokeWidth="3"
+          />
+        </svg>
 
-      {/* Sparkline */}
-      <div style={{ padding: '0 12px' }}>
-        <Sparkline values={sicakliklar.slice(-60)} color={cHex} />
-        {gecmis.length >= 3 && (
-          <div style={{ fontSize: 9, color: 'var(--t3)', textAlign: 'right', marginTop: -4 }}>
-            sıcaklık trendi ({gecmis.length} nokta)
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 22 }}>{BITKI_EMOJI[sera.bitki] ?? '🌱'}</span>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--t1)', fontFamily: 'var(--mono)' }}>
+                {sera.isim}
+              </div>
+              <div className="lbl">{sera.bitki} · {sera.alan} m²</div>
+            </div>
           </div>
-        )}
+          <span className={`${durumBadgeClass(sera.durum)} rounded-full px-2 py-0.5 text-xs font-semibold flex items-center gap-1`}>
+            {(sera.durum === 'ALARM' || sera.durum === 'ACIL_DURDUR') && (
+              <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'currentColor', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
+            )}
+            {durumLabel(sera.durum)}
+          </span>
+        </div>
       </div>
 
-      {/* Sensör değerleri */}
+      {/* Gauge Grid */}
       {s ? (
-        <div style={{ padding: '8px 14px 0' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-            {[
-              { icon: '🌡️', label: 'Sıcaklık', val: fmt(s.T,      '°C'),  color: '#f97316' },
-              { icon: '💧', label: 'Nem',       val: fmt(s.H,      '%'),   color: '#3b82f6' },
-              { icon: '🌬️', label: 'CO₂',       val: fmt(s.co2,    ' ppm'), color: '#a855f7' },
-              { icon: '🌱', label: 'Toprak',     val: fmt(s.toprak, '%'),  color: '#22c55e' },
-            ].map(({ icon, label, val, color }) => (
-              <div
-                key={label}
-                className="rounded-lg flex items-center gap-2"
-                style={{ background: 'rgba(255,255,255,0.04)', padding: '6px 8px' }}
-              >
-                <span style={{ fontSize: 14 }}>{icon}</span>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 10, color: 'var(--t3)' }}>{label}</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color }}>{val}</div>
-                </div>
-              </div>
-            ))}
+        <div style={{ padding: '2px 10px 8px' }}>
+          {/* İç Ortam */}
+          <div style={{ fontSize: 9, color: 'var(--t3)', fontFamily: 'var(--mono)', letterSpacing: '1px', marginBottom: 2, paddingLeft: 2 }}>
+            İÇ ORTAM
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2, marginBottom: 6 }}>
+            <Gauge label="Sıcaklık" birim="°C"    deger={s.T}      profil={profil.sicaklik} />
+            <Gauge label="Nem"      birim="%"      deger={s.H}      profil={profil.nem}      />
+            <Gauge label="CO₂"      birim="ppm"    deger={s.co2}    profil={profil.co2}      />
+            <Gauge label="Işık"     birim="lx"     deger={s.isik}   profil={profil.isik}     />
           </div>
 
-          {/* pH + EC satırı */}
-          <div className="flex gap-2 mt-2">
-            {[
-              { label: 'pH',     val: fmt(s.ph),                               color: '#06b6d4' },
-              { label: 'EC',     val: s.ec != null ? `${s.ec} mS/cm` : '—',    color: '#f59e0b' },
-              { label: 'Işık',   val: s.isik != null ? `${s.isik} lx` : '—',   color: '#fbbf24' },
-            ].map(({ label, val, color }) => (
-              <div
-                key={label}
-                className="flex-1 rounded-lg flex items-center justify-between"
-                style={{ background: 'rgba(255,255,255,0.04)', padding: '4px 8px' }}
-              >
-                <span style={{ fontSize: 10, color: 'var(--t3)' }}>{label}</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color }}>{val}</span>
-              </div>
-            ))}
+          {/* Toprak */}
+          <div style={{ fontSize: 9, color: 'var(--t3)', fontFamily: 'var(--mono)', letterSpacing: '1px', marginBottom: 2, paddingLeft: 2 }}>
+            TOPRAK
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2 }}>
+            <Gauge label="T.Nem"  birim="%"     deger={s.toprak}            profil={profil.toprakNem} />
+            <Gauge label="T.Isı"  birim="°C"    deger={null}                profil={profil.toprakIsi} />
+            <Gauge label="PH"     birim="pH"    deger={sulamaEcPh?.ph ?? null} profil={profil.ph}     />
+            <Gauge label="EC"     birim="mS/cm" deger={sulamaEcPh?.ec ?? null} profil={profil.ec}     />
           </div>
         </div>
       ) : (
-        <div style={{ padding: '16px 14px', color: 'var(--t3)', fontSize: 13, textAlign: 'center' }}>
+        <div style={{ padding: '20px', color: 'var(--t3)', fontSize: 12, textAlign: 'center' }}>
           Veri bekleniyor…
         </div>
       )}
 
-      {/* Hızlı komutlar */}
-      <div style={{ padding: '10px 14px 14px', marginTop: 'auto' }}>
-        <div className="flex gap-1.5 flex-wrap">
-          {([
-            ['💧', 'SULAMA_AC'], ['❄️', 'SOGUTMA_AC'], ['🌀', 'FAN_AC'], ['🔥', 'ISITICI_AC'],
-          ] as [string, KomutAdi][]).map(([ico, k]) => (
+      {/* Aktüatörler + Fotoğraf analizi */}
+      <div style={{ padding: '0 10px 10px', marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
+        {AKTUATORLER.map(({ ac, kapat, ico }) => {
+          const acik = isAcik(ac, kapat)
+          return (
             <button
-              key={k}
-              onClick={() => gonder(k)}
+              key={ac}
+              onClick={() => gonder(acik ? kapat : ac)}
               disabled={komutYuklenen !== null}
-              className="btn-ghost"
-              style={{ padding: '4px 10px', fontSize: 12 }}
-              title={k}
+              title={`${ac.replace('_AC', '')} — ${acik ? 'Kapat' : 'Aç'}`}
+              style={{
+                width: 32, height: 28, fontSize: 13, borderRadius: 4, cursor: 'pointer',
+                background: acik ? 'var(--accent-dim)' : 'rgba(255,255,255,0.04)',
+                border: `1px solid ${acik ? 'rgba(0,212,170,0.4)' : 'var(--border)'}`,
+                opacity: komutYuklenen !== null ? 0.5 : 1,
+                transition: 'background 0.15s, border-color 0.15s',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
             >
-              {komutYuklenen === k ? '…' : ico}
+              {komutYuklenen === ac || komutYuklenen === kapat ? '·' : ico}
             </button>
-          ))}
+          )
+        })}
+        <div style={{ marginLeft: 'auto' }}>
+          <GoruntuAnaliz seraId={sera.id} seraIsim={sera.isim} />
         </div>
-        {komutSonuc ? (
-          <div style={{ fontSize: 10, marginTop: 4, color: komutSonuc.ok ? 'var(--accent)' : 'var(--alarm)' }}>
+      </div>
+
+      {/* Komut geri bildirim */}
+      {komutSonuc && (
+        <div style={{ padding: '0 10px 8px' }}>
+          <div style={{ fontSize: 11, color: komutSonuc.ok ? 'var(--accent)' : 'var(--alarm)' }}>
             {komutSonuc.ok ? '✓' : '✗'} {komutSonuc.mesaj}
           </div>
-        ) : sonKomut ? (
-          <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 3 }}>
-            Son: {sonKomut.komut} · {new Date(sonKomut.zaman).toLocaleTimeString('tr-TR')}
-          </div>
-        ) : null}
+        </div>
+      )}
+    </div>
+  )
+}
+
+
+// ─── GenelBakis ───────────────────────────────────────────────────────────────
+
+// ─── KazanPanel ───────────────────────────────────────────────────────────────
+
+interface KazanVeri {
+  seviye_yuzde: number
+  ec: number; ph: number; isi: number
+  tank_a: number; tank_b: number; tank_ph: number
+  giris_ec: number; giris_ph: number
+  sulaniyor: boolean
+}
+
+function TankBar({ etiket, yuzde, renk }: { etiket: string; yuzde: number; renk: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ fontSize: 10, fontFamily: 'var(--mono)', fontWeight: 700, color: renk, width: 24, flexShrink: 0 }}>
+        {etiket}
+      </div>
+      <div style={{ flex: 1, height: 6, background: 'var(--border)', borderRadius: 3, overflow: 'hidden' }}>
+        <div style={{
+          width: `${yuzde}%`, height: '100%',
+          background: renk, borderRadius: 3,
+          transition: 'width 0.8s ease',
+        }} />
+      </div>
+      <div style={{ fontSize: 10, fontFamily: 'var(--mono)', color: renk, width: 28, textAlign: 'right', flexShrink: 0 }}>
+        {yuzde}%
       </div>
     </div>
   )
 }
 
-// Alt panel: Çoklu sera sıcaklık trendi
-function SicaklikTrendi() {
-  const { seralar, sensorGecmis } = useData()
+function MiniKazanSvg({ yuzde, sulaniyor }: { yuzde: number; sulaniyor: boolean }) {
+  const tankH = 72; const tankY = 12; const tankX = 10; const tankW = 52
+  const fillH = tankH * (yuzde / 100)
+  const fillY = tankY + tankH - fillH
+  const renk  = sulaniyor ? '#00d4aa' : '#1a6060'
+  return (
+    <svg viewBox="0 0 72 96" width="72" height="96">
+      {/* Giriş boru */}
+      <rect x="0" y="20" width="10" height="5" rx="2" fill="none" stroke="#3b82f6" strokeWidth="1.5" />
+      {/* Çıkış boru */}
+      <rect x="62" y="72" width="10" height="5" rx="2" fill="none" stroke={renk} strokeWidth="1.5" />
+      {/* Tank */}
+      <rect x={tankX} y={tankY} width={tankW} height={tankH} rx="4"
+        fill="#0a1520" stroke="#1e3048" strokeWidth="1.5" />
+      <clipPath id="kp-clip">
+        <rect x={tankX + 1} y={tankY + 1} width={tankW - 2} height={tankH - 2} rx="3" />
+      </clipPath>
+      <rect x={tankX + 1} y={fillY} width={tankW - 2} height={fillH}
+        fill={`${renk}22`} clipPath="url(#kp-clip)"
+        style={{ transition: 'y 1s ease, height 1s ease' }} />
+      {fillH > 4 && (
+        <rect x={tankX + 1} y={fillY} width={tankW - 2} height="3"
+          fill={renk} opacity="0.5" clipPath="url(#kp-clip)" />
+      )}
+      <rect x={tankX} y={tankY} width={tankW} height={tankH} rx="4"
+        fill="none" stroke="#2a4055" strokeWidth="1.5" />
+      <text x={tankX + tankW / 2} y={tankY + tankH / 2 + 4}
+        textAnchor="middle" fontSize="12" fontWeight="700"
+        fill={renk} fontFamily="var(--mono)" opacity="0.9">
+        {yuzde}%
+      </text>
+      {/* Kapak */}
+      <rect x={tankX + 8} y={tankY - 5} width={tankW - 16} height={5} rx="2"
+        fill="#1a2535" stroke="#2a4055" strokeWidth="1" />
+    </svg>
+  )
+}
 
-  // Son 30 ortak indeks
-  const maxLen = Math.max(...seralar.map(s => (sensorGecmis[s.id] ?? []).length), 0)
-  const baslangic = Math.max(0, maxLen - 30)
+function KazanPanel() {
+  const [veri, setVeri] = useState<KazanVeri | null>(null)
 
-  const data = Array.from({ length: Math.min(maxLen, 30) }, (_, i) => {
-    const idx = baslangic + i
-    const row: Record<string, number | string> = {
-      zaman: sensorGecmis[seralar[0]?.id]?.[idx]?.zaman ?? '',
+  useEffect(() => {
+    function yukle() {
+      fetch('/api/v1/sulama/kazan', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token') ?? ''}` },
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(json => { if (json?.success) setVeri(json.data) })
+        .catch(() => {})
     }
-    seralar.forEach(s => {
-      const val = sensorGecmis[s.id]?.[idx]?.T
-      if (val !== undefined) row[s.id] = val
-    })
-    return row
-  })
+    yukle()
+    const t = setInterval(yukle, 5000)
+    return () => clearInterval(t)
+  }, [])
 
-  const formatTime = (v: string) =>
-    new Date(v).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-
-  if (maxLen < 2) {
-    return (
-      <div className="card rounded-xl p-4">
-        <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--t1)', marginBottom: 8 }}>
-          🌡️ Sıcaklık Trendi — Tüm Seralar
-        </div>
-        <div style={{ height: 160, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t3)', fontSize: 13 }}>
-          Veri toplanıyor…
-        </div>
-      </div>
-    )
+  function gotoSulama() {
+    window.dispatchEvent(new CustomEvent('goto-sayfa', { detail: 'sulama' }))
   }
 
+  const v = veri ?? { seviye_yuzde: 0, ec: 0, ph: 0, isi: 0, tank_a: 0, tank_b: 0, tank_ph: 0, giris_ec: 0, giris_ph: 0, sulaniyor: false }
+
   return (
-    <div className="card rounded-xl p-4">
-      <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--t1)', marginBottom: 12 }}>
-        🌡️ Sıcaklık Trendi — Tüm Seralar
-        <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--t3)', marginLeft: 8 }}>
-          son {Math.min(maxLen, 30)} ölçüm
-        </span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
+
+      {/* Kazan */}
+      <div className="card" style={{ padding: '12px 14px' }}>
+        <div style={{
+          fontSize: 9, color: 'var(--t3)', fontFamily: 'var(--mono)',
+          letterSpacing: '1px', marginBottom: 8,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}>
+          <span>KAZAN</span>
+          {v.sulaniyor && (
+            <span style={{ color: 'var(--accent)', fontWeight: 700 }}>● AKTIF</span>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          <MiniKazanSvg yuzde={v.seviye_yuzde} sulaniyor={v.sulaniyor} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, flex: 1 }}>
+            {[
+              { l: 'EC',  v: v.ec.toFixed(1),  u: 'mS/cm', c: '#00d4aa' },
+              { l: 'PH',  v: v.ph.toFixed(1),  u: 'pH',    c: '#a855f7' },
+              { l: 'ISI', v: v.isi.toFixed(1), u: '°C',    c: '#f97316' },
+            ].map(({ l, v: val, u, c }) => (
+              <div key={l} style={{
+                background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border)',
+                borderRadius: 5, padding: '4px 8px',
+              }}>
+                <div style={{ fontSize: 8, color: 'var(--t3)', fontFamily: 'var(--mono)' }}>{l}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: c, fontFamily: 'var(--mono)', lineHeight: 1.1 }}>
+                  {veri ? val : '—'}
+                </div>
+                <div style={{ fontSize: 8, color: 'var(--t3)' }}>{u}</div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-      <ResponsiveContainer width="100%" height={160}>
-        <LineChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-          <XAxis
-            dataKey="zaman"
-            tickFormatter={formatTime}
-            tick={{ fontSize: 9, fill: 'var(--t3)' }}
-            interval="preserveStartEnd"
-          />
-          <YAxis
-            tick={{ fontSize: 9, fill: 'var(--t3)' }}
-            tickFormatter={v => `${v}°`}
-            domain={['auto', 'auto']}
-          />
-          <Tooltip
-            contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 11 }}
-            labelFormatter={v => formatTime(v as string)}
-            formatter={(v) => [`${Number(v).toFixed(1)}°C`, '']}
-          />
-          <Legend wrapperStyle={{ fontSize: 11, color: 'var(--t2)' }} />
-          {seralar.map(s => (
-            <Line
-              key={s.id}
-              type="monotone"
-              dataKey={s.id}
-              name={s.isim}
-              stroke={SERA_RENK[s.id] ?? '#888'}
-              strokeWidth={2}
-              dot={false}
-              isAnimationActive={false}
-            />
+
+      {/* Gübre Tankları */}
+      <div className="card" style={{ padding: '12px 14px' }}>
+        <div style={{ fontSize: 9, color: 'var(--t3)', fontFamily: 'var(--mono)', letterSpacing: '1px', marginBottom: 8 }}>
+          GÜBRE TANKLARI
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <TankBar etiket="A"   yuzde={veri ? v.tank_a  : 0} renk="#f59e0b" />
+          <TankBar etiket="B"   yuzde={veri ? v.tank_b  : 0} renk="#3b82f6" />
+          <TankBar etiket="PH-" yuzde={veri ? v.tank_ph : 0} renk="#a855f7" />
+        </div>
+      </div>
+
+      {/* Arıtılmış Su */}
+      <div className="card" style={{ padding: '12px 14px' }}>
+        <div style={{ fontSize: 9, color: 'var(--t3)', fontFamily: 'var(--mono)', letterSpacing: '1px', marginBottom: 8 }}>
+          ARITILMIŞ SU GİRİŞİ
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+          {[
+            { l: 'EC',  val: veri ? v.giris_ec.toFixed(2) : '—', c: '#3b82f6' },
+            { l: 'PH',  val: veri ? v.giris_ph.toFixed(1) : '—', c: '#a855f7' },
+          ].map(({ l, val, c }) => (
+            <div key={l} style={{
+              background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border)',
+              borderRadius: 5, padding: '5px 8px',
+            }}>
+              <div style={{ fontSize: 8, color: 'var(--t3)', fontFamily: 'var(--mono)' }}>{l}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: c, fontFamily: 'var(--mono)' }}>{val}</div>
+            </div>
           ))}
-        </LineChart>
-      </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Link */}
+      <button
+        onClick={gotoSulama}
+        style={{
+          padding: '7px 0', borderRadius: 5, fontSize: 11,
+          fontFamily: 'var(--mono)', cursor: 'pointer', fontWeight: 600,
+          background: 'var(--accent-dim)', border: '1px solid rgba(0,212,170,0.4)',
+          color: 'var(--accent)', width: '100%',
+        }}
+      >
+        💧 Sulama Sayfası →
+      </button>
     </div>
   )
 }
 
-// Alt panel: Son 10 komut
-function SonKomutlar() {
-  const { komutLog } = useData()
-  const son10 = komutLog.slice(0, 10)
+// ─── GenelBakis ───────────────────────────────────────────────────────────────
 
-  const komutIcon: Record<string, string> = {
-    SULAMA_AC: '💧', SULAMA_KAPAT: '💧',
-    ISITICI_AC: '🔥', ISITICI_KAPAT: '🔥',
-    SOGUTMA_AC: '❄️', SOGUTMA_KAPAT: '❄️',
-    FAN_AC: '🌀', FAN_KAPAT: '🌀',
-    ISIK_AC: '💡', ISIK_KAPAT: '💡',
-    ACIL_DURDUR: '🚨',
-  }
-
-  return (
-    <div className="card rounded-xl flex flex-col" style={{ height: '100%' }}>
-      <div style={{
-        padding: '12px 16px', borderBottom: '1px solid var(--border)',
-        fontWeight: 600, fontSize: 14, color: 'var(--t1)', flexShrink: 0,
-      }}>
-        📝 Son Komutlar
-        <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--t3)', marginLeft: 8 }}>
-          son {son10.length} işlem
-        </span>
-      </div>
-      <div className="flex-1 overflow-y-auto">
-        {son10.length === 0 ? (
-          <div style={{ padding: 32, textAlign: 'center', color: 'var(--t3)', fontSize: 13 }}>
-            Henüz komut gönderilmedi
-          </div>
-        ) : son10.map(k => (
-          <div
-            key={k.id}
-            className="table-row"
-            style={{ padding: '9px 16px', display: 'flex', alignItems: 'center', gap: 8 }}
-          >
-            <span style={{ fontSize: 16, flexShrink: 0 }}>{komutIcon[k.komut] ?? '⚙️'}</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)' }}>{k.komut}</div>
-              <div style={{ fontSize: 11, color: 'var(--t3)' }}>{k.sera_isim}</div>
-            </div>
-            <KaynakBadge kaynak={(k.kaynak ?? 'kullanici') as KomutKaynak} />
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div style={{ fontSize: 10, color: k.basarili ? 'var(--accent)' : 'var(--alarm)' }}>
-                {k.basarili ? '✓' : '✗'}
-              </div>
-              <div style={{ fontSize: 10, color: 'var(--t3)' }}>
-                {new Date(k.zaman).toLocaleTimeString('tr-TR')}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
+// sera_id → { ec, ph } son sulamadan
+function useSulamaEcPh(): Record<string, SulamaEcPh> {
+  const [map, setMap] = useState<Record<string, SulamaEcPh>>({})
+  useEffect(() => {
+    function yukle() {
+      fetch('/api/v1/sulama/gruplar', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access_token') ?? ''}` },
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(json => {
+          if (!json?.success) return
+          const yeni: Record<string, SulamaEcPh> = {}
+          for (const grup of json.data as { sera_idler: string[]; ec_hedef: number | null; ph_hedef: number | null }[]) {
+            for (const sid of grup.sera_idler) {
+              // Daha önce atanmadıysa ya da bu grubun verisi daha güncel ise ata
+              if (!yeni[sid]) yeni[sid] = { ec: grup.ec_hedef, ph: grup.ph_hedef }
+            }
+          }
+          setMap(yeni)
+        })
+        .catch(() => {})
+    }
+    yukle()
+    const t = setInterval(yukle, 10000)
+    return () => clearInterval(t)
+  }, [])
+  return map
 }
 
 export function GenelBakis() {
-  const { seralar, saglik, alarmlar, komutLog } = useData()
+  const { seralar } = useData()
   const [secilenSera, setSecilenSera] = useState<string | null>(null)
+  const sulamaAktif = localStorage.getItem('sera_sulama_aktif') !== 'false'
+  const sulamaEcPhMap = useSulamaEcPh()
 
-  const alarmSayisi = saglik?.alarm_sayisi ?? 0
-  const toplamKomut = komutLog.length
+  const icerik = (
+    <div style={{ flex: 1, minWidth: 0 }}>
+      {/* Başlık */}
+      <div style={{ marginBottom: 14 }}>
+        <h1 style={{ fontSize: 14, fontWeight: 700, color: 'var(--t1)', fontFamily: 'var(--mono)', letterSpacing: '2px' }}>
+          GENEL BAKIŞ
+        </h1>
+        <p className="lbl" style={{ marginTop: 3 }}>
+          Tüm seraların anlık durumu · karta tıkla → detay
+        </p>
+      </div>
+
+      {/* Sera kartları */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {seralar.map(sera => (
+          <SeraKart
+            key={sera.id}
+            sera={sera}
+            onDetay={setSecilenSera}
+            sulamaEcPh={sulamaEcPhMap[sera.id]}
+          />
+        ))}
+        {seralar.length === 0 && (
+          <div className="col-span-3 text-center" style={{ padding: 48, color: 'var(--t3)' }}>
+            <div style={{ fontSize: 40, marginBottom: 10 }}>🌿</div>
+            <div className="lbl">Backend bağlantısı bekleniyor…</div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 
   return (
     <div className="page-root">
@@ -394,58 +560,14 @@ export function GenelBakis() {
         <SeraDetayPanel seraId={secilenSera} onKapat={() => setSecilenSera(null)} />
       )}
 
-      <div className="mb-5">
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)' }}>Genel Bakış</h1>
-        <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 1 }}>Tüm seraların anlık durumu · karta tıkla → detay</p>
-      </div>
-
-      {/* Özet kartlar */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
-        <SummaryCard
-          icon="🏠" label="Toplam Sera" value={seralar.length}
-          sub={`${seralar.filter(s => s.durum === 'NORMAL').length} normal`}
-        />
-        <SummaryCard
-          icon="🚨" label="Aktif Alarm" value={alarmSayisi}
-          color={alarmSayisi > 0 ? '#ef4444' : '#00d4aa'}
-          pulse={alarmSayisi > 0}
-          sub={alarmSayisi > 0 ? alarmlar.map(a => a.isim).join(', ') : 'Tümü normal'}
-        />
-        <SummaryCard
-          icon="⏱" label="Sistem Uptime" value={saglik?.uptime_fmt ?? '—'}
-          sub="Kesintisiz çalışma" color="#f59e0b"
-        />
-        <SummaryCard
-          icon="⚙️" label="Toplam Komut" value={toplamKomut}
-          sub="Bu oturumda" color="#a855f7"
-        />
-      </div>
-
-      {/* Sera grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mb-5">
-        {seralar.map(sera => (
-          <SeraKart key={sera.id} sera={sera} onDetay={setSecilenSera} />
-        ))}
-        {seralar.length === 0 && (
-          <div
-            className="col-span-3 text-center"
-            style={{ padding: 60, color: 'var(--t3)' }}
-          >
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🌿</div>
-            <div style={{ fontSize: 13 }}>Backend bağlantısı bekleniyor…</div>
+      {sulamaAktif ? (
+        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 14, alignItems: 'start' }}>
+          <div style={{ position: 'sticky', top: 0 }}>
+            <KazanPanel />
           </div>
-        )}
-      </div>
-
-      {/* Alt panel: Sıcaklık trendi + Son komutlar */}
-      {seralar.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2">
-            <SicaklikTrendi />
-          </div>
-          <SonKomutlar />
+          {icerik}
         </div>
-      )}
+      ) : icerik}
     </div>
   )
 }

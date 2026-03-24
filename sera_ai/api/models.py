@@ -69,6 +69,41 @@ class SeraGuncelleme(BaseModel):
         return self
 
 
+class CihazKayitIstek(BaseModel):
+    """POST /api/v1/cihazlar/kayit request body."""
+
+    tesis_kodu:        str
+    sera_id:           str
+    mac_adresi:        str = ""
+    firmware_versiyon: str = "1.0.0"
+    baglanti_tipi:     str = "WiFi"
+
+    @field_validator("tesis_kodu", "sera_id")
+    @classmethod
+    def bos_olamaz(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("boş olamaz")
+        return v
+
+
+class KayitTalebiIstek(BaseModel):
+    """POST /api/v1/provisioning/kayit-talebi — ESP32'den gelen kayıt isteği."""
+
+    mac:               str
+    sera_id:           str
+    baglanti_tipi:     str = "WiFi"
+    firmware_versiyon: str = "1.0.0"
+
+    @field_validator("mac", "sera_id")
+    @classmethod
+    def bos_olamaz(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("boş olamaz")
+        return v
+
+
 # ── Response modelleri ─────────────────────────────────────────
 
 class ApiMeta(BaseModel):

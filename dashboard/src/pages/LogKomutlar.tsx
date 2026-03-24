@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, type CSSProperties } from 'react'
 import { useData } from '../context/DataContext'
 import { KaynakBadge } from '../components/KaynakBadge'
 import type { KomutAdi, SistemLog, KomutKaynak } from '../types'
@@ -54,6 +54,20 @@ export function LogKomutlar() {
   const seviyeRenk = (s: string) =>
     s === 'ERROR' ? 'var(--alarm)' : s === 'WARN' ? 'var(--warn)' : 'var(--t3)'
 
+  const logSatirStil = (seviye: string): CSSProperties => ({
+    background:
+      seviye === 'ERROR' ? 'rgba(239,68,68,0.06)' :
+      seviye === 'WARN'  ? 'rgba(245,158,11,0.05)' :
+                           'rgba(0,120,212,0.03)',
+    borderLeft:
+      seviye === 'ERROR' ? '2px solid rgba(239,68,68,0.35)' :
+      seviye === 'WARN'  ? '2px solid rgba(245,158,11,0.35)' :
+                           '2px solid rgba(0,120,212,0.2)',
+    paddingLeft: 8,
+    marginBottom: 1,
+    borderRadius: '0 3px 3px 0',
+  })
+
   return (
     <div className="page-root">
       <div className="mb-6" style={{ flexShrink: 0 }}>
@@ -96,7 +110,7 @@ export function LogKomutlar() {
               <div
                 key={l.id}
                 className="table-row"
-                style={{ padding: '6px 16px', display: 'flex', gap: 8, alignItems: 'baseline' }}
+                style={{ padding: '6px 16px', display: 'flex', gap: 8, alignItems: 'baseline', ...logSatirStil(l.seviye) }}
               >
                 <span style={{ color: 'var(--t3)', flexShrink: 0, fontSize: 10 }}>
                   {new Date(l.zaman).toLocaleTimeString('tr-TR')}
@@ -110,6 +124,14 @@ export function LogKomutlar() {
                   [{l.seviye}]
                 </span>
                 <span style={{ color: 'var(--t2)', wordBreak: 'break-word', flex: 1 }}>{l.mesaj}</span>
+                {l.kullanici_adi && (
+                  <span style={{
+                    flexShrink: 0, fontSize: 10, color: 'var(--accent)',
+                    background: 'var(--accent-dim)', borderRadius: 3, padding: '1px 5px',
+                  }}>
+                    {l.kullanici_adi}
+                  </span>
+                )}
                 {l.tekrar > 1 && (
                   <span
                     style={{
@@ -216,6 +238,15 @@ export function LogKomutlar() {
                   </span>
                   <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--t1)', flex: 1, minWidth: 0 }}>{k.komut}</span>
                   <KaynakBadge kaynak={(k.kaynak ?? 'kullanici') as KomutKaynak} />
+                  {k.kullanici_adi && (
+                    <span style={{
+                      fontSize: 10, color: 'var(--accent)', fontFamily: 'var(--mono)',
+                      background: 'var(--accent-dim)', borderRadius: 3,
+                      padding: '1px 5px', flexShrink: 0,
+                    }}>
+                      {k.kullanici_adi}
+                    </span>
+                  )}
                   <span style={{ fontSize: 11, color: 'var(--t3)', flexShrink: 0 }}>{k.sera_isim}</span>
                   <span style={{ fontSize: 10, color: 'var(--t3)', flexShrink: 0 }}>
                     {new Date(k.zaman).toLocaleTimeString('tr-TR')}

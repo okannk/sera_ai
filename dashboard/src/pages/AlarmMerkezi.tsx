@@ -42,7 +42,7 @@ export function AlarmMerkezi() {
           { durum: 'ALARM' as Durum,       renk: 'var(--alarm)', icon: '🔴' },
           { durum: 'ACIL_DURDUR' as Durum, renk: 'var(--crit)',  icon: '🚨' },
         ]).map(({ durum, renk, icon }) => (
-          <div key={durum} className="card rounded-xl p-4 flex items-center gap-3">
+          <div key={durum} className="card rounded-xl p-4 flex items-center gap-3 metric-bar-top" style={{ borderTopColor: renk }}>
             <span style={{ fontSize: 24 }}>{icon}</span>
             <div>
               <div style={{ fontSize: 24, fontWeight: 700, color: renk }}>{durumSayilari[durum]}</div>
@@ -66,8 +66,10 @@ export function AlarmMerkezi() {
             </span>
           </div>
           <div>
-            {alarmlar.map(a => (
-              <div key={a.sera_id} className="table-row" style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            {alarmlar.map(a => {
+              const rowClass = a.durum === 'ACIL_DURDUR' ? 'alarm-row-acil' : a.durum === 'ALARM' ? 'alarm-row-alarm' : 'alarm-row-uyari'
+              return (
+              <div key={a.sera_id} className={`table-row ${rowClass}`} style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span className={`${durumBadgeClass(a.durum)} rounded-full px-2 py-0.5 text-xs font-semibold`}>
                   {durumLabel(a.durum)}
                 </span>
@@ -79,7 +81,8 @@ export function AlarmMerkezi() {
                 )}
                 <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--t3)' }}>ŞU AN</span>
               </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
